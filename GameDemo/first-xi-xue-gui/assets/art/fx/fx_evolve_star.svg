@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <defs>
+    <radialGradient id="evoGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF3C8" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#FFD36E" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="24" cy="24" r="23" fill="url(#evoGlow)"/>
+  <path d="M24 2 L27 18 L43 12 L30 24 L46 24 L30 27 L40 42 L26 31 L28 47 L21 32 L9 44 L17 28 L2 29 L16 22 L4 12 L19 19 Z" fill="#FFD36E" opacity="0.9"/>
+  <path d="M24 8 L26 20 L38 16 L28 24 L40 25 L27 27 L34 38 L24 28 L25 41 L20 28 L11 37 L17 25 L5 25 L17 21 L8 14 L20 19 Z" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="24" cy="24" r="5" fill="#FFF6DE"/>
+</svg>

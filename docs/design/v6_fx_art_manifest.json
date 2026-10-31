@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "doc": "skills-balance-v6.md",
+  "title_zh": "v6 满级觉醒 + 打铁花铁水重做 · 特效与美术资源需求清单",
+  "generated": "2026-10-29",
+  "expert": "渲染达（godot-shader-developer）",
+  "summary": {
+    "new_shaders_must": 1,
+    "new_shaders_recommended": 1,
+    "new_art_must": 1,
+    "new_art_recommended": 3,
+    "reused_shaders": 9,
+    "reused_art": "全部 9 把武器本体 + 现有 fx/ui 贴图，无新武器美术"
+  },
+  "new_shaders": [
+    {
+      "id": "molten_scatter",
+      "title_zh": "铁水散开·漫天火星",
+      "status": "must",
+      "why": "打铁花重做签名：铁水团撞第一只实体碎裂，半径 150 大范围小伤害，需要'散成一片火星'而非干净冲击环",
+      "basis": "cast_burst 是单一干净环，表达不了'漫天火星'；新写一个径向火星爆发 shader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（边长 = 2×scatter_radius），放在碎裂点、z 低于本体",
+      "texture_samples": 0,
+      "uniforms": [
+        {"name": "rect_size", "type": "vec2", "default": [300, 300], "drive": "节点像素尺寸，短边归一化；API 跟随 resize 写"},
+        {"name": "radius", "type": "float", "range": [0, 1], "default": 0.95, "drive": "火星外缘，留边避免被节点矩形裁掉"},
+        {"name": "sparks", "type": "float", "range": [0.5, 12], "default": 5.0, "drive": "火星层数/密度，越多越'漫天'"},
+        {"name": "spread", "type": "float", "range": [0.1, 1], "default": 0.85, "drive": "火星从中心向外推的覆盖"},
+        {"name": "noise_scale", "type": "float", "range": [1, 24], "default": 7.0, "drive": "火星颗粒大小"},
+        {"name": "speed", "type": "float", "range": [0, 6], "default": 1.4, "drive": "每秒向外推几轮，也读作爆炸扩散速度"},
+        {"name": "spark_power", "type": "float", "range": [1, 16], "default": 6.0, "drive": "火星锋面锐度"},
+        {"name": "scatter_color", "type": "color", "default": "#FF7A1A", "drive": "橙红，铁水/火星"},
+        {"name": "core_color", "type": "color", "default": "#FFD16B", "drive": "中心更亮的熔核"},
+        {"name": "intensity", "type": "float", "range": [0, 3], "default": 1.4, "drive": "未开 HDR 2D 别超 1.6，否则过曝"},
+        {"name": "pulse", "type": "float", "range": [0, 1], "default": 0.0, "drive": "碎裂置 1 再衰减"},
+        {"name": "pulse_boost", "type": "float", "range": [0, 2], "default": 1.0}
+      ],
+      "api": "ShaderFX.molten_scatter(parent, center, 150.0, Color(1, 0.48, 0.10))",
+      "reference": [
+        "https://godotshaders.com/shader/explosion-shockwave/",
+        "https://godotshaders.com/shader/particle-shockwave-ring/"
+      ],
+      "pitfall": "① blend_add 下 src 会再乘一次 src.a → COLOR.a 恒 1.0，亮度全算进 rgb；② 极坐标噪声接缝同 aura_field——角度转单位圆坐标再采，禁止 (atan, 半径) 直接采样；③ 半径 150 在 720 竖屏约占 0.42 屏宽，ColorRect 边长用 2×150=300，按短边 720 归一化",
+      "integration_points": {
+        "WeaponManager.gd": "fire_extinguisher 铁水团首击碎裂处调用；scatter_cap 16 限制单发火星数，防同群叠炸（避免 +166% 双算，见 v6 §4）"
+      },
+      "conflict": "无（独立短命节点，播完 queue_free）"
+    },
+    {
+      "id": "lantern_stream",
+      "title_zh": "花灯·走马灯流光",
+      "status": "recommended",
+      "why": "v6 §6 花灯追加'场边缘走马灯流光'，aura_field 只有环流噪声，不够'灯笼巡游'感",
+      "basis": "可选：aura_field 提高 swirl_speed + 填充内部也能读成旋转光环；但'走马灯'是一道沿环匀速流动的亮带，需单独 shader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（正方形，直径 = 花灯判定直径），叠在 aura_field 之上",
+      "texture_samples": 0,
+      "uniforms": [
+        {"name": "rect_size", "type": "vec2", "default": [260, 260], "drive": "短边归一化"},
+        {"name": "inner", "type": "float", "range": [0, 1], "default": 0.80, "drive": "只贴在环边缘的一条带"},
+        {"name": "band_width", "type": "float", "range": [0.01, 0.3], "default": 0.10, "drive": "走马灯亮带宽度"},
+        {"name": "flow_speed", "type": "float", "range": [0, 6], "default": 1.8, "drive": "沿圆周流动速度"},
+        {"name": "lantern_color", "type": "color", "default": "#FFC752", "drive": "金/暖，灯笼光"},
+        {"name": "intensity", "type": "float", "range": [0, 3], "default": 0.9, "drive": "常驻别超 1.0"}
+      ],
+      "api": "ShaderFX.lantern_stream(ring, radius)",
+      "reference": [
+        "https://godotshaders.com/shader/rotating-dashed-ring/"
+      ],
+      "pitfall": "沿圆周流动用 atan 取角度后加 TIME 偏移，按短边归一化避免椭圆；与圆环抖动不同，这是一道连续流光",
+      "integration_points": {
+        "GarlicRing.gd": "_ready() 建（叠在 _field/area_ripple 之上）、set_radius() 里 resize、beat() 里可轻微 boost"
+      },
+      "conflict": "无（独立节点）"
+    }
+  ],
+  "new_art": [
+    {
+      "id": "awaken_badge",
+      "title_zh": "觉醒徽记",
+      "category": "ui",
+      "status": "must",
+      "path": "res://assets/art_shouyiren/ui/awaken_badge.svg",
+      "size": "约 64×32，描边型，纯色+描边（适配 ui_paper_card 剪纸风）",
+      "spec": "Lv8 卡面角标：'觉'字或火焰/傩面纹样的方形/圆形小徽记；朱红底 + 金边（与 skill_rank_rim high_color #FF5C38 同族）；半透明，叠在卡面右上角，非 Lv8 时隐藏",
+      "register": ["Art.AWAKEN_BADGE", "Art.ALL_PATHS"],
+      "basis": "v6 §6 明确要求'卡面在 Lv8 显示「觉醒」徽记'"
+    },
+    {
+      "id": "molten_blob",
+      "title_zh": "铁水团（打铁花弹体）",
+      "category": "fx",
+      "status": "recommended",
+      "path": "res://assets/art_shouyiren/fx/molten_blob.svg",
+      "size": "约 24×24，圆形发光团",
+      "spec": "橙红熔核 + 外晕，自带亮度（blend_add 下 alpha 恒 1，亮度算进 rgb）；替代当前复用的 sugar_thread.svg，让铁水团读得出'熔铁'而非'糖丝'",
+      "register": ["Art.MOLTEN_BLOB", "Art.ALL_PATHS"],
+      "basis": "v6 §4 铁水机制重做；当前弹体复用 BULLET_GLOWSTICK=sugar_thread.svg，主题不符"
+    },
+    {
+      "id": "ink_line_tex",
+      "title_zh": "墨斗·龙筋墨线",
+      "category": "weapon",
+      "status": "recommended",
+      "path": "res://assets/art_shouyiren/weapons/ink_line_tex.svg",
+      "size": "可平铺横向长条（如 256×8），沿长度重复龙筋纹理",
+      "spec": "墨色 + 暗青描边的'绷直墨线'，中间有龙筋状结节/纹理；由墨斗沿 玩家→目标 拉伸成直线（region 平铺），Lv8 加粗（scale.y 变大）",
+      "register": ["Art.INK_LINE_TEX", "Art.ALL_PATHS"],
+      "basis": "v6 §6 墨斗'墨线绷直带龙筋纹理'；当前墨线无纹理"
+    },
+    {
+      "id": "woodblock_seal",
+      "title_zh": "年画·雕版印记",
+      "category": "fx",
+      "status": "recommended",
+      "path": "res://assets/art_shouyiren/fx/woodblock_seal.svg",
+      "size": "约 160×160，方形阴刻印",
+      "spec": "木版年画雕版阴刻纹样（门神/莲花/回字边），金线描边；年画落点预显与落地'浮雕光印'；可叠 magic_circle 金线",
+      "register": ["Art.WOODBLOCK_SEAL", "Art.ALL_PATHS"],
+      "basis": "v6 §6 年画'雕版从天而降压出浮雕光印、落点金线描边'"
+    }
+  ],
+  "reuse_map": {
+    "whip": {
+      "shaders": ["slash_arc（双斩 ×2，flip 一次）", "hurt_vignette（暗红描边，复用默认色 #850F0D）"],
+      "art": ["nuo_blade_arc.svg"],
+      "note": "怒目傩面虚影 = 玩家 front sprite 半透明复制 + 两层 slash_arc；无新资源。暗红描边复用 hurt_vignette（已是暗红）"
+    },
+    "halo": {
+      "shaders": ["aura_field（填充内部 + 提高 swirl_speed 转旋转光环）", "lantern_stream（可选，走马灯）"],
+      "art": ["lantern_halo.svg"],
+      "note": "减速敌染暖色 = art.modulate 暖色（T0 小怪绝不走 shader，护合批）；现有 GarlicRing 把 aura_field 压成边带 → 改为填充+旋转"
+    },
+    "glowstick": {
+      "shaders": ["projectile_trail（金色糖丝，trail_color #FFDB8C）", "cast_burst（命中糖晶迸裂，小半径金色）"],
+      "art": ["sugar_thread.svg"],
+      "note": "糖渍减速视觉 = 糖色 modulate；穿透里程碑已具，本任务只补'拉丝轨迹 + 糖晶迸裂'"
+    },
+    "phone": {
+      "shaders": ["projectile_trail（黑色剪影残像，trail_color 暗 + axis 径向）", "spawn_spark（撞击剪纸爆响）"],
+      "art": ["shadow_puppet.svg"],
+      "note": "Lv8 +1 环绕 = 多挂一个 orbit sprite，无新资源；剪影残像用 projectile_trail 暗色径向版，比新写 afterimage 便宜"
+    },
+    "blade": {
+      "shaders": ["projectile_trail（金粉尾迹）", "cast_burst（弹射点小纸花绽放，纸色小半径）"],
+      "art": ["paper_cut_bird.svg"],
+      "note": "弹射 +1 已具（v6 只是数值拐点），本任务补'金粉尾迹 + 纸花绽放'"
+    },
+    "extinguisher": {
+      "shaders": ["molten_scatter（新，漫天火星）", "glow_aura（屏幕微光晕，橙）"],
+      "art": ["iron_flower_ladle.svg（武器本体）", "molten_blob.svg（推荐弹体）"],
+      "note": "二次溅射（百子千花）= molten_scatter 在同一碎裂点二次调用（area ×1.40）；屏幕微光晕 = glow_aura 短命全屏覆盖"
+    },
+    "gong": {
+      "shaders": ["cast_burst（扩散金环，rays 8~12，gather=false 周期触发）", "hit_flash（命中敌泛金属光，flash_color 银白）"],
+      "art": ["gong.svg", "gong_evolved.svg"],
+      "note": "每脉冲外扩 = cast_burst 周期触发；Lv8 每脉冲外扩一圈可见声波环"
+    },
+    "inkline": {
+      "shaders": ["spawn_spark（命中墨溅，墨色小爆发）"],
+      "art": ["inkline.svg", "ink_line_tex.svg（推荐龙筋纹理）"],
+      "note": "墨线变粗 = 拉伸 sprite 改 scale.y；龙筋纹理用 ink_line_tex 平铺"
+    },
+    "print": {
+      "shaders": ["magic_circle（浮雕光印 + 金线描边，appear 动画）"],
+      "art": ["woodblock_print.svg", "woodblock_seal.svg（推荐雕版印记）"],
+      "note": "从天而降 = 印章 sprite 缩放 + 淡入动画（非 shader）；落点金线描边 = magic_circle ring"
+    }
+  },
+  "constraints": {
+    "batching": "T0 小怪（同屏 50~200）绝不挂独立 ShaderMaterial；减速/糖渍/糖色/暖色一律用 art.modulate，不破坏合批",
+    "render_mode": "全部 canvas_item；新增 molten_scatter / lantern_stream 走 blend_add，COLOR.a 恒 1.0",
+    "no_screen_texture": "禁止 SCREEN_TEXTURE / DEPTH_TEXTURE，移动端 / Compatibility 通吃",
+    "short_edge_norm": "径向 / 圆形 shader 按短边（720）归一化，非正方形不变椭圆",
+    "hud": "觉醒徽记叠在 ui_paper_card 之上，不新开 Control 层",
+    "art_register": "任何新 svg 必须登记 Art.ALL_PATHS（冒烟测试资源守卫依赖），否则漏接静默通过"
+  },
+  "verification": {
+    "regression": ["SmokeTest 299/0", "FxInGame 18/18", "SkillInGame 32/32", "SkillSheet 重渲", "FxSheet 重渲"],
+    "new_checks": [
+      "molten_scatter 在 150 半径下可见像素 >20% 且无纯白过曝",
+      "awaken_badge 仅在 Lv8（含进化）卡面显示，其余等级隐藏",
+      "新 svg 全部被 Art.ALL_PATHS 覆盖（冒烟守卫通过）",
+      "花灯/皮影 Lv8 觉醒特效开启后，同屏小怪 draw call 数不回退（合批未破坏）"
+    ]
+  }
+}

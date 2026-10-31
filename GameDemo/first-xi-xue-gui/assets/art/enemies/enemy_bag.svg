@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="bagG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2C3A61"/>
+      <stop offset="1" stop-color="#141E38"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="24" cy="44" rx="12" ry="3" fill="#0E1626" opacity="0.35"/>
+  <path d="M12 34 Q8 22 15 15 Q13 9 18 10 Q19 6 23 9 Q27 5 29 10 Q34 8 33 15 Q41 22 36 34 Q30 40 24 40 Q18 40 12 34 Z" fill="url(#bagG)" opacity="0.92"/>
+  <path d="M15 15 Q13 9 18 10 Q19 6 23 9" stroke="#52E0D6" stroke-width="1.2" fill="none" opacity="0.5"/>
+  <path d="M23 9 Q27 5 29 10 Q34 8 33 15" stroke="#FFB37A" stroke-width="1.2" fill="none" opacity="0.5"/>
+  <ellipse cx="19" cy="26" rx="3.2" ry="4" fill="#0A1122"/>
+  <ellipse cx="29" cy="26" rx="3.2" ry="4" fill="#0A1122"/>
+  <circle cx="19.6" cy="25" r="1.6" fill="#6FD8FF"/>
+  <circle cx="29.6" cy="25" r="1.6" fill="#6FD8FF"/>
+  <path d="M20 33 Q24 35 28 33" stroke="#6FD8FF" stroke-width="1.2" fill="none" opacity="0.6"/>
+  <path d="M13 20 L17 22 M35 20 L31 22" stroke="#8FB8FF" stroke-width="1" opacity="0.4"/>
+</svg>

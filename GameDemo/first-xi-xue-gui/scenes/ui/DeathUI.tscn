@@ -1,0 +1,123 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/DeathUI.gd" id="1_death"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/enemies/lost_visage.svg" id="2_reaper"]
+
+[sub_resource type="StyleBoxFlat" id="SB_btn_normal"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.17, 0.14, 0.12, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.72, 0.55, 0.28, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="SB_btn_hot"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.28, 0.22, 0.16, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.92, 0.74, 0.38, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="DeathUI" type="CanvasLayer"]
+script = ExtResource("1_death")
+
+[node name="Mask" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.02, 0.03, 0.8)
+
+[node name="Popup" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Popup"]
+custom_minimum_size = Vector2(540, 470)
+
+[node name="VB" type="VBoxContainer" parent="Popup/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Reaper" type="TextureRect" parent="Popup/Panel/VB"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+texture = ExtResource("2_reaper")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Popup/Panel/VB"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.45, 1)
+theme_override_font_sizes/font_size = 32
+text = "灯灭了"
+horizontal_alignment = 1
+
+[node name="Info" type="Label" parent="Popup/Panel/VB"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.92, 0.93, 0.97, 1)
+theme_override_font_sizes/font_size = 19
+text = "守夜  00:00
+归色  0 只
+等级  Lv 1"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Restart" type="Button" parent="Popup/Panel/VB"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.93, 0.84, 1)
+theme_override_colors/font_hover_color = Color(1, 0.96, 0.84, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("SB_btn_normal")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn_normal")
+text = "再守一夜"
+
+[node name="Shop" type="Button" parent="Popup/Panel/VB"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.45, 1)
+theme_override_colors/font_hover_color = Color(1, 0.93, 0.62, 1)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("SB_btn_normal")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn_normal")
+text = "百工谱"
+
+[node name="Quit" type="Button" parent="Popup/Panel/VB"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.78, 0.72, 1)
+theme_override_colors/font_hover_color = Color(0.98, 0.94, 0.86, 1)
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("SB_btn_normal")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn_normal")
+text = "回主菜单"

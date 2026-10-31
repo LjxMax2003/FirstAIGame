@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="280" viewBox="0 0 200 280">
+  <defs>
+    <linearGradient id="cardEdge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD36E"/>
+      <stop offset="0.5" stop-color="#FF8A5C"/>
+      <stop offset="1" stop-color="#6FD8FF"/>
+    </linearGradient>
+    <linearGradient id="cardInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22304F"/>
+      <stop offset="1" stop-color="#141E38"/>
+    </linearGradient>
+    <radialGradient id="cardSpot" cx="0.5" cy="0.32" r="0.5">
+      <stop offset="0" stop-color="#6FD8FF" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#6FD8FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="2" y="2" width="196" height="276" rx="16" fill="url(#cardEdge)"/>
+  <rect x="7" y="7" width="186" height="266" rx="12" fill="url(#cardInner)"/>
+  <circle cx="100" cy="90" r="70" fill="url(#cardSpot)"/>
+  <circle cx="100" cy="90" r="52" fill="none" stroke="#52E0D6" stroke-width="2" opacity="0.5"/>
+  <circle cx="100" cy="90" r="58" fill="none" stroke="#FFD36E" stroke-width="1.2" opacity="0.35" stroke-dasharray="6 8"/>
+  <rect x="26" y="176" width="148" height="10" rx="5" fill="#3A4A6B"/>
+  <rect x="40" y="196" width="120" height="8" rx="4" fill="#2C3A61"/>
+  <rect x="26" y="228" width="148" height="26" rx="8" fill="#2C3A61"/>
+  <rect x="26" y="228" width="96" height="26" rx="8" fill="url(#cardEdge)" opacity="0.35"/>
+  <path d="M14 20 L14 34 M14 20 L28 20" stroke="#FFD36E" stroke-width="2.4" stroke-linecap="round" opacity="0.8"/>
+  <path d="M186 260 L186 246 M186 260 L172 260" stroke="#FFD36E" stroke-width="2.4" stroke-linecap="round" opacity="0.8"/>
+  <path d="M14 260 L14 246 M14 260 L28 260" stroke="#6FD8FF" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/>
+  <path d="M186 20 L186 34 M186 20 L172 20" stroke="#6FD8FF" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/>
+</svg>

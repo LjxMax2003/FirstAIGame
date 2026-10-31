@@ -1,0 +1,1168 @@
+{
+ "band": [
+  {
+   "id": "whip",
+   "name": "傩面·师刀",
+   "kind": "aoe",
+   "arche": "sweep",
+   "lv1": 8,
+   "lv8": 96,
+   "single8": 15,
+   "h8": 6.4,
+   "hitcap": 8
+  },
+  {
+   "id": "halo",
+   "name": "花灯",
+   "kind": "aoe",
+   "arche": "aura",
+   "lv1": 7,
+   "lv8": 157,
+   "single8": 16,
+   "h8": 9.7,
+   "hitcap": 10
+  },
+  {
+   "id": "glowstick",
+   "name": "糖画",
+   "kind": "single",
+   "arche": "locked",
+   "lv1": 10,
+   "lv8": 151,
+   "single8": 38,
+   "h8": 4.0,
+   "hitcap": 4
+  },
+  {
+   "id": "phone",
+   "name": "皮影",
+   "kind": "aoe",
+   "arche": "orbit",
+   "lv1": 10,
+   "lv8": 137,
+   "single8": 18,
+   "h8": 7.5,
+   "hitcap": 12
+  },
+  {
+   "id": "blade",
+   "name": "剪纸",
+   "kind": "single",
+   "arche": "bounce",
+   "lv1": 27,
+   "lv8": 107,
+   "single8": 35,
+   "h8": 3.1,
+   "hitcap": null
+  },
+  {
+   "id": "extinguisher",
+   "name": "打铁花",
+   "kind": "aoe",
+   "arche": "arc",
+   "lv1": 19,
+   "lv8": 138,
+   "single8": 17,
+   "h8": 8.0,
+   "hitcap": 4
+  },
+  {
+   "id": "gong",
+   "name": "铜锣",
+   "kind": "aoe",
+   "arche": "aura",
+   "lv1": 8,
+   "lv8": 124,
+   "single8": 16,
+   "h8": 8.0,
+   "hitcap": 8
+  },
+  {
+   "id": "inkline",
+   "name": "墨斗",
+   "kind": "single",
+   "arche": "line",
+   "lv1": 22,
+   "lv8": 135,
+   "single8": 100,
+   "h8": 1.4,
+   "hitcap": null
+  },
+  {
+   "id": "print",
+   "name": "木版年画",
+   "kind": "aoe",
+   "arche": "zone",
+   "lv1": 14,
+   "lv8": 149,
+   "single8": 25,
+   "h8": 6.0,
+   "hitcap": 6
+  }
+ ],
+ "shell": {
+  "on": 480.0,
+  "off": 1200.0,
+  "hp": 1.4,
+  "aoe": 0.75
+ },
+ "drum": {
+  "step": 0.08,
+  "times": [
+   300.0,
+   600.0,
+   1200.0,
+   1500.0
+  ]
+ },
+ "curve": {
+  "cur": [
+   {
+    "mm": "00:00",
+    "t": 0.0,
+    "lv": 1,
+    "picks": 0,
+    "dps": 8,
+    "aoe": 8,
+    "single": 0,
+    "demand": 19,
+    "R": 0.46,
+    "alive": 52,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 0,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "01:00",
+    "t": 60.0,
+    "lv": 9,
+    "picks": 8,
+    "dps": 128,
+    "aoe": 53,
+    "single": 74,
+    "demand": 23,
+    "R": 5.57,
+    "alive": 61,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 3,
+     "extinguisher": 1,
+     "print": 2
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 1,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "05:00",
+    "t": 300.0,
+    "lv": 18,
+    "picks": 17,
+    "dps": 259,
+    "aoe": 64,
+    "single": 195,
+    "demand": 97,
+    "R": 2.66,
+    "alive": 110,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 2
+    },
+    "pv": {
+     "damage": 2,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 3,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "10:00",
+    "t": 600.0,
+    "lv": 31,
+    "picks": 30,
+    "dps": 651,
+    "aoe": 278,
+    "single": 374,
+    "demand": 368,
+    "R": 1.77,
+    "alive": 253,
+    "drum": 1.0,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 1,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 1,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "15:00",
+    "t": 900.0,
+    "lv": 43,
+    "picks": 42,
+    "dps": 1018,
+    "aoe": 545,
+    "single": 473,
+    "demand": 562,
+    "R": 1.81,
+    "alive": 317,
+    "drum": 1.0,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 7,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 3,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "20:00",
+    "t": 1200.0,
+    "lv": 52,
+    "picks": 51,
+    "dps": 1200,
+    "aoe": 691,
+    "single": 509,
+    "demand": 999,
+    "R": 1.2,
+    "alive": 380,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 3,
+     "blade": 3,
+     "inkline": 8,
+     "extinguisher": 8,
+     "print": 8,
+     "phone": 2
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 5,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "25:00",
+    "t": 1500.0,
+    "lv": 61,
+    "picks": 60,
+    "dps": 1388,
+    "aoe": 755,
+    "single": 633,
+    "demand": 1636,
+    "R": 0.85,
+    "alive": 400,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 3,
+     "blade": 8,
+     "inkline": 8,
+     "extinguisher": 8,
+     "print": 8,
+     "phone": 4
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 5,
+     "regen": 2,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "30:00",
+    "t": 1800.0,
+    "lv": 69,
+    "picks": 68,
+    "dps": 1642,
+    "aoe": 1009,
+    "single": 633,
+    "demand": 2167,
+    "R": 0.76,
+    "alive": 400,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 3,
+     "blade": 8,
+     "inkline": 8,
+     "extinguisher": 8,
+     "print": 8,
+     "phone": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 3,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 5,
+     "regen": 3,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   }
+  ],
+  "v31": [
+   {
+    "mm": "00:00",
+    "t": 0.0,
+    "lv": 1,
+    "picks": 0,
+    "dps": 8,
+    "aoe": 8,
+    "single": 0,
+    "demand": 19,
+    "R": 0.46,
+    "alive": 52,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 0,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "01:00",
+    "t": 60.0,
+    "lv": 8,
+    "picks": 7,
+    "dps": 114,
+    "aoe": 53,
+    "single": 61,
+    "demand": 23,
+    "R": 4.99,
+    "alive": 61,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 2,
+     "extinguisher": 1,
+     "print": 2
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 1,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "05:00",
+    "t": 300.0,
+    "lv": 15,
+    "picks": 14,
+    "dps": 216,
+    "aoe": 53,
+    "single": 162,
+    "demand": 97,
+    "R": 2.22,
+    "alive": 110,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 2
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 2,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "10:00",
+    "t": 600.0,
+    "lv": 24,
+    "picks": 23,
+    "dps": 483,
+    "aoe": 128,
+    "single": 355,
+    "demand": 368,
+    "R": 1.31,
+    "alive": 253,
+    "drum": 1.0,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 4
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 4,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "15:00",
+    "t": 900.0,
+    "lv": 33,
+    "picks": 32,
+    "dps": 728,
+    "aoe": 310,
+    "single": 418,
+    "demand": 562,
+    "R": 1.3,
+    "alive": 317,
+    "drum": 1.0,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 3,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 1,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "20:00",
+    "t": 1200.0,
+    "lv": 40,
+    "picks": 39,
+    "dps": 938,
+    "aoe": 465,
+    "single": 473,
+    "demand": 999,
+    "R": 0.94,
+    "alive": 380,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 5,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 2,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "25:00",
+    "t": 1500.0,
+    "lv": 45,
+    "picks": 44,
+    "dps": 1084,
+    "aoe": 611,
+    "single": 473,
+    "demand": 1636,
+    "R": 0.66,
+    "alive": 400,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 2,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 8,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 3,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "30:00",
+    "t": 1800.0,
+    "lv": 48,
+    "picks": 47,
+    "dps": 1128,
+    "aoe": 655,
+    "single": 473,
+    "demand": 2167,
+    "R": 0.52,
+    "alive": 400,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 3,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 8,
+     "print": 8,
+     "phone": 1
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 4,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   }
+  ],
+  "v4_xp": [
+   {
+    "mm": "00:00",
+    "t": 0.0,
+    "lv": 1,
+    "picks": 0,
+    "dps": 8,
+    "aoe": 8,
+    "single": 0,
+    "demand": 19,
+    "R": 0.46,
+    "alive": 52,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 0,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "01:00",
+    "t": 60.0,
+    "lv": 7,
+    "picks": 6,
+    "dps": 102,
+    "aoe": 53,
+    "single": 49,
+    "demand": 23,
+    "R": 4.46,
+    "alive": 61,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 1,
+     "extinguisher": 1,
+     "print": 2
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 1,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "05:00",
+    "t": 300.0,
+    "lv": 13,
+    "picks": 12,
+    "dps": 175,
+    "aoe": 94,
+    "single": 82,
+    "demand": 97,
+    "R": 1.8,
+    "alive": 110,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 3,
+     "extinguisher": 1,
+     "print": 4
+    },
+    "pv": {
+     "damage": 1,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 2,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "10:00",
+    "t": 600.0,
+    "lv": 20,
+    "picks": 19,
+    "dps": 325,
+    "aoe": 229,
+    "single": 97,
+    "demand": 368,
+    "R": 0.88,
+    "alive": 253,
+    "drum": 1.0,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 3,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 3,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 3,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "15:00",
+    "t": 900.0,
+    "lv": 25,
+    "picks": 24,
+    "dps": 421,
+    "aoe": 264,
+    "single": 157,
+    "demand": 562,
+    "R": 0.75,
+    "alive": 317,
+    "drum": 1.0,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 5,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 4,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "20:00",
+    "t": 1200.0,
+    "lv": 29,
+    "picks": 28,
+    "dps": 507,
+    "aoe": 264,
+    "single": 244,
+    "demand": 999,
+    "R": 0.51,
+    "alive": 380,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "25:00",
+    "t": 1500.0,
+    "lv": 32,
+    "picks": 31,
+    "dps": 687,
+    "aoe": 293,
+    "single": 394,
+    "demand": 1636,
+    "R": 0.42,
+    "alive": 400,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 2,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 1,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "30:00",
+    "t": 1800.0,
+    "lv": 35,
+    "picks": 34,
+    "dps": 825,
+    "aoe": 352,
+    "single": 473,
+    "demand": 2167,
+    "R": 0.38,
+    "alive": 400,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 1,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   }
+  ],
+  "v4": [
+   {
+    "mm": "00:00",
+    "t": 0.0,
+    "lv": 1,
+    "picks": 0,
+    "dps": 8,
+    "aoe": 8,
+    "single": 0,
+    "demand": 19,
+    "R": 0.46,
+    "alive": 52,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 0,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "01:00",
+    "t": 60.0,
+    "lv": 7,
+    "picks": 6,
+    "dps": 102,
+    "aoe": 53,
+    "single": 49,
+    "demand": 23,
+    "R": 4.46,
+    "alive": 61,
+    "drum": 1.0,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 1,
+     "extinguisher": 1,
+     "print": 2
+    },
+    "pv": {
+     "damage": 0,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 1,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "05:00",
+    "t": 300.0,
+    "lv": 13,
+    "picks": 12,
+    "dps": 189,
+    "aoe": 101,
+    "single": 88,
+    "demand": 97,
+    "R": 1.95,
+    "alive": 110,
+    "drum": 1.08,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 3,
+     "extinguisher": 1,
+     "print": 4
+    },
+    "pv": {
+     "damage": 1,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 2,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "10:00",
+    "t": 600.0,
+    "lv": 20,
+    "picks": 19,
+    "dps": 377,
+    "aoe": 265,
+    "single": 112,
+    "demand": 421,
+    "R": 0.74,
+    "alive": 253,
+    "drum": 1.16,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 3,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 3,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 3,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "15:00",
+    "t": 900.0,
+    "lv": 25,
+    "picks": 24,
+    "dps": 488,
+    "aoe": 306,
+    "single": 182,
+    "demand": 643,
+    "R": 0.64,
+    "alive": 317,
+    "drum": 1.16,
+    "shell": true,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 5,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 4,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "20:00",
+    "t": 1200.0,
+    "lv": 28,
+    "picks": 27,
+    "dps": 589,
+    "aoe": 327,
+    "single": 262,
+    "demand": 999,
+    "R": 0.59,
+    "alive": 380,
+    "drum": 1.24,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 7,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 0,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 0,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": []
+   },
+   {
+    "mm": "25:00",
+    "t": 1500.0,
+    "lv": 32,
+    "picks": 31,
+    "dps": 907,
+    "aoe": 387,
+    "single": 521,
+    "demand": 1636,
+    "R": 0.55,
+    "alive": 400,
+    "drum": 1.32,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 2,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 1,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   },
+   {
+    "mm": "30:00",
+    "t": 1800.0,
+    "lv": 35,
+    "picks": 34,
+    "dps": 1089,
+    "aoe": 464,
+    "single": 625,
+    "demand": 2167,
+    "R": 0.5,
+    "alive": 400,
+    "drum": 1.32,
+    "shell": false,
+    "weapons": {
+     "whip": 1,
+     "blade": 1,
+     "inkline": 8,
+     "extinguisher": 1,
+     "print": 8
+    },
+    "pv": {
+     "damage": 5,
+     "cooldown": 5,
+     "area": 0,
+     "speed": 0,
+     "might": 5,
+     "max_hp": 1,
+     "regen": 0,
+     "shield": 0
+    },
+    "evolved": [
+     "inkline"
+    ]
+   }
+  ]
+ }
+}

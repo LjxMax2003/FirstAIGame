@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+  <defs>
+    <radialGradient id="gemBigGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF9E5E" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FF9E5E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gemBigFace" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE9B0"/>
+      <stop offset="1" stop-color="#FF8A5C"/>
+    </linearGradient>
+  </defs>
+  <circle cx="15" cy="15" r="14" fill="url(#gemBigGlow)"/>
+  <path d="M15 3 L25 15 L15 27 L5 15 Z" fill="url(#gemBigFace)"/>
+  <path d="M15 3 L15 27 M5 15 L25 15" stroke="#FFF6DE" stroke-width="1" opacity="0.6"/>
+  <path d="M9 11 L15 6 L16 13 Z" fill="#FFFFFF" opacity="0.7"/>
+</svg>

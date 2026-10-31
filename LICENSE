@@ -1,0 +1,37 @@
+MIT License
+
+Copyright (c) 2026 MAXLIU1017
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+适用范围说明（Scope）
+
+MIT 许可覆盖本仓库内的**源代码**（`*.gd`、`*.tscn`、`*.gdshader`、`*.py`、
+`*.mjs`、`*.json` 配置）与**技术文档**。
+
+本仓库内的**美术资源**（`assets/` 下的 SVG、PNG）与**策划文案**（`docs/theme/`）
+同样以 MIT 释出，但请注意它们是**AI 辅助生成的原创内容**，不含任何第三方
+素材、真实照片或传承人作品 —— 详见 [AI_USAGE.md](AI_USAGE.md) 与
+[docs/COMPLIANCE_CHECKLIST.md](docs/COMPLIANCE_CHECKLIST.md)。
+
+**本项目不含任何音频文件**。若后续加入音频，其授权将另行声明。
+
+Godot Engine 本身遵循其自身的 MIT 许可（© Godot Engine contributors），
+不在本仓库内分发。

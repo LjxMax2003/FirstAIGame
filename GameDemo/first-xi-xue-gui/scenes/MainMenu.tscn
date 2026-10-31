@@ -1,0 +1,286 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/MainMenu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/ui/bg_night_market.svg" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/enemies/boss_faceless_nuo.svg" id="3_nuo"]
+
+[sub_resource type="StyleBoxFlat" id="SB_primary"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.6, 0.19, 0.13, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.86, 0.62, 0.3, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="SB_primary_hot"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.78, 0.28, 0.18, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.82, 0.46, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="SB_btn"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.1, 0.09, 0.1, 0.86)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.43, 0.24, 0.6)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="SB_btn_hot"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.19, 0.16, 0.13, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.88, 0.7, 0.36, 0.95)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="SB_btn_off"]
+content_margin_left = 20.0
+content_margin_top = 12.0
+content_margin_right = 20.0
+content_margin_bottom = 12.0
+bg_color = Color(0.07, 0.07, 0.08, 0.66)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.33, 0.31, 0.29, 0.45)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_menu")
+
+[node name="BG" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.06, 0.56)
+
+[node name="Col" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 68.0
+offset_top = 84.0
+offset_right = -68.0
+offset_bottom = -64.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Head" type="VBoxContainer" parent="Col"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Emblem" type="TextureRect" parent="Col/Head"]
+custom_minimum_size = Vector2(212, 212)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+modulate = Color(1, 1, 1, 0.94)
+texture = ExtResource("3_nuo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Col/Head"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.38, 0.26, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.02, 0.95)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/outline_size = 5
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 64
+text = "守艺人"
+horizontal_alignment = 1
+
+[node name="Sub" type="Label" parent="Col/Head"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.67, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.02, 0.9)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 27
+text = "百 工 夜 行"
+horizontal_alignment = 1
+
+[node name="Rule" type="ColorRect" parent="Col/Head"]
+custom_minimum_size = Vector2(240, 3)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+color = Color(0.86, 0.62, 0.3, 0.55)
+
+[node name="Blurb" type="Label" parent="Col/Head"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.8, 0.86, 0.88)
+theme_override_colors/font_outline_color = Color(0.03, 0.03, 0.05, 0.9)
+theme_override_constants/outline_size = 3
+theme_override_constants/line_spacing = 6
+theme_override_font_sizes/font_size = 17
+text = "纸片成了精，街市空了。\n凭一身老手艺，撑到五更鸡鸣。"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="Col"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.84, 0.9, 0.92)
+theme_override_colors/font_outline_color = Color(0.03, 0.03, 0.05, 0.9)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 18
+text = "手上 0 枚铜钱    尚无传承"
+horizontal_alignment = 1
+
+[node name="BtnNew" type="Button" parent="Col"]
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.96, 1)
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("SB_primary")
+theme_override_styles/hover = SubResource("SB_primary_hot")
+theme_override_styles/pressed = SubResource("SB_primary_hot")
+theme_override_styles/focus = SubResource("SB_primary")
+text = "新游戏"
+
+[node name="BtnLoad" type="Button" parent="Col"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.82, 1)
+theme_override_colors/font_hover_color = Color(1, 0.96, 0.86, 1)
+theme_override_colors/font_disabled_color = Color(0.52, 0.5, 0.48, 1)
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("SB_btn")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn")
+theme_override_styles/disabled = SubResource("SB_btn_off")
+text = "载入存档"
+
+[node name="BtnShop" type="Button" parent="Col"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.82, 1)
+theme_override_colors/font_hover_color = Color(1, 0.96, 0.86, 1)
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("SB_btn")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn")
+text = "打开商店"
+
+[node name="BtnChars" type="Button" parent="Col"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.82, 1)
+theme_override_colors/font_hover_color = Color(1, 0.96, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("SB_btn")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn")
+text = "选匠人"
+
+[node name="BtnCodex" type="Button" parent="Col"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.82, 1)
+theme_override_colors/font_hover_color = Color(1, 0.96, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("SB_btn")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn")
+text = "图鉴 · 0/33"
+
+[node name="BtnSettings" type="Button" parent="Col"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.86, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 0.96, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("SB_btn")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn")
+text = "设置"
+
+[node name="BtnQuit" type="Button" parent="Col"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.76, 0.72, 1)
+theme_override_colors/font_hover_color = Color(1, 0.9, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("SB_btn")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn")
+text = "退出游戏"
+
+[node name="Hint" type="Label" parent="Col"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.52)
+theme_override_font_sizes/font_size = 14
+text = "传承开局自动带入 · 本作不保存单局进度"
+horizontal_alignment = 1

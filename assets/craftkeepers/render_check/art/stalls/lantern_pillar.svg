@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="200" viewBox="0 0 80 200">
+  <defs><radialGradient id="lpG" gradientUnits="userSpaceOnUse"  cx="40" cy="60" r="54"><stop offset="0" stop-color="#F2A03D" stop-opacity="0.5"/><stop offset="0.55" stop-color="#F2A03D" stop-opacity="0.175"/><stop offset="1" stop-color="#F2A03D" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="40" cy="70" r="54" fill="url(#lpG)"/>
+    <ellipse cx="40" cy="196" rx="20" ry="4" fill="#08111E" opacity="0.4"/>
+    <rect x="36" y="8" width="8" height="188" rx="2" fill="#3B2617"/>
+    <rect x="36" y="8" width="3" height="188" fill="#5A3B25" opacity="0.7"/>
+    <g transform="translate(40 22)">
+      <ellipse rx="12.0" ry="15.6" fill="#F2A03D"/>
+      <ellipse rx="5.4" ry="9.6" fill="#F4E8D0" opacity="0.5"/>
+      <rect x="-6.0" y="-17.4" width="12.0" height="3" fill="#D9A441"/>
+      <rect x="-6.0" y="13.8" width="12.0" height="3" fill="#D9A441"/>
+      <path d="M0 17.4v7" stroke="#C53B2E" stroke-width="1.6"/>
+    </g><g transform="translate(40 52)">
+      <ellipse rx="11.4" ry="14.8" fill="#C53B2E"/>
+      <ellipse rx="5.1" ry="9.1" fill="#F4E8D0" opacity="0.5"/>
+      <rect x="-5.7" y="-16.5" width="11.4" height="3" fill="#D9A441"/>
+      <rect x="-5.7" y="13.1" width="11.4" height="3" fill="#D9A441"/>
+      <path d="M0 16.5v7" stroke="#C53B2E" stroke-width="1.6"/>
+    </g><g transform="translate(40 82)">
+      <ellipse rx="10.8" ry="14.0" fill="#F2A03D"/>
+      <ellipse rx="4.9" ry="8.6" fill="#F4E8D0" opacity="0.5"/>
+      <rect x="-5.4" y="-15.7" width="10.8" height="3" fill="#D9A441"/>
+      <rect x="-5.4" y="12.4" width="10.8" height="3" fill="#D9A441"/>
+      <path d="M0 15.7v7" stroke="#C53B2E" stroke-width="1.6"/>
+    </g><g transform="translate(40 112)">
+      <ellipse rx="10.2" ry="13.3" fill="#C53B2E"/>
+      <ellipse rx="4.6" ry="8.2" fill="#F4E8D0" opacity="0.5"/>
+      <rect x="-5.1" y="-14.8" width="10.2" height="3" fill="#D9A441"/>
+      <rect x="-5.1" y="11.7" width="10.2" height="3" fill="#D9A441"/>
+      <path d="M0 14.8v7" stroke="#C53B2E" stroke-width="1.6"/>
+    </g><g transform="translate(40 142)">
+      <ellipse rx="9.6" ry="12.5" fill="#F2A03D"/>
+      <ellipse rx="4.3" ry="7.7" fill="#F4E8D0" opacity="0.5"/>
+      <rect x="-4.8" y="-13.9" width="9.6" height="3" fill="#D9A441"/>
+      <rect x="-4.8" y="11.0" width="9.6" height="3" fill="#D9A441"/>
+      <path d="M0 13.9v7" stroke="#C53B2E" stroke-width="1.6"/>
+    </g>
+    <path d="M22 12h36" stroke="#D9A441" stroke-width="3"/>
+    <path d="M14 16q26 8 52 0" fill="none" stroke="#5A3B25" stroke-width="2"/>
+</svg>

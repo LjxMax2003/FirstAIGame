@@ -1,0 +1,251 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/JoyRing.gd" id="2_ring"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/ui/ui_flame_fill.svg" id="3_fill"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/ui/ui_lantern_frame.svg" id="4_frame"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/items/light_bloom.svg" id="5_knob"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/ui/ui_lantern_ticks.svg" id="6_ticks"]
+
+[sub_resource type="Gradient" id="Gradient_shade"]
+offsets = PackedFloat32Array(0, 0.55, 0.82, 1)
+colors = PackedColorArray(0.0392157, 0.0509804, 0.0784314, 0.94, 0.0392157, 0.0509804, 0.0784314, 0.86, 0.0392157, 0.0509804, 0.0784314, 0.42, 0.0392157, 0.0509804, 0.0784314, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shade"]
+gradient = SubResource("Gradient_shade")
+width = 8
+height = 176
+fill_from = Vector2(0, 0)
+fill_to = Vector2(0, 1)
+
+[node name="HUD" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="TopShade" type="TextureRect" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 176.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_shade")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Hurt" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.86, 0.1, 0.12, 0)
+
+[node name="Top" type="MarginContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 14.0
+offset_right = -16.0
+offset_bottom = 150.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="Col" type="VBoxContainer" parent="Top"]
+layout_mode = 2
+theme_override_constants/separation = 6
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="Top/Col"]
+layout_mode = 2
+theme_override_constants/separation = 10
+mouse_filter = 2
+
+[node name="Pause" type="Button" parent="Top/Col/Row"]
+custom_minimum_size = Vector2(48, 40)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "II"
+
+[node name="Level" type="Label" parent="Top/Col/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "Lv 1"
+
+[node name="Timer" type="Label" parent="Top/Col/Row"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_color = Color(1, 1, 1, 0.92)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "一更·戌时"
+horizontal_alignment = 2
+
+[node name="TimerSmall" type="Label" parent="Top/Col/Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.62)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.45)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+text = "00:00  ·  剩 30:00"
+vertical_alignment = 2
+
+[node name="XPBar" type="TextureProgressBar" parent="Top/Col"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+texture_under = ExtResource("4_frame")
+texture_progress = ExtResource("3_fill")
+nine_patch_stretch = true
+stretch_margin_left = 8
+stretch_margin_top = 6
+stretch_margin_right = 8
+stretch_margin_bottom = 6
+tint_progress = Color(0.62, 0.88, 1, 1)
+max_value = 6.0
+
+[node name="XPNum" type="Label" parent="Top/Col/XPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.015, 0.01, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_constants/outline_size = 3
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+text = "0 / 5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HPBar" type="TextureProgressBar" parent="Top/Col"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+texture_under = ExtResource("4_frame")
+texture_progress = ExtResource("3_fill")
+texture_over = ExtResource("6_ticks")
+nine_patch_stretch = true
+stretch_margin_left = 8
+stretch_margin_top = 6
+stretch_margin_right = 8
+stretch_margin_bottom = 6
+tint_progress = Color(1, 0.52, 0.52, 1)
+max_value = 100.0
+value = 100.0
+
+[node name="HPNum" type="Label" parent="Top/Col/HPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.015, 0.01, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_constants/outline_size = 3
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+text = "100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShieldBar" type="TextureProgressBar" parent="Top/Col"]
+visible = false
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+texture_under = ExtResource("4_frame")
+texture_progress = ExtResource("3_fill")
+nine_patch_stretch = true
+stretch_margin_left = 8
+stretch_margin_top = 4
+stretch_margin_right = 8
+stretch_margin_bottom = 4
+tint_progress = Color(0.2, 0.66, 0.92, 1)
+max_value = 30.0
+value = 30.0
+
+[node name="ShieldNum" type="Label" parent="Top/Col/ShieldBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.015, 0.01, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "30 / 30"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Info" type="Label" parent="Top/Col"]
+modulate = Color(1, 1, 1, 0.72)
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+text = "归色 0    同屏 0    灯花 0    铜钱 0"
+
+[node name="Weapons" type="HBoxContainer" parent="Top/Col"]
+layout_mode = 2
+theme_override_constants/separation = 4
+mouse_filter = 2
+
+[node name="FPS" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -150.0
+offset_top = 158.0
+offset_right = -16.0
+offset_bottom = 182.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.42)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "0 fps"
+horizontal_alignment = 2
+
+[node name="Joystick" type="Node2D" parent="."]
+visible = false
+
+[node name="Ring" type="Node2D" parent="Joystick"]
+script = ExtResource("2_ring")
+
+[node name="Knob" type="Sprite2D" parent="Joystick"]
+modulate = Color(1, 1, 1, 0.6)
+texture = ExtResource("5_knob")

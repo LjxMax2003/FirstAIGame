@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 80 60">
+  <defs><linearGradient id="gcW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A5133"/><stop offset="1" stop-color="#3B2617"/></linearGradient></defs>
+  <ellipse cx="40" cy="56" rx="28" ry="4" fill="#08111E" opacity="0.36"/>
+    <path d="M10 22h56l-4 22H14z" fill="url(#gcW)"/>
+    <path d="M10 22h56" stroke="#D9A441" stroke-width="1.6" opacity="0.6"/>
+    <rect x="12" y="26.0" width="52" height="1.6" fill="#3B2617" opacity="0.35"/><rect x="12" y="32.0" width="52" height="1.6" fill="#3B2617" opacity="0.35"/><rect x="12" y="38.0" width="52" height="1.6" fill="#3B2617" opacity="0.35"/>
+    <circle cx="24" cy="46" r="9" fill="#4A3320" stroke="#D9A441" stroke-width="1.8"/>
+    <path d="M24 37v18M15 46h18M18 40l12 12M30 40l-12 12" stroke="#D9A441" stroke-width="1.1" opacity="0.8"/>
+    <path d="M46 10h12v14H46z" fill="#24524C"/>
+    <path d="M46 10h12" stroke="#F4E8D0" stroke-width="1.4" opacity="0.5"/>
+    <ellipse cx="52" cy="8" rx="7" ry="3" fill="#C53B2E"/>
+    <path d="M6 16l8 6" stroke="#5A3B25" stroke-width="3.4" stroke-linecap="round"/>
+</svg>

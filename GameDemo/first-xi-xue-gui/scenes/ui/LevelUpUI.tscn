@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/LevelUpUI.gd" id="1_lvlup"]
+
+[node name="LevelUpUI" type="CanvasLayer"]
+script = ExtResource("1_lvlup")
+
+[node name="Mask" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.07, 0.74)
+
+[node name="Popup" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="VB" type="VBoxContainer" parent="Popup"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Popup/VB"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.5, 1)
+theme_override_font_sizes/font_size = 30
+text = "手艺精进"
+horizontal_alignment = 1
+
+[node name="Cards" type="HBoxContainer" parent="Popup/VB"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="Hint" type="Label" parent="Popup/VB"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.62)
+theme_override_font_sizes/font_size = 14
+text = "选一张传承卡"
+horizontal_alignment = 1

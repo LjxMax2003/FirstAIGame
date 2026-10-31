@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
+  <defs>
+    <radialGradient id="magGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6FD8FF" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#6FD8FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="18" cy="18" r="17" fill="url(#magGlow)"/>
+  <path d="M9 26 L9 14 Q9 6 18 6 Q27 6 27 14 L27 26 L21 26 L21 14 Q21 11 18 11 Q15 11 15 14 L15 26 Z" fill="#E86A5A"/>
+  <rect x="9" y="24" width="6" height="6" fill="#F4F7FF"/>
+  <rect x="21" y="24" width="6" height="6" fill="#6FD8FF"/>
+  <path d="M11 12 Q18 4 25 12" stroke="#FFD9CF" stroke-width="1.4" fill="none" opacity="0.8"/>
+  <path d="M5 20 Q5 12 12 8 M31 20 Q31 12 24 8" stroke="#6FD8FF" stroke-width="1.2" fill="none" opacity="0.5"/>
+</svg>

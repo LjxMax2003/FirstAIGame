@@ -1,0 +1,292 @@
+{
+  "meta": {
+    "title": "《守艺人·百工夜行》v5 新增美术资源需求清单（AI 可读取）",
+    "source_doc": "docs/design/skills-and-midgame-v4.md",
+    "generated_at": "2026-10-28",
+    "project": "守艺人·百工夜行 (FirstXiXueGui)",
+    "engine": "Godot 4 (feature tag 4.7, 校验用 4.6 stable + mobile 后端)",
+    "base_resolution": "720x1280 竖屏 (portrait)",
+    "enemy_baseline_size": "48px (杂兵原生尺寸基线)",
+    "art_style": "剪纸 / 非遗手作 / 傩仪 矢量 SVG（守艺人·百工夜行 美术包）",
+    "asset_root": "res://assets/art_shouyiren/",
+    "format": "SVG，Godot 导入为 Texture2D，按原尺寸 1:1 使用（脚本内不缩放贴图本身）",
+    "purpose": "本文件只『记录需求』，不含任何代码、不含任何二进制图片/美术成品。目标是让下游 AI 图像生成管线或美术按此清单产出 SVG，再由工程接入 Art.gd。",
+    "registry_note": "新增资源落地后，必须同步在 scripts/Art.gd 的 ALL_PATHS 数组补一行，并在 SLOT_ALIASES 补精确文件名主干（冒烟测试的『资源齐备性守卫』依赖它，漏接不会被测试发现）。",
+    "constraints": [
+      "玩家行走帧三帧必须同画布 (64x80)，换 style 时三帧一起换，否则脚底与碰撞体对不上（本清单不新增角色帧，仅作提醒）。",
+      "加法混合 (blend_add) 的 FX 贴图：alpha 必须固定 1.0，亮度全算进 rgb，否则未开 HDR 2D 时会被裁成纯白。",
+      "竖屏归一化一律按短边 (720)，不要按 screen_size.y，否则特效边缘会被放大吃掉中线。",
+      "所有新增 SVG 沿用现有美术包的描边/配色语言（剪纸硬边 + 朱红 #C8443B / 暖铜 #B87333 / 靛蓝 #2E4A7B 等），不要引入新画风。",
+      "武器世界贴图与卡牌图标可复用同一张 SVG（现有 6 把武器均如此）；进化形态默认复用本体贴图 + kailian_burst 进化辉光，是否给独立进化图标见各条 status。"
+    ]
+  },
+
+  "status_legend": {
+    "existing": "已存在于 assets/art_shouyiren/，直接复用，不要重新生成",
+    "missing": "v5 必须新建的资源",
+    "variant_needed": "本体已存在，但需要一个新的状态/叠加层变体",
+    "recommended": "可选增强；不阻塞玩法，但建议一并提供以提升辨识度",
+    "out_of_scope_referenced": "v5 文档 §12 标注为『局外另议』，本重写不覆盖；仅因上游需求涉及而列出，便于全局美术排期"
+  },
+
+  "existing_assets_reference": {
+    "note": "以下为 v5 仍复用、AI 不应重复产出的现有资源（路径见 scripts/Art.gd）。",
+    "weapons_existing": [
+      "weapons/nuo_blade_arc.svg (师刀 whip)",
+      "weapons/lantern_halo.svg (花灯 halo)",
+      "weapons/sugar_thread.svg + sugar_ladle.svg (糖画 glowstick)",
+      "weapons/shadow_puppet.svg (皮影 phone)",
+      "weapons/paper_cut_bird.svg (剪纸 blade)",
+      "weapons/iron_flower_ladle.svg (打铁花 extinguisher)"
+    ],
+    "enemies_existing": [
+      "enemies/paper_scrap.svg (杂兵基型，浆壳兵在其上叠加)",
+      "enemies/broken_kite.svg / broken_puppet.svg",
+      "enemies/ink_blob_elite.svg / faceless_nuo_elite.svg",
+      "enemies/lost_visage.svg (Boss 基型)"
+    ],
+    "bosses_existing": [
+      "enemies/boss_drum.svg",
+      "enemies/boss_faceless_nuo.svg",
+      "enemies/boss_long_night_lantern.svg"
+    ],
+    "fx_existing": [
+      "fx/gold_spark_fx.svg (通用火花，打铁花爆炸可复用)",
+      "fx/kailian_burst.svg (进化辉光，进化形态复用)",
+      "fx/boss_warning_ring.svg (预警圈，潮涌/小Boss 可复用)",
+      "fx/boss_mask_glow.svg / boss_lantern_drain.svg"
+    ],
+    "ui_existing": [
+      "ui/ui_paper_card.svg (卡牌框，三选一卡面复用)",
+      "ui/ui_lantern_frame.svg / ui_flame_fill.svg / ui_lantern_ticks.svg",
+      "ui/bg_night_market.svg (夜市背景)"
+    ]
+  },
+
+  "required_assets": [
+    {
+      "id": "weapon_gong",
+      "name": "铜锣",
+      "category": "weapon_world",
+      "status": "missing",
+      "source_ref": "v4 §3.1 / 落地清单 WeaponDB.gd 加 gong DEFS",
+      "description": "大半径低频光环武器（半径 150，满级 8 目标），自带 amp=0.12 破壳微增益。视觉定位为『百工·打更/卖货铜锣』，环绕玩家旋转释放声波。",
+      "visual_brief": "圆形铜锣，边缘刻回纹/云雷纹，中心有锤击凹痕与朱红布绳挂耳；暖铜色 (#B87333) 描边 + 朱红点缀；剪纸风硬边、无渐变。需读得出『锣面』与『悬挂』。",
+      "suggested_path": "res://assets/art_shouyiren/weapons/gong.svg",
+      "size_hint": "约 96x96（环形本体；实际占屏半径 150 由 WeaponManager 控制，贴图不必画满整圈）",
+      "card_icon": "可复用本 SVG 作为三选一卡面（同现有武器做法）",
+      "depends_on_fx": ["cast_burst (冲击环，程序化，无贴图需求)"],
+      "reuse_existing": false
+    },
+    {
+      "id": "weapon_inkline",
+      "name": "墨斗",
+      "category": "weapon_world",
+      "status": "missing",
+      "source_ref": "v4 §3.2 / 落地清单 WeaponDB.gd 加 inkline DEFS",
+      "description": "直线穿透单点武器，满级单体 100（全游戏单点头牌），shell_bonus=1.80 为浆壳兵官方解。本体是木匠的墨斗（弹线工具），发射一道墨线。",
+      "visual_brief": "墨斗：木制线盒 + 拉出的笔直墨线（线端带小坠/针）；靛蓝 (#2E4A7B) 墨线 + 木色 (#8A5A2B) 线盒 + 朱红封蜡。需读得出『一线贯穿』。",
+      "suggested_path": "res://assets/art_shouyiren/weapons/inkline.svg",
+      "size_hint": "约 220x16（横向细长墨线；作为弹道贴图，长度方向为飞行轴）",
+      "card_icon": "可复用本 SVG（卡面内可旋转竖展示意『线』）",
+      "depends_on_fx": [],
+      "reuse_existing": false
+    },
+    {
+      "id": "weapon_print",
+      "name": "木版年画",
+      "category": "weapon_world",
+      "status": "missing",
+      "source_ref": "v4 §3.3 / 落地清单 WeaponDB.gd 加 print DEFS",
+      "description": "延迟 0.45s 落点范围爆发（半径 105），高基础伤 30，扎堆中心密度 focus=1.8。本体是『木版年画』雕版，从天而降砸下成区。",
+      "visual_brief": "方形木雕版，版面上雕有年画人物/门神轮廓线刻，四角有固定榫；木色底 + 朱红/靛蓝线刻。需读得出『雕版』与『方硬』（区别于圆形光环类）。",
+      "suggested_path": "res://assets/art_shouyiren/weapons/woodblock_print.svg",
+      "size_hint": "约 120x120（雕版本体；落点区半径 105 由 WeaponManager 控制）",
+      "card_icon": "可复用本 SVG",
+      "depends_on_fx": ["cast_burst (落点冲击环)"],
+      "reuse_existing": false
+    },
+    {
+      "id": "weapon_gong_evolved",
+      "name": "开市锣（铜锣进化）",
+      "category": "weapon_icon",
+      "status": "recommended",
+      "source_ref": "v4 §3.6 / EvolutionDB 加 gong→开市锣 (dps×1.50, area×1.50)",
+      "description": "铜锣的进化形态。默认复用本体 + kailian_burst 进化辉光即可；若要做独立卡面辨识，提供一张『锣面加刻『开市』字样/金边』的变体。",
+      "visual_brief": "在 weapon_gong 基础上加金色描边与『开市』朱印，整体更华丽。",
+      "suggested_path": "res://assets/art_shouyiren/weapons/gong_evolved.svg",
+      "size_hint": "约 96x96",
+      "reuse_existing": false
+    },
+    {
+      "id": "weapon_inkline_evolved",
+      "name": "龙筋墨线（墨斗进化）",
+      "category": "weapon_icon",
+      "status": "recommended",
+      "source_ref": "v4 §3.6 / EvolutionDB 加 inkline→龙筋墨线 (dps×1.55, area×1.10)",
+      "description": "墨斗进化。默认复用本体 + 进化辉光；独立变体可表现为『墨线化作龙筋，更粗更亮』。",
+      "visual_brief": "在 weapon_inkline 基础上墨线加粗、描金边，线端坠改为龙首。",
+      "suggested_path": "res://assets/art_shouyiren/weapons/inkline_evolved.svg",
+      "size_hint": "约 220x18",
+      "reuse_existing": false
+    },
+    {
+      "id": "weapon_extinguisher_evolved",
+      "name": "百子千花（打铁花进化）",
+      "category": "weapon_icon",
+      "status": "recommended",
+      "source_ref": "v4 §3.6 / EvolutionDB 加 extinguisher→百子千花 (dps×1.50, area×1.40, 每2命中引爆)",
+      "description": "打铁花进化。本体 iron_flower_ladle 已存在；进化后『每 2 命中引爆一次（连环炸）』。建议提供独立卡面（铁花更繁密/金红双色），并确认爆炸特效增强（见 fx_extinguisher_explosion 复用说明）。",
+      "visual_brief": "在 iron_flower_ladle 基础上增加繁密金红铁花迸溅纹理。",
+      "suggested_path": "res://assets/art_shouyiren/weapons/extinguisher_evolved.svg",
+      "size_hint": "约 80x80",
+      "reuse_existing": true
+    },
+    {
+      "id": "passive_regen",
+      "name": "回春",
+      "category": "passive_icon",
+      "status": "missing",
+      "source_ref": "v4 §3.6 / UpgradeDB 加 regen (每秒回血 +1.5×lv)",
+      "description": "新被动（使模型池达 9）。卡牌图标需与现有 7 条被动视觉语言一致（剪纸小图 + 卡框 ui_paper_card）。",
+      "visual_brief": "一株从剪纸土坡冒出的嫩芽/春枝，带露珠；绿 (#3E8E5A) 为主、朱红点缀。需读得出『恢复/生长』。",
+      "suggested_path": "res://assets/art_shouyiren/items/passive_regen.svg",
+      "size_hint": "约 64x64（卡面内图标，外部由 ui_paper_card 框定）",
+      "card_icon": "本 SVG 即卡面内容",
+      "reuse_existing": false
+    },
+    {
+      "id": "passive_shield",
+      "name": "结界",
+      "category": "passive_icon",
+      "status": "missing",
+      "source_ref": "v4 §3.6 / UpgradeDB 加 shield (每12s 护盾 30+15×lv)",
+      "description": "新被动。卡牌图标需与现有被动一致。",
+      "visual_brief": "一道剪纸符箓/八卦护圈，中心有『结』字或绳结意象；靛蓝 (#2E4A7B) 为主、金边。需读得出『屏障/守护』。",
+      "suggested_path": "res://assets/art_shouyiren/items/passive_shield.svg",
+      "size_hint": "约 64x64",
+      "card_icon": "本 SVG 即卡面内容",
+      "reuse_existing": false
+    },
+    {
+      "id": "enemy_shell_crust",
+      "name": "浆壳兵·结壳层",
+      "category": "enemy_variant",
+      "status": "variant_needed",
+      "source_ref": "v4 §8 / Enemy.gd 加 shelled 标志 + 受击倍率；WaveTable 8–20min 上壳",
+      "description": "浆壳兵是杂兵 (paper_scrap) 在 8–20min 的时间窗内『结壳』变体：血×1.40、吃 AoE×0.75、吃墨斗×1.80。需要一层叠加在其上的『壳』美术，或一张完整的结壳态 sprite。",
+      "visual_brief": "方案 A（推荐，低成本）：一张半透明黏土/纸浆壳 overlay，贴合 paper_scrap 轮廓，带裂纹与灰白 (#9A8C7A) 质感，叠加在杂兵上即表示结壳。方案 B：重画一张完整『戴壳杂兵』sprite。壳要有『硬、厚、可破』的读感。",
+      "suggested_path": "res://assets/art_shouyiren/enemies/shell_crust.svg (overlay) 或 enemies/paper_scrap_shelled.svg (完整态)",
+      "size_hint": "与 paper_scrap 同尺寸（约 48x48），overlay 需对齐基型锚点",
+      "reuse_existing": true,
+      "note": "若用 overlay，注意锚点/朝向与 paper_scrap 完全一致，否则壳会错位。"
+    },
+    {
+      "id": "fx_surge_telegraph",
+      "name": "周期潮涌·地面预警",
+      "category": "fx_telegraph",
+      "status": "recommended",
+      "source_ref": "v4 §6 / WaveTable 周期潮涌调度 (10/15/20/25/30min)",
+      "description": "每 10min 一波潮涌（持续 22–45s，刷新×1.35→1.55）。需要在地面预告『哪片要涌怪』。现有 fx/boss_warning_ring.svg 可被小Boss 复用；若想让潮涌预警有独立辨识，新建一张更大的地面波纹环。",
+      "visual_brief": "地面同心波纹环，朱红描边由内向外扩散；与 boss_warning_ring 风格一致但更大、更密。",
+      "suggested_path": "res://assets/art_shouyiren/fx/surge_ring.svg (可选；否则复用 boss_warning_ring.svg)",
+      "size_hint": "约 256x256（覆盖潮涌刷新区）",
+      "reuse_existing": true
+    },
+    {
+      "id": "ui_skill_roar",
+      "name": "傩面替身·震吼（主动技按钮）",
+      "category": "ui_icon",
+      "status": "missing",
+      "source_ref": "v4 §3.5 / Game.gd 主动技输入与 CD",
+      "description": "本作首个主动技（竖屏单摇杆下用双击/长按或独立按钮触发，CD 25s）：以自身为中心半径 220 爆发（250% 当前单体 DPS）+ 0.7s 无敌向摇杆方向冲刺。需要一个按钮图标表达『可主动释放的震吼/替身』。",
+      "visual_brief": "一张咆哮的傩面 + 向外扩散的声纹弧；朱红傩面 + 金声纹。需读得出『主动、爆发、声波』，并与被动图标（绿/靛蓝）在色相上区分（用朱红/金为主）。",
+      "suggested_path": "res://assets/art_shouyiren/ui/skill_roar.svg",
+      "size_hint": "约 96x96（HUD 主动技按钮，圆角方形或圆形）",
+      "depends_on_fx": ["cast_burst (震吼冲击环，程序化，无贴图需求)", "玩家冲刺无敌帧可用短暂 tint/拖影（无新贴图）"],
+      "reuse_existing": false
+    },
+    {
+      "id": "ui_refine_badge",
+      "name": "精炼等级徽标",
+      "category": "ui_icon",
+      "status": "recommended",
+      "source_ref": "v4 §5.1 / UpgradeDB 精炼 (Lv8 后再 pick → 精炼 ≤3 级，每级 +6%)",
+      "description": "精炼系统在已满级武器上二次投入。卡牌/武器槽上需一个小徽标显示精炼等级（1–3 道刻痕/星）。",
+      "visual_brief": "小号金边圆点/刻痕组，1–3 级递增；或『炼』字小印。与武器卡面不冲突，置于卡角。",
+      "suggested_path": "res://assets/art_shouyiren/ui/refine_badge.svg",
+      "size_hint": "约 24x24（卡角小标）",
+      "reuse_existing": false
+    }
+  ],
+
+  "fx_texture_notes": {
+    "note": "以下特效无需新贴图，复用既有 shader/贴图，列出以避免误判为缺资源。",
+    "items": [
+      {
+        "effect": "打铁花爆炸 (§3.4 explode_radius=76, explode_ratio=0.65)",
+        "reuse": "FX_SPARK (gold_spark_fx.svg) 火花 + cast_burst 冲击环 (程序化)",
+        "new_texture_needed": false,
+        "note": "每发只引爆一次（防同一群反复炸导致 +166% 平衡崩）。进化『百子千花』改为每 2 命中引爆。"
+      },
+      {
+        "effect": "花灯加伤 (对减速敌 +20%)",
+        "reuse": "现有 lantern_halo.svg + sprite_glow/halo 辉光 shader，无新贴图",
+        "new_texture_needed": false
+      },
+      {
+        "effect": "小 Boss 预警 (12/18/24min)",
+        "reuse": "fx/boss_warning_ring.svg",
+        "new_texture_needed": false
+      },
+      {
+        "effect": "震吼视觉 (§3.5)",
+        "reuse": "cast_burst 程序化冲击环 + 玩家 tint/拖影，无新贴图",
+        "new_texture_needed": false
+      },
+      {
+        "effect": "进化辉光 (3 进化)",
+        "reuse": "fx/kailian_burst.svg",
+        "new_texture_needed": false
+      }
+    ]
+  },
+
+  "masks_out_of_scope": {
+    "note": "v5 文档 §12 明确『面具架（局外构筑选择）是独立系统，本重写不覆盖』。以下 12 面来自上游需求（傩戏真实分类：正神/凶神/世俗/丑角；湘西『半堂十二面』），仅列出供全局美术排期，不在本次局内重写交付范围内。落地接口见参考方案 §3（走 MetaSave.mask_mult() 第二乘区）。",
+    "status": "out_of_scope_referenced",
+    "asset_dir": "res://assets/art_shouyiren/ui/masks/",
+    "list": [
+      {"id": "mask_kaituo", "name": "开山猛将", "type": "凶神", "path": "ui/masks/mask_kaituo.svg"},
+      {"id": "mask_tangpo", "name": "唐氏太婆", "type": "世俗", "path": "ui/masks/mask_tangpo.svg"},
+      {"id": "mask_qintong", "name": "歪嘴秦童", "type": "丑角", "path": "ui/masks/mask_qintong.svg"},
+      {"id": "mask_heshan", "name": "和合二仙", "type": "正神", "path": "ui/masks/mask_heshan.svg"},
+      {"id": "mask_zhongkui", "name": "钟馗", "type": "正神", "path": "ui/masks/mask_zhongkui.svg"},
+      {"id": "mask_baozheng", "name": "包拯", "type": "正神", "path": "ui/masks/mask_baozheng.svg"},
+      {"id": "mask_erlang", "name": "二郎神", "type": "正神", "path": "ui/masks/mask_erlang.svg"},
+      {"id": "mask_leigong", "name": "雷公", "type": "凶神", "path": "ui/masks/mask_leigong.svg"},
+      {"id": "mask_dianmu", "name": "电母", "type": "凶神", "path": "ui/masks/mask_dianmu.svg"},
+      {"id": "mask_tudi", "name": "土地公", "type": "世俗", "path": "ui/masks/mask_tudi.svg"},
+      {"id": "mask_caishen", "name": "财神", "type": "世俗", "path": "ui/masks/mask_caishen.svg"},
+      {"id": "mask_shanhai", "name": "山魈", "type": "凶神", "path": "ui/masks/mask_shanhai.svg"}
+    ],
+    "per_mask_spec": "每张需：① 面具正面 SVG（约 96x120，傩面硬边、朱红/金/靛蓝主色，保留本作剪纸语言）；② 局外商店缩略图（可同图缩放）；③ 穿戴后在玩家头部的小尺寸叠加图（约 32x40，锚点对齐 shouyiren 头部）。每张配一条增益 + 一条代价（参考方案 §3 已列初步数值，落地需回填 v5_model.py 复核）。"
+  },
+
+  "counts": {
+    "missing_must_create": 6,
+    "variant_needed": 1,
+    "recommended": 5,
+    "out_of_scope_referenced_masks": 12,
+    "existing_reused": "见 existing_assets_reference（6 武器本体、3 Boss、敌人、FX、UI 均复用，不重产）",
+    "breakdown": {
+      "weapon_world_missing": 3,
+      "weapon_icon_recommended": 3,
+      "passive_icon_missing": 2,
+      "enemy_variant": 1,
+      "fx_telegraph_recommended": 1,
+      "ui_icon_missing": 1,
+      "ui_icon_recommended": 1
+    }
+  }
+}

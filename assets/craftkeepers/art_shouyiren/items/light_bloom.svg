@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs><radialGradient id="lbG" gradientUnits="userSpaceOnUse"  cx="12" cy="12" r="12"><stop offset="0" stop-color="#E8B04B" stop-opacity="0.8"/><stop offset="0.55" stop-color="#E8B04B" stop-opacity="0.27999999999999997"/><stop offset="1" stop-color="#E8B04B" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="12" cy="12" r="12" fill="url(#lbG)"/>
+    <path d="M12 2q3 5 0 10-3-5 0-10zM12 22q3-5 0-10-3 5 0 10zM2 12q5-3 10 0-5 3-10 0zM22 12q-5-3-10 0 5 3 10 0z" fill="#F4E8D0" opacity="0.9"/>
+    <circle cx="12" cy="12" r="3.6" fill="#F2A03D"/>
+    <circle cx="12" cy="12" r="1.8" fill="#F4E8D0"/>
+</svg>

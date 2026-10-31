@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80">
+  <defs><radialGradient id="sfL" gradientUnits="userSpaceOnUse"  cx="47" cy="52" r="15"><stop offset="0" stop-color="#F2A03D" stop-opacity="0.7"/><stop offset="0.55" stop-color="#F2A03D" stop-opacity="0.24499999999999997"/><stop offset="1" stop-color="#F2A03D" stop-opacity="0"/></radialGradient><linearGradient id="sfJ" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A8F86"/><stop offset="1" stop-color="#24524C"/></linearGradient></defs>
+  <circle cx="47" cy="52" r="15" fill="url(#sfL)"/>
+    <ellipse cx="32" cy="76" rx="13" ry="3.2" fill="#08111E" opacity="0.35"/>
+    <rect x="25" y="58" width="6" height="15" rx="2" fill="#08111E"/>
+    <rect x="33" y="58" width="6" height="15" rx="2" fill="#08111E"/>
+    <rect x="23" y="71" width="10" height="4" rx="1.5" fill="#1A1A1A"/>
+    <rect x="33" y="71" width="10" height="4" rx="1.5" fill="#1A1A1A"/>
+    <path d="M21 41q11-7 22 0l2 20H19z" fill="url(#sfJ)"/>
+    <path d="M32 37l-6.5 10 2 3.5 4.5-6 4.5 6 2-3.5z" fill="#F4E8D0"/>
+    <rect x="20" y="52" width="24" height="7" fill="#C53B2E"/>
+    <rect x="20" y="55.5" width="24" height="2" fill="#D9A441" opacity="0.75"/>
+    <path d="M21 43l-6 12 4 2.5 5-9z" fill="#24524C"/>
+    <path d="M43 43l7 7-3.5 3.5-6-6z" fill="#24524C"/>
+    <line x1="48" y1="50" x2="47" y2="44" stroke="#5A3B25" stroke-width="1.6"/>
+    <ellipse cx="47" cy="54" rx="5" ry="6.5" fill="#F2A03D"/>
+    <ellipse cx="47" cy="54" rx="2.4" ry="3.6" fill="#F4E8D0" opacity="0.8"/>
+    <rect x="44" y="46.5" width="6" height="2" fill="#D9A441"/>
+    <circle cx="32" cy="24" r="10.5" fill="#F4E8D0"/>
+    <path d="M21.5 24.5c0-7 4.5-12.5 10.5-12.5s10.5 5.5 10.5 12.5c-2-4.5-6-6.8-10.5-6.8s-8.5 2.3-10.5 6.8z" fill="#1A1A1A"/>
+    <circle cx="32" cy="11" r="3.4" fill="#1A1A1A"/>
+    <rect x="28.6" y="9.6" width="6.8" height="1.8" rx="0.9" fill="#C53B2E"/>
+    <circle cx="27.6" cy="27.5" r="1.55" fill="#1A1A1A"/>
+    <circle cx="36.4" cy="27.5" r="1.55" fill="#1A1A1A"/>
+    <path d="M29.5 32.5q2.5 1.8 5 0" stroke="#C53B2E" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <circle cx="24.5" cy="30" r="2.2" fill="#C53B2E" opacity="0.28"/>
+    <circle cx="39.5" cy="30" r="2.2" fill="#C53B2E" opacity="0.28"/>
+</svg>

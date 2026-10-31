@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160">
+  <!-- 铁花匠：宽肩壮汉。剪影靠"方、宽"立住 —— 五个人里最敦实的一个。 -->
+  <defs>
+    <radialGradient id="fg" gradientUnits="userSpaceOnUse" cx="64" cy="92" r="78">
+      <stop offset="0" stop-color="#E2552F" stop-opacity="0.42"/>
+      <stop offset="0.55" stop-color="#C53B2E" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#C53B2E" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3F6F68"/><stop offset="1" stop-color="#224A45"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4E8D0"/><stop offset="1" stop-color="#DCCBA6"/>
+    </linearGradient>
+    <linearGradient id="apron" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8C3F31"/><stop offset="1" stop-color="#5A2620"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="160" fill="#08111E"/>
+  <circle cx="64" cy="92" r="78" fill="url(#fg)"/>
+  <path d="M137.5 80.0L134.5 100.7L125.8 119.7L112.8 136.4L94.8 147.3L74.6 154.0L53.6 152.2L33.5 146.8L15.1 136.4L2.0 119.8L-6.6 100.7L-11.7 80.0L-7.1 59.1L1.9 40.1L14.9 23.3L32.9 11.8L53.5 7.2L74.4 8.0L94.7 12.7L111.9 24.7L126.9 39.6L134.0 59.4Z" fill="#0F1B2D" opacity="0.85"/>
+
+  <!-- 肩：整张图最宽的水平线，一眼能认出"这人力气大" -->
+  <path d="M24 92q40-16 80 0l7 46q-6 10-14 12H31q-8-2-14-12z" fill="url(#coat)"/>
+  <!-- 围裙：从胸口挂到脚面，压住整个下半身 -->
+  <path d="M46 98h36l5 54H41z" fill="url(#apron)"/>
+  <path d="M46 98h36" stroke="#C0532F" stroke-width="3"/>
+  <path d="M56 104v42M72 104v42" stroke="#3C1A16" stroke-width="1.4" opacity="0.6" stroke-linecap="round"/>
+  <!-- 腰带 -->
+  <rect x="40" y="128" width="48" height="7" rx="2" fill="#241F1B"/>
+  <rect x="60" y="128" width="8" height="7" fill="#E8B04B"/>
+
+  <!-- 脖子 -->
+  <path d="M56 76h16v12H56z" fill="#C9B791"/>
+  <!-- 头：方下颌（男性） -->
+  <path d="M44 54q0-20 20-20t20 20v10q0 14-20 14t-20-14z" fill="url(#skin)"/>
+  <!-- 红布包头 + 打结的两条巾脚 -->
+  <path d="M40 50q4-22 24-22t24 22q-6-8-24-8t-24 8z" fill="#B2372A"/>
+  <path d="M42 48q22-9 44 0" stroke="#8E2A20" stroke-width="2" fill="none"/>
+  <path d="M40 48l-8-8 4-4 8 8z" fill="#B2372A"/>
+  <path d="M88 48l8-7 4 4-8 7z" fill="#B2372A"/>
+  <!-- 眉眼：粗、平、低 -->
+  <path d="M50 54h9M69 54h9" stroke="#1A1A1A" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="55" cy="60" r="2.3" fill="#1A1A1A"/>
+  <circle cx="73" cy="60" r="2.3" fill="#1A1A1A"/>
+  <path d="M60 68q4 3 8 0" stroke="#7A3A2A" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <!-- 炉火烤红的脸颊 -->
+  <circle cx="49" cy="64" r="4" fill="#C53B2E" opacity="0.25"/>
+  <circle cx="79" cy="64" r="4" fill="#C53B2E" opacity="0.25"/>
+
+  <!-- 右臂 + 长柄铁勺：勺子举在胸前偏上，勺里一汪铁水 -->
+  <path d="M92 98l14 6 6 20" stroke="url(#coat)" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <path d="M100 96l16 12" stroke="#6B6F7A" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="112" cy="86" rx="9" ry="7" fill="#5A5F6B"/>
+  <ellipse cx="112" cy="85" rx="6" ry="4.6" fill="#FF7A2A"/>
+  <ellipse cx="111" cy="84" rx="3" ry="2" fill="#FFD07A"/>
+  <circle cx="116" cy="76" r="1.6" fill="#FFB24A" opacity="0.9"/>
+
+  <rect x="6" y="6" width="116" height="148" rx="4" fill="none" stroke="#C0532F" stroke-width="2" opacity="0.55"/>
+</svg>

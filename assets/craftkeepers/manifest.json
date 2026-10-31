@@ -1,0 +1,860 @@
+{
+  "theme": "守艺人·百工夜行",
+  "generated_at": "2026-10-27",
+  "engine": "Godot 4.7.2 / SVG 直接导入（与原素材同管线）",
+  "palette": {
+    "夜蓝": "#0F1B2D",
+    "墨黑": "#1A1A1A",
+    "朱砂": "#C53B2E",
+    "灯笼橙": "#F2A03D",
+    "琥珀": "#E8B04B",
+    "青绿": "#3E7C74",
+    "米白": "#F4E8D0",
+    "金": "#D9A441",
+    "冷灰": "#6B7A8F"
+  },
+  "counts": {
+    "reskin": 34,
+    "new_p0": 17,
+    "new_p1": 9,
+    "total": 77,
+    "new_p0_v4": 17,
+    "v5_project_only": 12,
+    "v6_project_only": 4
+  },
+  "assets": [
+    {
+      "file": "characters/shouyiren_front.svg",
+      "replaces": "characters/player_front.svg",
+      "size": "64x80",
+      "tier": "P0",
+      "title": "阿满·正面",
+      "bytes": 2300
+    },
+    {
+      "file": "characters/shouyiren_back.svg",
+      "replaces": "characters/player_back.svg",
+      "size": "64x80",
+      "tier": "P0",
+      "title": "阿满·背面（提灯）",
+      "bytes": 2029
+    },
+    {
+      "file": "enemies/paper_scrap.svg",
+      "replaces": "enemies/enemy_cup.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "纸屑",
+      "bytes": 2205
+    },
+    {
+      "file": "enemies/broken_kite.svg",
+      "replaces": "enemies/enemy_cup_fast.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "断线纸鸢（保留青色速度预警）",
+      "bytes": 1512
+    },
+    {
+      "file": "enemies/broken_puppet.svg",
+      "replaces": "enemies/enemy_bag.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "断线傀儡",
+      "bytes": 1240
+    },
+    {
+      "file": "enemies/ink_blob_elite.svg",
+      "replaces": "enemies/enemy_elite_box.svg",
+      "size": "96x96",
+      "tier": "P0",
+      "title": "墨渍·精英",
+      "bytes": 3771
+    },
+    {
+      "file": "enemies/faceless_nuo_elite.svg",
+      "replaces": "enemies/enemy_elite_red.svg",
+      "size": "96x96",
+      "tier": "P0",
+      "title": "残面傩·精英",
+      "bytes": 1762
+    },
+    {
+      "file": "enemies/lost_visage.svg",
+      "replaces": "enemies/enemy_reaper.svg",
+      "size": "80x112",
+      "tier": "P0",
+      "title": "失传之相",
+      "bytes": 1788
+    },
+    {
+      "file": "weapons/nuo_blade_arc.svg",
+      "replaces": "weapons/whip_arc.svg",
+      "size": "96x96",
+      "tier": "P0",
+      "title": "傩面刀·横扫弧",
+      "bytes": 1857
+    },
+    {
+      "file": "weapons/lantern_halo.svg",
+      "replaces": "weapons/halo_ring.svg",
+      "size": "256x256",
+      "tier": "P0",
+      "title": "花灯·光环",
+      "bytes": 8555
+    },
+    {
+      "file": "weapons/sugar_ladle.svg",
+      "replaces": "weapons/wand_glowstick.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "糖画·铜勺",
+      "bytes": 906
+    },
+    {
+      "file": "weapons/sugar_thread.svg",
+      "replaces": "weapons/bullet_glowstick.svg",
+      "size": "32x16",
+      "tier": "P0",
+      "title": "糖画·糖丝弹",
+      "bytes": 822
+    },
+    {
+      "file": "weapons/shadow_puppet.svg",
+      "replaces": "weapons/knife_boxcutter.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "皮影·影人片",
+      "bytes": 997
+    },
+    {
+      "file": "weapons/paper_cut_bird.svg",
+      "replaces": "weapons/phone_orbit.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "剪纸·绕身雀",
+      "bytes": 950
+    },
+    {
+      "file": "weapons/iron_flower_ladle.svg",
+      "replaces": "weapons/axe_extinguisher.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "打铁花·铁水勺",
+      "bytes": 1442
+    },
+    {
+      "file": "items/light_bloom.svg",
+      "replaces": "items/gem_blue.svg",
+      "size": "24x24",
+      "tier": "P0",
+      "title": "归色·光瓣（经验）",
+      "bytes": 698
+    },
+    {
+      "file": "items/gold_spark.svg",
+      "replaces": "items/gem_orange.svg",
+      "size": "30x30",
+      "tier": "P0",
+      "title": "金花·大经验（1.6 倍面积）",
+      "bytes": 950
+    },
+    {
+      "file": "items/craft_box.svg",
+      "replaces": "items/chest.svg",
+      "size": "44x40",
+      "tier": "P0",
+      "title": "百工箱（宝箱）",
+      "bytes": 838
+    },
+    {
+      "file": "items/copper_coin.svg",
+      "replaces": "items/coin.svg",
+      "size": "24x24",
+      "tier": "P0",
+      "title": "铜钱",
+      "bytes": 591
+    },
+    {
+      "file": "items/ciba.svg",
+      "replaces": "items/pickup_bento.svg",
+      "size": "36x36",
+      "tier": "P0",
+      "title": "糍粑（回血）",
+      "bytes": 1702
+    },
+    {
+      "file": "items/firecracker.svg",
+      "replaces": "items/pickup_bomb.svg",
+      "size": "36x36",
+      "tier": "P0",
+      "title": "爆竹（清屏）",
+      "bytes": 1087
+    },
+    {
+      "file": "items/bronze_bell.svg",
+      "replaces": "items/pickup_magnet.svg",
+      "size": "36x36",
+      "tier": "P0",
+      "title": "铜铃（磁吸）",
+      "bytes": 895
+    },
+    {
+      "file": "ground/stone_tile.svg",
+      "replaces": "ground/ground_tile.svg",
+      "size": "256x256",
+      "tier": "P0",
+      "title": "夜市石板路（无缝）",
+      "bytes": 12301
+    },
+    {
+      "file": "props/lantern_stand.svg",
+      "replaces": "props/prop_hydrant.svg",
+      "size": "48x60",
+      "tier": "P0",
+      "title": "灯架",
+      "bytes": 1096
+    },
+    {
+      "file": "props/bamboo_basket.svg",
+      "replaces": "props/prop_trash.svg",
+      "size": "48x56",
+      "tier": "P0",
+      "title": "竹筐堆",
+      "bytes": 1039
+    },
+    {
+      "file": "props/stone_lamp.svg",
+      "replaces": "props/prop_cone.svg",
+      "size": "48x56",
+      "tier": "P0",
+      "title": "石灯",
+      "bytes": 942
+    },
+    {
+      "file": "props/goods_cart.svg",
+      "replaces": "props/prop_bike.svg",
+      "size": "80x60",
+      "tier": "P0",
+      "title": "货郎车",
+      "bytes": 1159
+    },
+    {
+      "file": "props/sugar_stall.svg",
+      "replaces": "props/prop_vending.svg",
+      "size": "64x96",
+      "tier": "P0",
+      "title": "糖画摊（立幅）",
+      "bytes": 1388
+    },
+    {
+      "file": "fx/gold_spark_fx.svg",
+      "replaces": "fx/fx_spark.svg",
+      "size": "32x32",
+      "tier": "P0",
+      "title": "金光·打击特效",
+      "bytes": 938
+    },
+    {
+      "file": "fx/kailian_burst.svg",
+      "replaces": "fx/fx_evolve_star.svg",
+      "size": "48x48",
+      "tier": "P0",
+      "title": "开炉·进化爆发",
+      "bytes": 1563
+    },
+    {
+      "file": "ui/bg_night_market.svg",
+      "replaces": "ui/bg_city_dusk.svg",
+      "size": "720x1280",
+      "tier": "P0",
+      "title": "夜市远景背景",
+      "bytes": 23253
+    },
+    {
+      "file": "ui/ui_lantern_frame.svg",
+      "replaces": "ui/ui_bar_frame.svg",
+      "size": "320x20",
+      "tier": "P0",
+      "title": "血条外框·漆木",
+      "bytes": 761
+    },
+    {
+      "file": "ui/ui_flame_fill.svg",
+      "replaces": "ui/ui_bar_fill.svg",
+      "size": "312x12",
+      "tier": "P0",
+      "title": "血条填充·灯火（暖色，避免与 tint 相乘发脏）",
+      "bytes": 739
+    },
+    {
+      "file": "ui/ui_paper_card.svg",
+      "replaces": "ui/ui_card_frame.svg",
+      "size": "200x280",
+      "tier": "P0",
+      "title": "升级卡·宣纸木版",
+      "bytes": 12502
+    },
+    {
+      "file": "stalls/stall_sugar.svg",
+      "replaces": null,
+      "size": "180x140",
+      "tier": "P0",
+      "title": "糖画摊",
+      "bytes": 4509
+    },
+    {
+      "file": "stalls/stall_shadow.svg",
+      "replaces": null,
+      "size": "180x140",
+      "tier": "P0",
+      "title": "皮影摊",
+      "bytes": 4837
+    },
+    {
+      "file": "stalls/stall_lantern.svg",
+      "replaces": null,
+      "size": "180x140",
+      "tier": "P0",
+      "title": "花灯摊",
+      "bytes": 6610
+    },
+    {
+      "file": "stalls/stall_paper.svg",
+      "replaces": null,
+      "size": "180x140",
+      "tier": "P0",
+      "title": "剪纸摊",
+      "bytes": 6502
+    },
+    {
+      "file": "stalls/stall_forge.svg",
+      "replaces": null,
+      "size": "180x140",
+      "tier": "P0",
+      "title": "铁花炉",
+      "bytes": 5429
+    },
+    {
+      "file": "stalls/lantern_pillar.svg",
+      "replaces": null,
+      "size": "80x200",
+      "tier": "P0",
+      "title": "灯柱",
+      "bytes": 2621
+    },
+    {
+      "file": "stalls/archway.svg",
+      "replaces": null,
+      "size": "320x200",
+      "tier": "P0",
+      "title": "夜市牌坊",
+      "bytes": 2889
+    },
+    {
+      "file": "stalls/old_stage.svg",
+      "replaces": null,
+      "size": "400x220",
+      "tier": "P0",
+      "title": "老戏台",
+      "bytes": 3100
+    },
+    {
+      "file": "enemies/boss_drum.svg",
+      "replaces": null,
+      "size": "160x160",
+      "tier": "P0",
+      "title": "哑鼓（一更 Boss）",
+      "bytes": 2675
+    },
+    {
+      "file": "enemies/boss_faceless_nuo.svg",
+      "replaces": null,
+      "size": "128x160",
+      "tier": "P0",
+      "title": "无面傩（三更 Boss）",
+      "bytes": 2028
+    },
+    {
+      "file": "enemies/boss_long_night_lantern.svg",
+      "replaces": null,
+      "size": "160x160",
+      "tier": "P0",
+      "title": "长夜灯（五更压轴）",
+      "bytes": 2453
+    },
+    {
+      "file": "ui/ui_paper_texture.svg",
+      "replaces": null,
+      "size": "256x256",
+      "tier": "P0",
+      "title": "宣纸底纹（无缝）",
+      "bytes": 20821
+    },
+    {
+      "file": "ui/ui_wood_sign.svg",
+      "replaces": null,
+      "size": "240x80",
+      "tier": "P0",
+      "title": "木招牌（标题底）",
+      "bytes": 2112
+    },
+    {
+      "file": "ui/ui_seal.svg",
+      "replaces": null,
+      "size": "64x64",
+      "tier": "P0",
+      "title": "朱砂印章",
+      "bytes": 2345
+    },
+    {
+      "file": "ui/intro_01.svg",
+      "replaces": null,
+      "size": "720x1280",
+      "tier": "P0",
+      "title": "过场一·一盏灯（无人物无文字）",
+      "bytes": 20320
+    },
+    {
+      "file": "ui/intro_02.svg",
+      "replaces": null,
+      "size": "720x1280",
+      "tier": "P0",
+      "title": "过场二·六艺案头",
+      "bytes": 21620
+    },
+    {
+      "file": "ui/intro_03.svg",
+      "replaces": null,
+      "size": "720x1280",
+      "tier": "P0",
+      "title": "过场三·百工夜市复原",
+      "bytes": 32379
+    },
+    {
+      "file": "characters/char_sugar.svg",
+      "replaces": null,
+      "size": "128x160",
+      "tier": "P1",
+      "title": "立绘·糖画匠",
+      "bytes": 2098
+    },
+    {
+      "file": "characters/char_shadow.svg",
+      "replaces": null,
+      "size": "128x160",
+      "tier": "P1",
+      "title": "立绘·皮影匠",
+      "bytes": 2048
+    },
+    {
+      "file": "characters/char_paper.svg",
+      "replaces": null,
+      "size": "128x160",
+      "tier": "P1",
+      "title": "立绘·剪纸娘",
+      "bytes": 2130
+    },
+    {
+      "file": "characters/char_lantern.svg",
+      "replaces": null,
+      "size": "128x160",
+      "tier": "P1",
+      "title": "立绘·花灯翁",
+      "bytes": 2157
+    },
+    {
+      "file": "characters/char_forge.svg",
+      "replaces": null,
+      "size": "128x160",
+      "tier": "P1",
+      "title": "立绘·铁花汉",
+      "bytes": 2169
+    },
+    {
+      "file": "ui/codex_bg.svg",
+      "replaces": null,
+      "size": "720x1280",
+      "tier": "P1",
+      "title": "百工谱图鉴底",
+      "bytes": 45469
+    },
+    {
+      "file": "fx/boss_warning_ring.svg",
+      "replaces": null,
+      "size": "256x256",
+      "tier": "P1",
+      "title": "Boss 大招地面预警圈",
+      "bytes": 2732
+    },
+    {
+      "file": "fx/boss_mask_glow.svg",
+      "replaces": null,
+      "size": "128x128",
+      "tier": "P1",
+      "title": "傩面开脸光效",
+      "bytes": 909
+    },
+    {
+      "file": "fx/boss_lantern_drain.svg",
+      "replaces": null,
+      "size": "256x256",
+      "tier": "P1",
+      "title": "长夜灯·吸光漩涡",
+      "bytes": 3286
+    },
+    {
+      "file": "weapons/gong_icon.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "铜锣·图标",
+      "bytes": 2332,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "weapons/gong_aura.svg",
+      "replaces": null,
+      "size": "256x256",
+      "tier": "P0",
+      "title": "铜锣·世界光环（半径 150）",
+      "bytes": 4390,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "weapons/inkline_icon.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "墨斗·图标",
+      "bytes": 1741,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "weapons/inkline_beam.svg",
+      "replaces": null,
+      "size": "256x32",
+      "tier": "P0",
+      "title": "墨斗·墨线（左中锚点）",
+      "bytes": 1635,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "weapons/inkline_impact.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "墨斗·命中墨溅",
+      "bytes": 1300,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "weapons/print_icon.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "木版年画·图标",
+      "bytes": 1578,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "weapons/print_zone_warn.svg",
+      "replaces": null,
+      "size": "256x256",
+      "tier": "P0",
+      "title": "木版年画·落点预警",
+      "bytes": 3031,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "weapons/print_zone_stamp.svg",
+      "replaces": null,
+      "size": "256x256",
+      "tier": "P0",
+      "title": "木版年画·落点成画",
+      "bytes": 6006,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "items/passive_regen.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "回春·被动图标（药葫芦+新芽）",
+      "bytes": 1656,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "items/passive_shield.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "结界·被动图标（俯视油纸伞）",
+      "bytes": 1669,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "fx/shield_ward.svg",
+      "replaces": null,
+      "size": "128x128",
+      "tier": "P0",
+      "title": "结界·护身罩（中心 44px 透明）",
+      "bytes": 2386,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "fx/shield_break.svg",
+      "replaces": null,
+      "size": "96x96",
+      "tier": "P0",
+      "title": "结界·破罩碎片",
+      "bytes": 2485,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "enemies/paper_scrap_shell.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "纸屑·浆壳变体",
+      "bytes": 4223,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "enemies/broken_kite_shell.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "断线纸鸢·浆壳变体（保留青尾）",
+      "bytes": 2817,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "enemies/broken_puppet_shell.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "断线傀儡·浆壳变体（保留提线关节）",
+      "bytes": 2887,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "ui/ui_geng_drum.svg",
+      "replaces": null,
+      "size": "48x48",
+      "tier": "P0",
+      "title": "更鼓·HUD 标识",
+      "bytes": 2203,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    },
+    {
+      "file": "fx/drum_ripple.svg",
+      "replaces": null,
+      "size": "256x256",
+      "tier": "P0",
+      "title": "更鼓·跨更波纹",
+      "bytes": 3594,
+      "source": "v4_p0_build.py",
+      "feature": "v4"
+    }
+  ],
+  "v4_note": "P0 v4 的 17 张由 assets/craftkeepers/v4_p0_build.py 产出，不在 generate.mjs 里；重跑 generate.mjs 会删除它们，重跑后需再执行 python v4_p0_build.py 复原。",
+  "v5_project_only": {
+    "note": "v5（docs/design/art_assets_manifest.json）的 12 张只写进工程 res://GameDemo/first-xi-xue-gui/assets/art_shouyiren/，本库不复制、不改动。生成器 assets/craftkeepers/v5_build.py；校核 render_check/tools/V5Sheet.gd（Godot 4.7.2 headless，fail=0）。generate.mjs 不拥有这些文件，重跑它不会产出也不会删除它们。",
+    "counts": {
+      "v5_project_only": 12,
+      "missing_must_create": 6,
+      "variant_needed": 1,
+      "recommended": 5
+    },
+    "same_name_divergence": [
+      {
+        "file": "items/passive_regen.svg",
+        "library": "48x48（v4 P0，v4_p0_build.py 产出，保持不动）",
+        "project": "64x64（v5 清单 size_hint 要求卡面内 64）",
+        "consequence": "两份同名不同尺寸，工程读的是自己 res:// 下的 64 版；若将来要统一，改 v5_build.py 或 v4_p0_build.py 重出，不要手工覆盖"
+      },
+      {
+        "file": "items/passive_shield.svg",
+        "library": "48x48（v4 P0）",
+        "project": "64x64（v5）",
+        "consequence": "同上；v5 版按用户确认改画竹篾护圈+朱绳结，v4 库版保持原样"
+      }
+    ],
+    "assets": [
+      {
+        "manifest_id": "weapon_gong",
+        "file": "weapons/gong.svg",
+        "size": "96x96",
+        "status": "missing",
+        "title": "铜锣·世界贴图"
+      },
+      {
+        "manifest_id": "weapon_inkline",
+        "file": "weapons/inkline.svg",
+        "size": "220x16",
+        "status": "missing",
+        "title": "墨斗·弹线弹道（长度方向=飞行轴）"
+      },
+      {
+        "manifest_id": "weapon_print",
+        "file": "weapons/woodblock_print.svg",
+        "size": "120x120",
+        "status": "missing",
+        "title": "木版年画·雕版本体"
+      },
+      {
+        "manifest_id": "passive_regen",
+        "file": "items/passive_regen.svg",
+        "size": "64x64",
+        "status": "missing",
+        "title": "回春·被动卡面"
+      },
+      {
+        "manifest_id": "passive_shield",
+        "file": "items/passive_shield.svg",
+        "size": "64x64",
+        "status": "missing",
+        "title": "结界·被动卡面（清单原文『符箓/八卦/结字』改画竹篾护圈+朱绳结：宗教符号与可读文字踩 v4 §2.6 红线，用户 2026-10-28 确认）"
+      },
+      {
+        "manifest_id": "ui_skill_roar",
+        "file": "ui/skill_roar.svg",
+        "size": "96x96",
+        "status": "missing",
+        "title": "傩面替身·震吼主动技按钮"
+      },
+      {
+        "manifest_id": "enemy_shell_crust",
+        "file": "enemies/shell_crust.svg",
+        "size": "48x48",
+        "status": "variant_needed",
+        "title": "浆壳兵·结壳层 overlay（方案 A；已按 paper_scrap 眼窗/脚底/轮廓三条契约校验）"
+      },
+      {
+        "manifest_id": "weapon_gong_evolved",
+        "file": "weapons/gong_evolved.svg",
+        "size": "96x96",
+        "status": "recommended",
+        "title": "开市锣·进化（清单『开市』字样改无字朱印，可读文字踩 v4 §2.6 红线）"
+      },
+      {
+        "manifest_id": "weapon_inkline_evolved",
+        "file": "weapons/inkline_evolved.svg",
+        "size": "220x18",
+        "status": "recommended",
+        "title": "龙筋墨线·进化（线加粗描金 + 线端龙首）"
+      },
+      {
+        "manifest_id": "weapon_extinguisher_evolved",
+        "file": "weapons/extinguisher_evolved.svg",
+        "size": "80x80",
+        "status": "recommended",
+        "title": "百子千花·进化（本体 iron_flower_ladle 5/3 放大 + 金红花火扇与星芒）"
+      },
+      {
+        "manifest_id": "fx_surge_telegraph",
+        "file": "fx/surge_ring.svg",
+        "size": "256x256",
+        "status": "recommended",
+        "title": "周期潮涌·地面预警（峰值 alpha 0.816、中心 r<=26 全空、外缘 125.5 不被画布裁）"
+      },
+      {
+        "manifest_id": "ui_refine_badge",
+        "file": "ui/refine_badge.svg",
+        "size": "24x24",
+        "status": "recommended",
+        "title": "精炼等级徽标（3 道递增刻痕；『炼』字小印不做，可读文字踩红线）"
+      }
+    ],
+    "not_in_this_delivery": {
+      "masks": "12 面傩戏面具：清单自标 out_of_scope_referenced（『局外另议』），未产出",
+      "art_gd": "scripts/Art.gd 的 ALL_PATHS / SLOT_ALIASES 接入是工程侧后续步骤，本次未改",
+      "player_frames": "玩家行走帧未新增（清单 constraints 提醒：三帧同画布 64x80，换 style 要三帧一起换）"
+    }
+  },
+  "v6_project_only": {
+    "note": "v6（docs/design/v6_fx_art_plan.md + v6_fx_art_manifest.json）的美术交付只有 4 张 SVG，全部只写进工程 res://GameDemo/first-xi-xue-gui/assets/art_shouyiren/，本库不复制、不改动。生成器 assets/craftkeepers/v6_build.py（复用 v5_build.py 的调色板与 ThorVG 安全写法），校核 render_check/tools/V6Sheet.gd（画布实测 / 贴边 / 分档 alpha / 平铺接缝 / 卡面契约 / 明暗与剪影表 / 720x1120 局内合成，fail=0）。未重跑 generate.mjs，未覆盖任何既有素材。",
+    "source_doc": "docs/design/v6_fx_art_plan.md / docs/design/v6_fx_art_manifest.json",
+    "counts": {
+      "v6_project_only": 4,
+      "must": 1,
+      "recommended": 3
+    },
+    "assets": [
+      {
+        "manifest_id": "awaken_badge",
+        "file": "ui/awaken_badge.svg",
+        "size": "64x32",
+        "size_source": "Godot 光栅实测画布，与清单 size 一致",
+        "status": "must",
+        "category": "ui",
+        "title": "觉醒徽记（卡面右上角半透明朱印）",
+        "project_path": "res://assets/art_shouyiren/ui/awaken_badge.svg"
+      },
+      {
+        "manifest_id": "molten_blob",
+        "file": "fx/molten_blob.svg",
+        "size": "24x24",
+        "size_source": "Godot 光栅实测画布，与清单 size 一致",
+        "status": "recommended",
+        "category": "fx",
+        "title": "熔核团（熔火弹道贴图，替代 sugar_thread）",
+        "project_path": "res://assets/art_shouyiren/fx/molten_blob.svg"
+      },
+      {
+        "manifest_id": "ink_line_tex",
+        "file": "weapons/ink_line_tex.svg",
+        "size": "256x8",
+        "size_source": "Godot 光栅实测画布，与清单 size 一致",
+        "status": "recommended",
+        "category": "weapon",
+        "title": "墨线·龙筋长条（可横向平铺）",
+        "project_path": "res://assets/art_shouyiren/weapons/ink_line_tex.svg"
+      },
+      {
+        "manifest_id": "woodblock_seal",
+        "file": "fx/woodblock_seal.svg",
+        "size": "160x160",
+        "size_source": "Godot 光栅实测画布，与清单 size 一致",
+        "status": "recommended",
+        "category": "fx",
+        "title": "木刻画·门神印（阴刻莲花+回字边）",
+        "project_path": "res://assets/art_shouyiren/fx/woodblock_seal.svg"
+      }
+    ],
+    "same_name_divergence": [],
+    "not_in_this_delivery": {
+      "shaders": "molten_scatter（must）与 lantern_stream（recommended）是 .gdshader 代码，属渲染达的交付物，不是美术资产；两者都是 canvas_item + blend_add，无新增纹理依赖（molten_scatter 走 ColorRect，lantern_stream 复用 lantern_glow.svg）。",
+      "hookup": "4 张图的调用点还没接：HUD 的 Lv8 显隐、灭火器弹道换成 molten_blob、墨线 region 平铺 + Lv8 scale.y、木刻印落地。清单 constraints.how_to_use 把这些列为后续「表现层/接入」步骤。",
+      "masks": "12 张傩戏面具仍为局外另议（清单标 out_of_scope_referenced），本批未动。"
+    },
+    "registration": {
+      "art_gd": "已做：scripts/Art.gd 增加 AWAKEN_BADGE / MOLTEN_BLOB / INK_LINE_TEX / WOODBLOCK_SEAL 四个常量，并把它们加入 ALL_PATHS（清单 constraints.art_register：任何新 svg 必须登记 ALL_PATHS，否则资源守卫只测已登记路径，会静默放行）。",
+      "slot_aliases": "未做：SLOT_ALIASES 留给工程在写调用点时一并命名槽位，美术侧不猜槽名。",
+      "guard": "可重跑守卫：tools/V6Art.gd（--headless --script res://tools/V6Art.gd），逐项断言已登记 / 在非遗目录内 / 可加载 / 实测画布=清单尺寸 / 非空图，并守住 v6 §1.2 红线：WeaponDB 的 svg 与 bullet_svg 无一指向 v6 新图。当前 fail=0。"
+    },
+    "render_notes": {
+      "alpha": "molten_blob 把亮度编码进 alpha（外晕 0.48→0 衰减），交给 blend_add 的 ColorRect/Sprite2D 使用；清单要求 blend_add 特效保持 COLOR.a=1.0、亮度放在 rgb，所以素材不能自带满不透明实心。",
+      "woodblock_seal": "按 ≤0.85 峰值 alpha 的 decal 画（普通混合、贴地印痕），莲花瓣用 fill-opacity / stroke-opacity 分别控制，避免元素级 opacity 把金线一起压暗。",
+      "ink_line_tex": "横向可平铺：正弦结节周期 64 整除 256，接缝列均值落差 ≤ 内部最大落差的 1.15 倍，首末行全透明；校核里 tile 类只考核上下边，左右边由平铺断言负责。",
+      "awaken_badge": "底座朱印按清单「半透明」压到均值 0.646，实测盖在 ui_paper_card 上时纸面 alpha 全程 ≥0.8，纸不会被咬穿。"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/Enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/HpBar.gd" id="2_hpbar"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/enemies/paper_scrap.svg" id="3_cup"]
+
+[node name="Enemy" type="Node2D"]
+script = ExtResource("1_enemy")
+
+[node name="Art" type="Sprite2D" parent="."]
+texture = ExtResource("3_cup")
+offset = Vector2(0, -20)
+
+[node name="HpBar" type="Node2D" parent="."]
+position = Vector2(0, -52)
+script = ExtResource("2_hpbar")

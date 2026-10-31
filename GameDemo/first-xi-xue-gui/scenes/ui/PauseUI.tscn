@@ -1,0 +1,147 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/PauseUI.gd" id="1_pause"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/ui/ui_paper_card.svg" id="2_card"]
+
+[sub_resource type="StyleBoxFlat" id="SB_btn_normal"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.17, 0.14, 0.12, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.72, 0.55, 0.28, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="SB_btn_hot"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.28, 0.22, 0.16, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.92, 0.74, 0.38, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="PauseUI" type="CanvasLayer"]
+layer = 9
+script = ExtResource("1_pause")
+
+[node name="Mask" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.07, 0.72)
+
+[node name="Popup" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="VB" type="VBoxContainer" parent="Popup"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Card" type="TextureRect" parent="Popup/VB"]
+custom_minimum_size = Vector2(200, 280)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+texture = ExtResource("2_card")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="Mark" type="Label" parent="Popup/VB/Card"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 280.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.55, 0.18, 1)
+theme_override_font_sizes/font_size = 88
+text = "II"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Title" type="Label" parent="Popup/VB"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "歇口气"
+horizontal_alignment = 1
+
+[node name="Resume" type="Button" parent="Popup/VB"]
+custom_minimum_size = Vector2(280, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.96, 0.92, 0.84, 1)
+theme_override_colors/font_hover_color = Color(1, 0.95, 0.82, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("SB_btn_normal")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn_normal")
+text = "接着守"
+
+[node name="Restart" type="Button" parent="Popup/VB"]
+custom_minimum_size = Vector2(280, 52)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.9, 0.86, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 0.95, 0.82, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("SB_btn_normal")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn_normal")
+text = "重守一夜"
+
+[node name="Settings" type="Button" parent="Popup/VB"]
+custom_minimum_size = Vector2(280, 46)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.86, 0.82, 0.74, 1)
+theme_override_colors/font_hover_color = Color(1, 0.95, 0.82, 1)
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("SB_btn_normal")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn_normal")
+text = "设置"
+
+[node name="Menu" type="Button" parent="Popup/VB"]
+custom_minimum_size = Vector2(280, 46)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.8, 0.72, 0.68, 1)
+theme_override_colors/font_hover_color = Color(1, 0.9, 0.84, 1)
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("SB_btn_normal")
+theme_override_styles/hover = SubResource("SB_btn_hot")
+theme_override_styles/pressed = SubResource("SB_btn_hot")
+theme_override_styles/focus = SubResource("SB_btn_normal")
+text = "回主菜单"
+
+[node name="Tip" type="Label" parent="Popup/VB"]
+modulate = Color(1, 1, 1, 0.5)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "键盘：WASD / 方向键移动 · Esc 暂停 · 1/2/3 选卡"
+horizontal_alignment = 1

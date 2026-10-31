@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160">
+  <!-- 糖画师：最小、头身比最大。剪影靠"短、圆、轻"立住 ——
+       衣摆只到膝盖，露出小腿，是五个里唯一看得见腿的人。
+       手里一勺糖丝往下垂成糖画，这条金线是他的招牌。 -->
+  <defs>
+    <radialGradient id="ug" gradientUnits="userSpaceOnUse" cx="64" cy="88" r="78">
+      <stop offset="0" stop-color="#FFC861" stop-opacity="0.42"/>
+      <stop offset="0.55" stop-color="#D89A3A" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#D89A3A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tunic" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8B25A"/><stop offset="1" stop-color="#B77A2C"/>
+    </linearGradient>
+    <linearGradient id="skin5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF1DC"/><stop offset="1" stop-color="#E4D2AC"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="160" fill="#08111E"/>
+  <circle cx="64" cy="88" r="78" fill="url(#ug)"/>
+  <path d="M137.5 80.0L134.5 100.7L125.8 119.7L112.8 136.4L94.8 147.3L74.6 154.0L53.6 152.2L33.5 146.8L15.1 136.4L2.0 119.8L-6.6 100.7L-11.7 80.0L-7.1 59.1L1.9 40.1L14.9 23.3L32.9 11.8L53.5 7.2L74.4 8.0L94.7 12.7L111.9 24.7L126.9 39.6L134.0 59.4Z" fill="#0F1B2D" opacity="0.85"/>
+
+  <!-- 小腿：短打的下摆以上，露在外面 -->
+  <path d="M52 118h6v28h-6zM70 118h6v28h-6z" fill="url(#skin5)"/>
+  <path d="M50 144h10v8H50zM68 144h10v8H68z" fill="#3A2A18"/>
+  <!-- 短打：宽摆只到膝上，圆滚滚 -->
+  <path d="M42 92q22-12 44 0l4 30H38z" fill="url(#tunic)"/>
+  <path d="M38 112h52" stroke="#8A5A1C" stroke-width="3"/>
+  <!-- 交领 -->
+  <path d="M64 88l-9 10 4 3 5-6 5 6 4-3z" fill="#FFF0CC"/>
+
+  <!-- 脖子 -->
+  <path d="M60 74h8v10h-8z" fill="#D8C69F"/>
+  <!-- 头：大、圆（少年的头身比） -->
+  <circle cx="64" cy="54" r="21" fill="url(#skin5)"/>
+  <!-- 短发：三绺翘起来的碎发，和铁花匠的头巾、灯彩匠的毡帽完全不同的顶部轮廓 -->
+  <path d="M43 50q2-18 21-18t21 18q-8-11-21-11t-21 11z" fill="#2A1E14"/>
+  <path d="M46 44q-4-8 0-12 3 6 6 9z" fill="#2A1E14"/>
+  <path d="M82 44q4-8 0-12-3 6-6 9z" fill="#2A1E14"/>
+  <path d="M64 32q3-6 7-7-1 6-3 9z" fill="#2A1E14"/>
+  <!-- 大眼睛：少年感全在这两笔 -->
+  <circle cx="56" cy="56" r="3.4" fill="#1A1A1A"/>
+  <circle cx="72" cy="56" r="3.4" fill="#1A1A1A"/>
+  <circle cx="57" cy="55" r="1.1" fill="#FFFFFF"/>
+  <circle cx="73" cy="55" r="1.1" fill="#FFFFFF"/>
+  <path d="M60 66q4 4 8 0" stroke="#A0522D" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <circle cx="49" cy="63" r="3.6" fill="#E0703C" opacity="0.3"/>
+  <circle cx="79" cy="63" r="3.6" fill="#E0703C" opacity="0.3"/>
+
+  <!-- 左手：小铜勺 + 垂下来的糖丝，末端绕成一朵螺旋（糖画） -->
+  <path d="M84 96l10 12" stroke="url(#tunic)" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M93 108l6 8" stroke="#C9A15A" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <ellipse cx="101" cy="119" rx="6" ry="4.4" fill="#C9A15A"/>
+  <ellipse cx="101" cy="118.4" rx="4" ry="2.6" fill="#FFD98A"/>
+  <path d="M104 122q-2 12-10 14-9 2-13-6-3-7 3-10 5-2 6 3 1 4-3 5" stroke="#FFC861" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="87" cy="128" r="1.6" fill="#FFE9B0"/>
+
+  <rect x="6" y="6" width="116" height="148" rx="4" fill="none" stroke="#D89A3A" stroke-width="2" opacity="0.55"/>
+</svg>

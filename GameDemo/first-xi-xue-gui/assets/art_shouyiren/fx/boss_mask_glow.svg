@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs><radialGradient id="bmg" gradientUnits="userSpaceOnUse"  cx="64" cy="64" r="64"><stop offset="0" stop-color="#F4E8D0" stop-opacity="0.6"/><stop offset="0.55" stop-color="#F4E8D0" stop-opacity="0.21"/><stop offset="1" stop-color="#F4E8D0" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="64" cy="64" r="64" fill="url(#bmg)"/>
+    <ellipse cx="64" cy="64" rx="34" ry="42" fill="none" stroke="#F4E8D0" stroke-width="3" opacity="0.8"/>
+    <path d="M30 50q34-26 68 0" fill="none" stroke="#D9A441" stroke-width="3" opacity="0.7"/>
+    <path d="M44 60q6 10 4 22M84 60q-6 10-4 22" stroke="#F4E8D0" stroke-width="2" fill="none" opacity="0.4"/>
+    <path d="M64 38.0L71.3 64L64 90.0L56.7 64Z" fill="#F4E8D0" opacity="0.25"/>
+    <path d="M38.0 64L64 56.7L90.0 64L64 71.3Z" fill="#F4E8D0" opacity="0.2125"/>
+</svg>

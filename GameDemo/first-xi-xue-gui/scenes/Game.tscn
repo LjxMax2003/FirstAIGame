@@ -1,0 +1,77 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/Game.gd" id="1_game"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/EnemyPool.gd" id="3_epool"]
+[ext_resource type="Script" path="res://scripts/GemPool.gd" id="4_gpool"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/WeaponManager.tscn" id="5_weapons"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/LevelUpUI.tscn" id="7_lvlup"]
+[ext_resource type="PackedScene" path="res://scenes/ui/DeathUI.tscn" id="8_death"]
+[ext_resource type="Script" path="res://scripts/Ground.gd" id="9_ground"]
+[ext_resource type="Script" path="res://scripts/PropField.gd" id="10_props"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PauseUI.tscn" id="11_pause"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/ui/bg_night_market.svg" id="12_bg"]
+[ext_resource type="Script" path="res://scripts/PickupField.gd" id="13_pickups"]
+[ext_resource type="Script" path="res://scripts/ResourceField.gd" id="14_resources"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ShopUI.tscn" id="15_shop"]
+[ext_resource type="Script" path="res://scripts/ui/DamageNumbers.gd" id="16_dmg"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_game")
+
+[node name="BG" type="TextureRect" parent="."]
+z_index = -20
+texture_filter = 1
+offset_right = 720.0
+offset_bottom = 1280.0
+mouse_filter = 2
+texture = ExtResource("12_bg")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Ground" type="Node2D" parent="World"]
+z_index = -10
+script = ExtResource("9_ground")
+
+[node name="Props" type="Node2D" parent="World"]
+z_index = -5
+script = ExtResource("10_props")
+
+[node name="Resources" type="Node2D" parent="World"]
+z_index = -3
+script = ExtResource("14_resources")
+
+[node name="Player" parent="World" instance=ExtResource("2_player")]
+
+[node name="EnemyPool" type="Node2D" parent="World"]
+script = ExtResource("3_epool")
+
+[node name="GemPool" type="Node2D" parent="World"]
+z_index = 1
+script = ExtResource("4_gpool")
+
+[node name="Pickups" type="Node2D" parent="World"]
+z_index = 2
+script = ExtResource("13_pickups")
+
+[node name="Weapons" parent="World" instance=ExtResource("5_weapons")]
+
+[node name="DamageNumbers" type="Node2D" parent="World"]
+z_index = 7
+script = ExtResource("16_dmg")
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="HUD" parent="UI" instance=ExtResource("6_hud")]
+
+[node name="PauseUI" parent="UI" instance=ExtResource("11_pause")]
+
+[node name="LevelUpUI" parent="UI" instance=ExtResource("7_lvlup")]
+
+[node name="DeathUI" parent="UI" instance=ExtResource("8_death")]
+
+[node name="ShopUI" parent="UI" instance=ExtResource("15_shop")]

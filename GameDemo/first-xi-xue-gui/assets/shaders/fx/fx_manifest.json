@@ -1,0 +1,1632 @@
+{
+  "schema_version": 1,
+  "pack": "shouyiren-fx",
+  "title_zh": "《守艺人·百工夜行》视觉特效包",
+  "generated": "2026-10-27",
+  "curated_from": "https://godotshaders.com/shader/?orderby=date&order=DESC",
+  "godot": "4.6 / 4.7（已在 4.6 stable + mobile 渲染后端实跑验证）",
+  "renderer": [
+    "mobile",
+    "gl_compatibility",
+    "forward_plus"
+  ],
+  "viewport": [
+    720,
+    1280
+  ],
+  "principles": [
+    "全部为 canvas_item，不含 SCREEN_TEXTURE / DEPTH_TEXTURE 采样，移动端与 Compatibility 通吃",
+    "全部参数走 uniform 并带 hint，Inspector 里可直接调，不写死魔法数",
+    "modulate / self_modulate 统一在 vertex() 取出、最后相乘，特效不会吞掉节点调色",
+    "单个节点只能挂一个 ShaderMaterial —— 材质接管与还原统一由 scripts/ShaderFX.gd 负责"
+  ],
+  "categories": {
+    "hit": "受击反馈",
+    "spawn": "敌人出现 / 消失",
+    "light": "光效",
+    "item": "道具",
+    "skill": "技能"
+  },
+  "skill_subcategories": {
+    "cast": "技能发动 / 一次性演出（slash_arc、cast_burst、projectile_trail）",
+    "rank": "技能升级区分，常驻（skill_rank_rim）",
+    "field": "技能持续表现，常驻（aura_field）"
+  },
+  "skill_integration_points": {
+    "slash_arc": "scripts/weapons/WeaponManager.gd → fire_whip() 的 _push_fx() 之后 ShaderFX.slash(arc, 0.12, false, false)；flip 传 false（方向已由 flip_h 翻转），restore 传 false（池化精灵由 _take_fx() 剥材质）",
+    "cast_burst": "fire_whip() 与 fire_halo() → ShaderFX.burst_ellipse(parent, center, long_px, short_px, color, rays, duration)。横扫 long=length*2 / short=width / rays=0；花灯是圆心为正圆、只在真的烧到目标时放。⚠️ 不要直接传 squash=(1.7,0.5)：那会把椭圆长轴挤出节点被裁掉，见 fx-pack.md §9.6 ②",
+    "skill_rank_rim": "scripts/ui/HUD.gd → _sync_weapon_row() 里对槽位 TextureRect 调 ShaderFX.set_rank(ic, level, evolved)，必须在 set_size 之后（框宽要按 源图宽/显示宽 换算）",
+    "aura_field": "scripts/GarlicRing.gd → _ready() 建场（并压成贴边窄带）、set_radius() 里 field_resize()、beat() 里 field_beat()",
+    "area_ripple": "GarlicRing.gd（花灯第二层）。⚠️ 和 aura_field 是叠加不是替代：边带管“边界在哪”，波纹管“圈里在烧”。皮影的轨迹圈已删除（见 effects 里 not_used_by）",
+    "projectile_trail": "WeaponManager.fire_projectile() 里糖画/剪纸挂 set_trail(axis=0)，_release_bullet() 里还原。自转的弹体（打铁花）不挂：拖尾在贴图 UV 里，自转会让尾巴绕圈"
+  },
+  "effects": [
+    {
+      "id": "hit_flash",
+      "title_zh": "受击闪光（可带描边）",
+      "category": "hit",
+      "file": "res://assets/shaders/fx/hit_flash.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_mix",
+      "attach_to": "Sprite2D / AnimatedSprite2D 的 material",
+      "why": "48px 敌人只剩色块，整块压成单色比整体提亮更容易在满屏同色怪里被看见",
+      "texture_samples": "1（开描边时 5）",
+      "params": [
+        {
+          "name": "flash_color",
+          "type": "color",
+          "default": "#FFF5DB",
+          "drive": "暖白，与灯笼色系同族"
+        },
+        {
+          "name": "amount",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "脚本 tween 1 → 0"
+        },
+        {
+          "name": "active",
+          "type": "bool",
+          "default": false,
+          "drive": "true 等同 amount=1，做开关用"
+        },
+        {
+          "name": "preserve_shading",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "0 平涂 / 1 保留明暗"
+        },
+        {
+          "name": "boost",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 1.35,
+          "drive": ">1 略过曝"
+        },
+        {
+          "name": "outline_width",
+          "type": "float",
+          "range": [
+            0,
+            8
+          ],
+          "default": 0.0,
+          "drive": "快速怪设 2.0，替代 outline.gdshader"
+        }
+      ],
+      "api": "ShaderFX.flash(sprite, Color(1, 0.96, 0.86), 0.12)",
+      "replaces": "Enemy.gd 里 art.modulate = HIT_COLOR 的写法（仅建议用于精英/Boss/玩家）",
+      "conflict": "与 outline.gdshader 抢同一个 material 槽；本 shader 自带描边参数，flash() 会自动继承原描边值",
+      "reference": [
+        "https://godotshaders.com/shader/hit-flash-effect/",
+        "https://godotshaders.com/shader/flash-with-modulate-preserve/"
+      ]
+    },
+    {
+      "id": "dissolve_spawn",
+      "title_zh": "噪声溶解（出现 / 消失双向）",
+      "category": "spawn",
+      "file": "res://assets/shaders/fx/dissolve_spawn.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_mix",
+      "attach_to": "Sprite2D / AnimatedSprite2D 的 material",
+      "why": "一个 progress 参数覆盖出场与退场；程序化噪声不需要 noise 贴图；不用 discard，边缘是化开的墨而不是跳动的像素",
+      "texture_samples": "1",
+      "params": [
+        {
+          "name": "progress",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 1.0,
+          "drive": "0→1 出现，1→0 消失"
+        },
+        {
+          "name": "noise_scale",
+          "type": "float",
+          "range": [
+            1,
+            40
+          ],
+          "default": 9.0,
+          "drive": "墨块颗粒大小，48px 怪建议 7~9"
+        },
+        {
+          "name": "softness",
+          "type": "float",
+          "range": [
+            0.005,
+            0.35
+          ],
+          "default": 0.07,
+          "drive": "越大越化开"
+        },
+        {
+          "name": "edge_color",
+          "type": "color",
+          "default": "#FFD16B",
+          "drive": "金=出场，青 #73E6FF=退场/鬼气"
+        },
+        {
+          "name": "edge_width",
+          "type": "float",
+          "range": [
+            0,
+            0.5
+          ],
+          "default": 0.12
+        },
+        {
+          "name": "edge_boost",
+          "type": "float",
+          "range": [
+            0,
+            5
+          ],
+          "default": 0.9,
+          "drive": "未开 HDR 2D 时不要超过 1.2，否则裁成纯白"
+        },
+        {
+          "name": "edge_tint",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.75
+        },
+        {
+          "name": "direction",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.4,
+          "drive": "0 均匀 / 1 完全按方向推进"
+        },
+        {
+          "name": "from_bottom",
+          "type": "bool",
+          "default": true,
+          "drive": "true = 破土而出"
+        }
+      ],
+      "api": "ShaderFX.spawn_in(sprite, 0.35) / ShaderFX.dissolve_out(sprite, 0.45)",
+      "replaces": "Enemy.gd _die() 里 modulate 直接归零的瞬切（可选增强，需控制数量）",
+      "conflict": "过渡期间会顶掉描边材质；过渡结束 detach() 自动还原",
+      "reference": [
+        "https://godotshaders.com/shader/teleport-effect/",
+        "https://godotshaders.com/shader/enhanced-dissolve-ragdoll-alternative-tutorial/",
+        "https://godotshaders.com/shader/dissolve-with-glowing-edge/"
+      ]
+    },
+    {
+      "id": "sprite_glow",
+      "title_zh": "本体脉冲发光",
+      "category": "light",
+      "file": "res://assets/shaders/fx/sprite_glow.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "Sprite2D 的 material",
+      "why": "加法混合，暗色贴图也能自己发光；光被裁剪在贴图 alpha 内，不会多出一个发光方框",
+      "texture_samples": "1",
+      "params": [
+        {
+          "name": "glow_color",
+          "type": "color",
+          "default": "#FFC752"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            5
+          ],
+          "default": 1.2
+        },
+        {
+          "name": "falloff",
+          "type": "float",
+          "range": [
+            0.2,
+            3
+          ],
+          "default": 1.1
+        },
+        {
+          "name": "pulse_speed",
+          "type": "float",
+          "range": [
+            0,
+            8
+          ],
+          "default": 1.6
+        },
+        {
+          "name": "pulse_amount",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.25
+        }
+      ],
+      "api": "ShaderFX.set_item_glow(sprite, true, Color(1, 0.78, 0.32))",
+      "use_for": [
+        "掉落的铜钱/道具",
+        "被点燃的敌人",
+        "升级卡",
+        "Boss 蓄力本体"
+      ],
+      "conflict": "blend_add 会盖掉描边，不要和描边同时用在同一个节点",
+      "reference": [
+        "https://godotshaders.com/shader/texture-clipped-pulse-glow/",
+        "https://godotshaders.com/shader/item-pulse-glow/"
+      ]
+    },
+    {
+      "id": "glow_aura",
+      "title_zh": "程序化光晕（无贴图）",
+      "category": "light",
+      "file": "res://assets/shaders/fx/glow_aura.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（推荐，尺寸任意）",
+      "why": "零贴图采样，纯数学衰减；拉多大都不会糊，比模糊一张贴图便宜得多",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "radius",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.42
+        },
+        {
+          "name": "softness",
+          "type": "float",
+          "range": [
+            0.01,
+            1
+          ],
+          "default": 0.55
+        },
+        {
+          "name": "ring",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "0 实心光斑 / 1 空心光环"
+        },
+        {
+          "name": "wobble",
+          "type": "float",
+          "range": [
+            0,
+            0.4
+          ],
+          "default": 0.06
+        },
+        {
+          "name": "glow_color",
+          "type": "color",
+          "default": "#FFB859"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            5
+          ],
+          "default": 1.0
+        },
+        {
+          "name": "core_boost",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0.8
+        },
+        {
+          "name": "pulse_speed",
+          "type": "float",
+          "range": [
+            0,
+            8
+          ],
+          "default": 1.4
+        },
+        {
+          "name": "pulse_amount",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.18
+        }
+      ],
+      "api": "var aura := ShaderFX.add_aura(node, 120.0, Color(1, 0.72, 0.35))",
+      "use_for": [
+        "篝火 / 油灯",
+        "精英底光",
+        "技能落点高光",
+        "拾取瞬间"
+      ],
+      "conflict": "无（独立节点，不占本体 material）",
+      "reference": [
+        "https://godotshaders.com/shader/sun-pulse-glow/",
+        "https://godotshaders.com/shader/glow/"
+      ]
+    },
+    {
+      "id": "shine_sweep",
+      "title_zh": "扫光",
+      "category": "item",
+      "file": "res://assets/shaders/fx/shine_sweep.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_mix",
+      "attach_to": "Sprite2D / TextureRect 的 material",
+      "why": "光只在图案内部扫，不加发光背景；1~3 条平行光带，常量循环，移动端安全",
+      "texture_samples": "1",
+      "params": [
+        {
+          "name": "shine_color",
+          "type": "color",
+          "default": "#FFFFFF"
+        },
+        {
+          "name": "progress",
+          "type": "float",
+          "range": [
+            -0.5,
+            1.5
+          ],
+          "default": 0.55
+        },
+        {
+          "name": "width",
+          "type": "float",
+          "range": [
+            0.01,
+            0.6
+          ],
+          "default": 0.16
+        },
+        {
+          "name": "angle",
+          "type": "float",
+          "range": [
+            -1.57,
+            1.57
+          ],
+          "default": 0.6
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            2
+          ],
+          "default": 1.1
+        },
+        {
+          "name": "bands",
+          "type": "float",
+          "range": [
+            1,
+            3
+          ],
+          "default": 1.0
+        },
+        {
+          "name": "hardness",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "剪纸风设 0.8 出硬边光条"
+        },
+        {
+          "name": "auto_speed",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0.0,
+          "drive": ">0 自动循环，0 由脚本驱动"
+        }
+      ],
+      "api": "ShaderFX.sweep(icon, 0.55)  // 扫一次；常亮掉落物把 auto_speed 设 0.15",
+      "use_for": [
+        "商店卡片",
+        "宝箱",
+        "稀有掉落",
+        "升级卡翻面"
+      ],
+      "conflict": "与其他 canvas shader 互斥，靠 detach() 还原",
+      "reference": [
+        "https://godotshaders.com/shader/shine-sweep-for-items-and-ui/"
+      ]
+    },
+    {
+      "id": "hurt_vignette",
+      "title_zh": "受伤红边（全屏）",
+      "category": "hit",
+      "file": "res://assets/shaders/fx/hurt_vignette.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_mix",
+      "attach_to": "HUD 最上层 ColorRect（Full Rect，Mouse Filter = Ignore）",
+      "why": "内边界用噪声扰动，读作血糊上来而不是 UI 弹窗；按像素归一化，竖屏左右上下厚度一致",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "hurt_color",
+          "type": "color",
+          "default": "#850F0D"
+        },
+        {
+          "name": "screen_size",
+          "type": "vec2",
+          "default": [
+            720,
+            1280
+          ],
+          "drive": "必须等于项目 viewport，否则四边厚度不均"
+        },
+        {
+          "name": "size",
+          "type": "float",
+          "range": [
+            0,
+            0.5
+          ],
+          "default": 0.22
+        },
+        {
+          "name": "softness",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.6
+        },
+        {
+          "name": "roughness",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.35
+        },
+        {
+          "name": "max_alpha",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.85,
+          "drive": "脚本主要驱动这个"
+        },
+        {
+          "name": "pulse_speed",
+          "type": "float",
+          "range": [
+            0,
+            10
+          ],
+          "default": 1.8
+        },
+        {
+          "name": "pulse_amount",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.5
+        }
+      ],
+      "api": "ShaderFX.hurt(vignette_rect, 0.8, 0.5)",
+      "use_for": [
+        "玩家受伤",
+        "残血常驻（每帧按 hp 比例驱动 max_alpha）"
+      ],
+      "conflict": "无（叠在最上层，不占本体的 material）",
+      "reference": [
+        "https://godotshaders.com/shader/damage-hurt-pulsing-blood-red-screen-edge/"
+      ]
+    },
+    {
+      "id": "magic_circle",
+      "title_zh": "程序化法阵",
+      "category": "skill",
+      "file": "res://assets/shaders/fx/magic_circle.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（正方形）或 纯色 Sprite2D",
+      "why": "零贴图，环数/星形/刻痕/光点全参数化；appear 从 0 到 1 就是沿圆周画阵",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "circle_color",
+          "type": "color",
+          "default": "#F2B85C"
+        },
+        {
+          "name": "glow",
+          "type": "float",
+          "range": [
+            0,
+            4
+          ],
+          "default": 1.0
+        },
+        {
+          "name": "rings",
+          "type": "int",
+          "range": [
+            1,
+            5
+          ],
+          "default": 3
+        },
+        {
+          "name": "line_width",
+          "type": "float",
+          "range": [
+            0.002,
+            0.03
+          ],
+          "default": 0.008
+        },
+        {
+          "name": "ticks",
+          "type": "int",
+          "range": [
+            0,
+            96
+          ],
+          "default": 48
+        },
+        {
+          "name": "star_points",
+          "type": "int",
+          "range": [
+            0,
+            8
+          ],
+          "default": 8
+        },
+        {
+          "name": "star_step",
+          "type": "int",
+          "range": [
+            1,
+            5
+          ],
+          "default": 3
+        },
+        {
+          "name": "orbs",
+          "type": "int",
+          "range": [
+            0,
+            12
+          ],
+          "default": 6
+        },
+        {
+          "name": "spin_speed",
+          "type": "float",
+          "default": 0.25
+        },
+        {
+          "name": "pulse_speed",
+          "type": "float",
+          "default": 2.0
+        },
+        {
+          "name": "appear",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 1.0
+        }
+      ],
+      "api": "var c := ShaderFX.spawn_circle(player, 180.0); get_tree().create_timer(1.2).timeout.connect(c.queue_free)",
+      "use_for": [
+        "技能预警圈",
+        "召唤阵",
+        "传送门",
+        "升级演出"
+      ],
+      "conflict": "无（独立节点）",
+      "reference": [
+        "https://godotshaders.com/shader/procedural-magic-circle/"
+      ]
+    },
+    {
+      "id": "slash_arc",
+      "title_zh": "挥砍弧光（遮罩式）",
+      "category": "skill",
+      "sub": "cast",
+      "file": "res://assets/shaders/fx/skill/slash_arc.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_mix",
+      "attach_to": "已经挂了弧光贴图的 Sprite2D（Art.WHIP_ARC）的 material",
+      "why": "本作的弧光是 SVG 笔触图，用 shader 从零画圆环会变成霓虹灯管。所以这个 shader 只做遮挡：按一帧画到哪，把未扫到的部分盖掉，画风零改动",
+      "texture_samples": "1",
+      "params": [
+        {
+          "name": "progress",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 1.0,
+          "drive": "脚本 0 → 1；1 = 整条弧可见"
+        },
+        {
+          "name": "pivot",
+          "type": "vec2",
+          "default": [
+            0.0,
+            0.5
+          ],
+          "drive": "起手点，左中 = 从左往右扫"
+        },
+        {
+          "name": "start_angle",
+          "type": "float",
+          "range": [
+            -3.14,
+            3.14
+          ],
+          "default": -1.35
+        },
+        {
+          "name": "arc_span",
+          "type": "float",
+          "range": [
+            0.2,
+            6.28
+          ],
+          "default": 2.5
+        },
+        {
+          "name": "flip",
+          "type": "bool",
+          "default": false,
+          "drive": "反向挥，配合 sprite.flip_h"
+        },
+        {
+          "name": "edge_color",
+          "type": "color",
+          "default": "#FFF5D6"
+        },
+        {
+          "name": "edge_width",
+          "type": "float",
+          "range": [
+            0,
+            0.6
+          ],
+          "default": 0.1,
+          "drive": "刀锋亮带宽度（占弧长比例）"
+        },
+        {
+          "name": "edge_boost",
+          "type": "float",
+          "range": [
+            0,
+            4
+          ],
+          "default": 1.35,
+          "drive": "未开 HDR 2D 时别超 1.6"
+        },
+        {
+          "name": "tail_fade",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.55,
+          "drive": "0 = 整条一样亮，1 = 只剩刀锋"
+        }
+      ],
+      "api": "ShaderFX.slash(arc_sprite, 0.12, false)",
+      "use_for": [
+        "傩面·师刀横扫",
+        "锯骨刃挥砍",
+        "任何有弧光贴图的近战"
+      ],
+      "conflict": "与 hit_flash 抢同一个 material；弧光 sprite 是特效节点，不受击，一般无冲突",
+      "reference": [
+        "https://godotshaders.com/shader/sword-slash-effect/",
+        "https://godotshaders.com/shader/animated-slash-arc/"
+      ]
+    },
+    {
+      "id": "cast_burst",
+      "title_zh": "发动冲击环（扩散 / 收拢）",
+      "category": "skill",
+      "sub": "cast",
+      "file": "res://assets/shaders/fx/skill/cast_burst.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（尺寸 = 冲击环外径），放在技能中心、本体下层",
+      "why": "技能出手那一帧的统一回应。一个 shader 两种模式：扩散 = 出招，收拢 = 蓄力/进化；squash 能把圆环压成椭圆，贴着矩形判定框走，不会读错范围",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "progress",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "脚本 0 → 1"
+        },
+        {
+          "name": "gather",
+          "type": "bool",
+          "default": false,
+          "drive": "false 扩散 / true 收拢"
+        },
+        {
+          "name": "rings",
+          "type": "float",
+          "range": [
+            1,
+            3
+          ],
+          "default": 1.0
+        },
+        {
+          "name": "spread",
+          "type": "float",
+          "range": [
+            0.1,
+            1
+          ],
+          "default": 0.9
+        },
+        {
+          "name": "width",
+          "type": "float",
+          "range": [
+            0.01,
+            0.5
+          ],
+          "default": 0.12
+        },
+        {
+          "name": "squash",
+          "type": "vec2",
+          "default": [
+            1,
+            1
+          ],
+          "drive": "横扫填 (1.7, 0.5)，改成椭圆贴判定框；API 会自动换算节点尺寸"
+        },
+        {
+          "name": "rays",
+          "type": "int",
+          "range": [
+            0,
+            24
+          ],
+          "default": 0,
+          "drive": "0 = 纯环（灯晕一跳），8~12 = 爆点"
+        },
+        {
+          "name": "ray_sharp",
+          "type": "float",
+          "range": [
+            0.5,
+            8
+          ],
+          "default": 3.0
+        },
+        {
+          "name": "burst_color",
+          "type": "color",
+          "default": "#FFDB8C"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            5
+          ],
+          "default": 2.2,
+          "drive": "低于 1.5 在暗底上会看不见"
+        },
+        {
+          "name": "core",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0.6
+        },
+        {
+          "name": "fade_pow",
+          "type": "float",
+          "range": [
+            0.5,
+            4
+          ],
+          "default": 1.2
+        }
+      ],
+      "api": "ShaderFX.burst(parent, Vector2(280, 90), Color(1,0.86,0.55), Vector2(1.7, 0.5), 10)",
+      "use_for": [
+        "技能出手",
+        "光环一跳",
+        "进化爆发",
+        "蓄力预警（gather=true）"
+      ],
+      "conflict": "无（独立节点，播完自己 queue_free）",
+      "pitfall": "ColorRect 的 color 会被当顶点色乘进去，必须设纯白，否则红会叠红",
+      "reference": [
+        "https://godotshaders.com/shader/shockwave-effect/",
+        "https://godotshaders.com/shader/ring-shockwave/"
+      ]
+    },
+    {
+      "id": "skill_rank_rim",
+      "title_zh": "技能等级外框（升级区分）",
+      "category": "skill",
+      "sub": "rank",
+      "file": "res://assets/shaders/fx/skill/skill_rank_rim.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_mix",
+      "attach_to": "Sprite2D / TextureRect（武器槽图标、光环范围圈、环绕体本体）",
+      "why": "MAX_LEVEL=8、6 把武器 = 48 张分级贴图，美术成本不划算，而且玩家在战斗里不读小数字。改成同一张图 + 三档颜色 + 三档厚度 + 流动：颜色是前注意特征，余光就知道哪把变金了",
+      "texture_samples": "9（1 本体 + 8 邻域）",
+      "params": [
+        {
+          "name": "rank",
+          "type": "float",
+          "range": [
+            1,
+            8
+          ],
+          "default": 1.0,
+          "drive": "直接喂 WeaponManager.weapon_level()；Lv1~2 不出框"
+        },
+        {
+          "name": "evolved",
+          "type": "bool",
+          "default": false,
+          "drive": "进化形态：无视 rank 直接最高档 + 高频呼吸"
+        },
+        {
+          "name": "rim_width",
+          "type": "float",
+          "range": [
+            0,
+            8
+          ],
+          "default": 2.0
+        },
+        {
+          "name": "rim_strength",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 1.0
+        },
+        {
+          "name": "low_color",
+          "type": "color",
+          "default": "#CCEBFF",
+          "drive": "Lv3~4 冷白"
+        },
+        {
+          "name": "mid_color",
+          "type": "color",
+          "default": "#FFC752",
+          "drive": "Lv5~6 金"
+        },
+        {
+          "name": "high_color",
+          "type": "color",
+          "default": "#FF5C38",
+          "drive": "Lv7~8 朱红"
+        },
+        {
+          "name": "flow_speed",
+          "type": "float",
+          "range": [
+            0,
+            6
+          ],
+          "default": 1.2
+        },
+        {
+          "name": "flow_amount",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.35,
+          "drive": "0 = 恒定亮"
+        },
+        {
+          "name": "inner_glow",
+          "type": "float",
+          "range": [
+            0,
+            2
+          ],
+          "default": 0.0,
+          "drive": "本体整体泛色，高等级才有"
+        }
+      ],
+      "api": "ShaderFX.set_rank(slot_icon, WeaponManager.weapon_level(id), WeaponManager.is_evolved(id))",
+      "use_for": [
+        "6 个武器槽图标",
+        "光环范围圈",
+        "环绕体"
+      ],
+      "conflict": "占 material 槽；武器槽图标一般不会再挂别的 shader。采样 9 次，只能给个位数节点用，别挂小怪或弹幕",
+      "tiers": {
+        "Lv1~2": "无外框",
+        "Lv3~4": "冷白细框",
+        "Lv5~6": "金框",
+        "Lv7~8": "朱红粗框 + 流动加快",
+        "进化": "强制朱红 + 双倍强度 + 9Hz 呼吸"
+      },
+      "reference": [
+        "https://godotshaders.com/shader/outline-with-color-ramp/"
+      ]
+    },
+    {
+      "id": "aura_field",
+      "title_zh": "领域能量场（光环持续表现）",
+      "category": "skill",
+      "sub": "field",
+      "file": "res://assets/shaders/fx/skill/aura_field.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（正方形，直径 = 判定直径），叠在范围圈贴图上",
+      "why": "常驻的持续表达，和一次性法阵分工：magic_circle 是预警（出完就没），这个是\"技能一直在这儿\"。程序化环流噪声，免贴图",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "inner",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.62
+        },
+        {
+          "name": "outer",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.98
+        },
+        {
+          "name": "softness",
+          "type": "float",
+          "range": [
+            0.01,
+            0.5
+          ],
+          "default": 0.1
+        },
+        {
+          "name": "field_color",
+          "type": "color",
+          "default": "#FFB859"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0.9
+        },
+        {
+          "name": "noise_scale",
+          "type": "float",
+          "range": [
+            1,
+            20
+          ],
+          "default": 5.0,
+          "drive": "越大越碎"
+        },
+        {
+          "name": "swirl_speed",
+          "type": "float",
+          "range": [
+            -3,
+            3
+          ],
+          "default": 0.55,
+          "drive": "负值反向；多个光环反向能看出层次"
+        },
+        {
+          "name": "streak",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.45,
+          "drive": "0 云雾 / 1 丝状"
+        },
+        {
+          "name": "beat",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "命中置 1 再衰减，接 GarlicRing.beat()"
+        },
+        {
+          "name": "beat_boost",
+          "type": "float",
+          "range": [
+            0,
+            2
+          ],
+          "default": 0.7
+        }
+      ],
+      "api": "var f := ShaderFX.field(ring, 260.0); ShaderFX.field_beat(f)",
+      "use_for": [
+        "花灯·光环",
+        "毒圈 / 减速区",
+        "Boss 领域"
+      ],
+      "conflict": "无（独立节点）",
+      "pitfall": "极坐标噪声不能直接拿 (atan, 半径) 采样，±PI 处会裂开一条缝；本实现把角度转成单位圆坐标再采",
+      "reference": [
+        "https://godotshaders.com/shader/swirling-energy-field/"
+      ]
+    },
+    {
+      "id": "area_ripple",
+      "title_zh": "范围水波纹（同心扩散环）",
+      "category": "skill",
+      "sub": "field",
+      "file": "res://assets/shaders/fx/skill/area_ripple.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（正方形，边长 = 范围直径），由 ShaderFX.ripple() 建",
+      "why": "aura_field 说的是“边界在哪里”，这个说的是“圈里一直在挨打”。同心环由内向外推，一眼就能读出持续伤害，而且 0 次采样、纯数学",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "rect_size",
+          "type": "vec2",
+          "default": [
+            256,
+            256
+          ],
+          "drive": "节点像素尺寸，只用于短边归一化；API 会跟着 resize 一起写"
+        },
+        {
+          "name": "inner",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.1,
+          "drive": "内径，圆心不留亮点"
+        },
+        {
+          "name": "outer",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.98
+        },
+        {
+          "name": "softness",
+          "type": "float",
+          "range": [
+            0.01,
+            0.5
+          ],
+          "default": 0.14
+        },
+        {
+          "name": "rings",
+          "type": "float",
+          "range": [
+            0.5,
+            8
+          ],
+          "default": 2.0,
+          "drive": "半径方向上的圈数"
+        },
+        {
+          "name": "speed",
+          "type": "float",
+          "range": [
+            0,
+            6
+          ],
+          "default": 1.6,
+          "drive": "每秒往外推几圈 —— 也就是“发射频率”，1.6 ≈ 每 0.6s 一圈"
+        },
+        {
+          "name": "wave_power",
+          "type": "float",
+          "range": [
+            1,
+            16
+          ],
+          "default": 5.0,
+          "drive": "越大环越细，读作一道锋面"
+        },
+        {
+          "name": "ring_color",
+          "type": "color",
+          "default": "#FF9E4D"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0.55,
+          "drive": "常驻大面积别超 0.6，再亮会糊住圈心的角色"
+        },
+        {
+          "name": "pulse",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "命中置 1 再衰减，接 GarlicRing.beat()"
+        },
+        {
+          "name": "pulse_boost",
+          "type": "float",
+          "range": [
+            0,
+            2
+          ],
+          "default": 0.9
+        }
+      ],
+      "api": "var r := ShaderFX.ripple(ring_node, radius * 2.0, Color(1, 0.62, 0.30), 2.0, 1.6, 0.52)",
+      "use_for": [
+        "花灯·光环（第二层，叠在 aura_field 边带之上）",
+        "毒圈 / 减速区",
+        "Boss 领域"
+      ],
+      "integration_points": {
+        "GarlicRing.gd": "_ready() 建（放在 _field 之后、Ring 之前）、set_radius() 里 ripple_resize()、beat() 里 ripple_pulse()"
+      },
+      "not_used_by": "皮影（phone）的环绕轨迹圈已于本轮删除：花灯范围场也是同心波纹，两个同时在场时分不清哪个才是判定范围。环绕的轨道交由影人本体的运动表达",
+      "conflict": "无（独立节点）",
+      "pitfall": "① blend_add 下 src 会再乘一次 src.a → COLOR.a 恒 1.0，亮度全算进 rgb；② 径向 shader 不能拿 UV 直接算半径，非正方形会变椭圆，所以按短边归一化；③ 别用 fract 做锯齿相位，环的收尾会留一条硬接缝",
+      "reference": [
+        "https://godotshaders.com/shader/circular-waves-2d/"
+      ]
+    },
+    {
+      "id": "projectile_trail",
+      "title_zh": "弹道辉光尾",
+      "category": "skill",
+      "sub": "cast",
+      "file": "res://assets/shaders/fx/skill/projectile_trail.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "弹道 Sprite2D 的 material",
+      "why": "糖丝、飞刀、符纸都要\"在飞\"的感觉。拖尾在贴图自身 UV 里做，跟着 sprite 一起转，不用录粒子",
+      "texture_samples": "1",
+      "params": [
+        {
+          "name": "stretch",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.55,
+          "drive": "尾长占贴图长度的比例"
+        },
+        {
+          "name": "axis",
+          "type": "int",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0,
+          "drive": "0 +X / 1 -X / 2 +Y / 3 -Y；用 int 不用 vec2，避免与 rotation 打架"
+        },
+        {
+          "name": "tightness",
+          "type": "float",
+          "range": [
+            0.1,
+            4
+          ],
+          "default": 1.4
+        },
+        {
+          "name": "trail_color",
+          "type": "color",
+          "default": "#FFDB8C"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            2
+          ],
+          "default": 1.0,
+          "drive": "超 1.5 会烧成纯白横杠"
+        },
+        {
+          "name": "flicker",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.2
+        },
+        {
+          "name": "flicker_speed",
+          "type": "float",
+          "range": [
+            0,
+            40
+          ],
+          "default": 18.0
+        }
+      ],
+      "api": "ShaderFX.set_trail(bullet_sprite, 0, Color(1, 0.86, 0.55))",
+      "use_for": [
+        "糖丝",
+        "飞刀",
+        "泼射",
+        "符纸"
+      ],
+      "conflict": "占 material 槽；每节点一份独立材质，同屏 > 20 发时只给前排挂",
+      "pitfall": "blend_add 下 src 会二次乘 src.a，alpha 必须固定 1.0、亮度全算进 rgb",
+      "reference": [
+        "https://godotshaders.com/shader/projectile-trail/",
+        "https://godotshaders.com/shader/bullet-glow-trail/"
+      ]
+    },
+    {
+      "id": "molten_scatter",
+      "title_zh": "铁水散开·漫天火星（v6 打铁花签名）",
+      "category": "skill",
+      "sub": "一次性爆发",
+      "file": "res://assets/shaders/fx/skill/molten_scatter.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（边长 = 2×溅射半径，z=1 压在怪之上）",
+      "why": "cast_burst 画的是**一条干净环**，语义是'敲了一下'（铜锣）。铁水是'一团熔铁砸开散成一片火星'——没有环、只有各自往外飞的亮点，形状语言完全不同",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "rect_size",
+          "type": "vec2",
+          "default": [
+            300,
+            300
+          ],
+          "drive": "节点像素尺寸，短边归一化；API 随 resize 写"
+        },
+        {
+          "name": "radius",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.95,
+          "drive": "火星外缘，留 5% 不被矩形裁掉"
+        },
+        {
+          "name": "spread",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.85,
+          "drive": "火星推到半径的比例。**API 传 1.0**：0.85×0.95 只到判定半径 81%，玩家会白挨看不见的边"
+        },
+        {
+          "name": "sparks",
+          "type": "float",
+          "range": [
+            0.5,
+            12
+          ],
+          "default": 5.0,
+          "drive": "角度分格数 = sparks×7"
+        },
+        {
+          "name": "noise_scale",
+          "type": "float",
+          "range": [
+            1,
+            24
+          ],
+          "default": 7.0,
+          "drive": "火星云颗粒尺度"
+        },
+        {
+          "name": "spark_power",
+          "type": "float",
+          "range": [
+            1,
+            16
+          ],
+          "default": 6.0,
+          "drive": "单颗火星锐度"
+        },
+        {
+          "name": "speed",
+          "type": "float",
+          "range": [
+            0,
+            6
+          ],
+          "default": 1.4,
+          "drive": "每秒推几轮"
+        },
+        {
+          "name": "scatter_color",
+          "type": "color",
+          "default": "#FF7A1A",
+          "drive": "铁水橙红，B 压到 0.10 与花灯暖金/铜锣白金分开"
+        },
+        {
+          "name": "core_color",
+          "type": "color",
+          "default": "#FFD16B",
+          "drive": "中心熔核"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 1.4,
+          "drive": "API 传 1.5（清单上限 1.6）"
+        },
+        {
+          "name": "pulse",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.0,
+          "drive": "碎裂置 1 再衰减"
+        },
+        {
+          "name": "pulse_boost",
+          "type": "float",
+          "range": [
+            0,
+            2
+          ],
+          "default": 1.0
+        }
+      ],
+      "api": "ShaderFX.molten_scatter(parent, center, radius_px, color, duration) -> ColorRect",
+      "integration_points": {
+        "WeaponManager._maybe_explode()": "碎裂点调用，半径直接传实际结算半径 r（explode_radius × area × area_mult）；进化态再补一次 0.62r 的内部二次溅射",
+        "WeaponManager._glow_left": "屏幕光晕的 0.25s 冷却：同一次泼洒炸两发，两团光叠加会过曝"
+      },
+      "pitfall": "① blend_add 下 COLOR.a 恒 1.0，亮度全算进 rgb，node_tint 必须纯白；② 极坐标噪声要转单位圆坐标再采，禁止 (atan, r) 直接采样（接缝）；③ 半径按短边归一化，rect_size 必须随节点尺寸写",
+      "deviation": "节点 z 从清单建议的'低于本体'改为 1（高于怪）：实测压在怪堆下会被挡掉大半，'漫天火星'读不出来",
+      "verified": "V6Fx.tscn：150 半径可见像素 45.4%、纯白过曝 0.30%、最外 3px 行 0%；V5InGame 断言碎裂点确实开的是它"
+    },
+    {
+      "id": "lantern_stream",
+      "title_zh": "花灯·走马灯流光（v6 Lv8 觉醒）",
+      "category": "skill",
+      "sub": "常驻表现（满级）",
+      "file": "res://assets/shaders/fx/skill/lantern_stream.gdshader",
+      "shader_type": "canvas_item",
+      "render_mode": "blend_add",
+      "attach_to": "ColorRect（正方形，直径 = 花灯判定直径），叠在 aura_field / area_ripple 之上",
+      "why": "aura_field 的环流是**噪声在流**，边界糊、没有方向感，读作'雾在转'。走马灯必须一格一格地过、有拖尾——几何结构不同，调参数调不出来",
+      "texture_samples": "0",
+      "params": [
+        {
+          "name": "rect_size",
+          "type": "vec2",
+          "default": [
+            260,
+            260
+          ],
+          "drive": "短边归一化"
+        },
+        {
+          "name": "inner",
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "default": 0.8,
+          "drive": "亮带内沿"
+        },
+        {
+          "name": "band_width",
+          "type": "float",
+          "range": [
+            0.01,
+            0.3
+          ],
+          "default": 0.12,
+          "drive": "亮带宽度（径向）"
+        },
+        {
+          "name": "flow_speed",
+          "type": "float",
+          "range": [
+            0,
+            6
+          ],
+          "default": 1.8,
+          "drive": "沿圆周流动速度（rad/s）"
+        },
+        {
+          "name": "lantern_color",
+          "type": "color",
+          "default": "#FFC752",
+          "drive": "灯笼金"
+        },
+        {
+          "name": "intensity",
+          "type": "float",
+          "range": [
+            0,
+            3
+          ],
+          "default": 1.0,
+          "drive": "常驻 1.0；命中一跳由 API 推到 1.7 再回落"
+        }
+      ],
+      "api": "ShaderFX.lantern_stream(parent, diameter, color) / lantern_stream_resize() / lantern_stream_beat()",
+      "integration_points": {
+        "GarlicRing.gd": "_ready() 建、set_radius() resize、beat() 轻推 intensity、set_awakened() 开关",
+        "Player.gd": "每帧把 has_weapon(halo) + weapon_level>=MAX_LEVEL 推给 GarlicRing.set_awakened()"
+      },
+      "pitfall": "格与格的底噪必须压到 0.05：0.22 会把六格连成连续亮环，和 aura_field 的边带完全同形，加了等于没加（第一版实测 Lv7/Lv8 几乎分不出来）",
+      "deviation": "清单把 aura_field'填充内部'列为复用项；实施取中间态 inner 0.62（原 0.80）：填满会把站在圆心的玩家盖掉，走位信息比'更满'重要",
+      "verified": "V6Fx.tscn：圆心 160px 亮度 = 底色、整圈 100% 有光、0.35s 后 100% 采样点变化；V5InGame：Lv7 无 / Lv8 有"
+    }
+  ],
+  "tiering": {
+    "why": "独立 ShaderMaterial 会切断 CanvasItem 合批；同屏上百只怪逐只挂 shader = 上百次 draw call",
+    "T0_crowd": {
+      "who": "普通小怪（同屏 50~200）",
+      "use": "继续用 art.modulate 换色 + scale 缩放，0 额外成本",
+      "avoid": "hit_flash / dissolve_spawn"
+    },
+    "T1_individual": {
+      "who": "精英、Boss、玩家、掉落物（同屏 < 10）",
+      "use": "ShaderFX.flash / spawn_in / dissolve_out / set_item_glow"
+    },
+    "T2_hero_moment": {
+      "who": "升级、Boss 出场、受击特写",
+      "use": "glow_aura + magic_circle + hurt_vignette 叠加"
+    },
+    "T2_skill_cast": {
+      "who": "技能发动那一帧（同屏最多十几个）",
+      "use": "cast_burst + slash_arc + projectile_trail；都是独立的短命节点或弹道本体，不影响小怪合批"
+    },
+    "T3_persistent": {
+      "who": "武器槽图标、光环圈、环绕体（个位数）",
+      "use": "skill_rank_rim / aura_field。前者采样 9 次，只给常驻的个位数节点"
+    }
+  },
+  "verified": {
+    "date": "2026-10-28",
+    "where": "Godot 4.6 stable · mobile 渲染后端 · SubViewport 1:1（含 720x1280 竖屏校验）",
+    "api_assertions": 28,
+    "preview": "docs/shaders/skill-preview.png（9 格）",
+    "skill_in_game": "tools/SkillInGame.tscn → 32/32 PASS（走 fire_whip / fire_projectile / fire_halo / GarlicRing.beat / HUD 重建的真实调用）"
+  },
+  "material_rules": [
+    "一个 CanvasItem 只能有一个 material；ShaderFX.attach() 会把原材质存进 meta，detach() 原样还回",
+    "同一节点上新特效会 kill 上一条 tween，不会有两条动画抢同一个 uniform",
+    "快速怪若要用 hit_flash，描边宽度通过在 hit_flash 上设 outline_width=2 实现，不要另挂 outline.gdshader",
+    "池化对象：材质按 shader 缓存在节点 meta 里，反复受击不会反复 new ShaderMaterial"
+  ],
+  "not_picked": [
+    {
+      "entry": "Dissolve with Glowing Edge / Enhanced Dissolve",
+      "reason": "spatial 版，本作是纯 2D；溶解思路已移植进 dissolve_spawn"
+    },
+    {
+      "entry": "Analog Horror VHS / CRT Lite",
+      "reason": "全屏复古后处理，与非遗手绘风格冲突"
+    },
+    {
+      "entry": "Waterfall / Water waves / Lava",
+      "reason": "场景向，本作地面是静态铺装"
+    },
+    {
+      "entry": "Sprite hologram / Hologram with Scanlines",
+      "reason": "科幻调性不符；但其 vertex() 取 modulate 的写法被全部 shader 采用"
+    },
+    {
+      "entry": "Refractive glass / Planet / Wormhole",
+      "reason": "Spatial 或观赏型，无玩法承载"
+    }
+  ],
+  "sources_note": "本包是按上述站点条目的思路重写、并按本工程分辨率与移动端预算重新调参的实现，非逐字复制。各条目许可以其页面标注为准（多数为 CC0 或 MIT），商用前请自行复核。"
+}

@@ -1,0 +1,1414 @@
+{
+ "stages": [
+  {
+   "t": 0,
+   "mm": "00:00",
+   "lv": 1,
+   "density": 52,
+   "demand_hp": 16,
+   "dps": 8,
+   "dps_ratio": 0.47,
+   "single_dps": 8,
+   "hp": 100,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "kill_per_s": 2.56,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 1,
+     "base": 7.7,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 8
+    }
+   ]
+  },
+  {
+   "t": 60,
+   "mm": "01:00",
+   "lv": 4,
+   "density": 61,
+   "demand_hp": 20,
+   "dps": 9,
+   "dps_ratio": 0.46,
+   "single_dps": 9,
+   "hp": 100,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "kill_per_s": 2.93,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 2,
+     "base": 9.3,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 9
+    }
+   ]
+  },
+  {
+   "t": 300,
+   "mm": "05:00",
+   "lv": 11,
+   "density": 110,
+   "demand_hp": 91,
+   "dps": 39,
+   "dps_ratio": 0.42,
+   "single_dps": 37,
+   "hp": 100,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "kill_per_s": 4.89,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 3,
+     "base": 11.7,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 12
+    },
+    {
+     "wid": "halo",
+     "lv": 2,
+     "base": 12.1,
+     "hits": 1.1,
+     "mult": 1.0,
+     "dps": 14
+    },
+    {
+     "wid": "glowstick",
+     "lv": 1,
+     "base": 13.3,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 13
+    }
+   ]
+  },
+  {
+   "t": 600,
+   "mm": "10:00",
+   "lv": 20,
+   "density": 253,
+   "demand_hp": 352,
+   "dps": 154,
+   "dps_ratio": 0.44,
+   "single_dps": 87,
+   "hp": 100,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "kill_per_s": 11.66,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 4,
+     "base": 14.4,
+     "hits": 2.6,
+     "mult": 1.0,
+     "dps": 38
+    },
+    {
+     "wid": "halo",
+     "lv": 3,
+     "base": 16.2,
+     "hits": 3.5,
+     "mult": 1.0,
+     "dps": 56
+    },
+    {
+     "wid": "glowstick",
+     "lv": 3,
+     "base": 50.8,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 51
+    },
+    {
+     "wid": "phone",
+     "lv": 1,
+     "base": 5.3,
+     "hits": 1.7,
+     "mult": 1.0,
+     "dps": 9
+    }
+   ]
+  },
+  {
+   "t": 900,
+   "mm": "15:00",
+   "lv": 28,
+   "density": 317,
+   "demand_hp": 538,
+   "dps": 308,
+   "dps_ratio": 0.57,
+   "single_dps": 135,
+   "hp": 100,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "kill_per_s": 19.06,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 5,
+     "base": 17.7,
+     "hits": 4.4,
+     "mult": 1.0,
+     "dps": 78
+    },
+    {
+     "wid": "halo",
+     "lv": 4,
+     "base": 21.1,
+     "hits": 5.8,
+     "mult": 1.0,
+     "dps": 122
+    },
+    {
+     "wid": "glowstick",
+     "lv": 4,
+     "base": 71.6,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 72
+    },
+    {
+     "wid": "phone",
+     "lv": 2,
+     "base": 6.6,
+     "hits": 2.8,
+     "mult": 1.0,
+     "dps": 18
+    },
+    {
+     "wid": "blade",
+     "lv": 2,
+     "base": 17.6,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 18
+    }
+   ]
+  },
+  {
+   "t": 1200,
+   "mm": "20:00",
+   "lv": 34,
+   "density": 380,
+   "demand_hp": 967,
+   "dps": 714,
+   "dps_ratio": 0.74,
+   "single_dps": 220,
+   "hp": 100,
+   "threat": 18.6,
+   "survive_s": 5.4,
+   "kill_per_s": 29.56,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 6,
+     "base": 19.0,
+     "hits": 6.8,
+     "mult": 1.0,
+     "dps": 130
+    },
+    {
+     "wid": "halo",
+     "lv": 5,
+     "base": 23.7,
+     "hits": 9.1,
+     "mult": 1.0,
+     "dps": 216
+    },
+    {
+     "wid": "glowstick",
+     "lv": 5,
+     "base": 130.4,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 130
+    },
+    {
+     "wid": "phone",
+     "lv": 3,
+     "base": 7.2,
+     "hits": 4.4,
+     "mult": 1.0,
+     "dps": 32
+    },
+    {
+     "wid": "blade",
+     "lv": 3,
+     "base": 21.0,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 21
+    },
+    {
+     "wid": "extinguisher",
+     "lv": 2,
+     "base": 18.5,
+     "hits": 10,
+     "mult": 1.0,
+     "dps": 185
+    }
+   ]
+  },
+  {
+   "t": 1500,
+   "mm": "25:00",
+   "lv": 40,
+   "density": 443,
+   "demand_hp": 1593,
+   "dps": 984,
+   "dps_ratio": 0.62,
+   "single_dps": 292,
+   "hp": 100,
+   "threat": 17.2,
+   "survive_s": 5.8,
+   "kill_per_s": 28.82,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 7,
+     "base": 23.1,
+     "hits": 8,
+     "mult": 1.0,
+     "dps": 185
+    },
+    {
+     "wid": "halo",
+     "lv": 6,
+     "base": 30.0,
+     "hits": 10,
+     "mult": 1.0,
+     "dps": 300
+    },
+    {
+     "wid": "glowstick",
+     "lv": 6,
+     "base": 178.2,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 178
+    },
+    {
+     "wid": "phone",
+     "lv": 4,
+     "base": 8.9,
+     "hits": 6.6,
+     "mult": 1.0,
+     "dps": 58
+    },
+    {
+     "wid": "blade",
+     "lv": 4,
+     "base": 28.1,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 28
+    },
+    {
+     "wid": "extinguisher",
+     "lv": 3,
+     "base": 23.4,
+     "hits": 10,
+     "mult": 1.0,
+     "dps": 234
+    }
+   ]
+  },
+  {
+   "t": 1800,
+   "mm": "30:00",
+   "lv": 45,
+   "density": 506,
+   "demand_hp": 2111,
+   "dps": 1478,
+   "dps_ratio": 0.7,
+   "single_dps": 525,
+   "hp": 100,
+   "threat": 17.2,
+   "survive_s": 5.8,
+   "kill_per_s": 37.34,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 8,
+     "base": 26.2,
+     "hits": 8,
+     "mult": 1.0,
+     "dps": 209
+    },
+    {
+     "wid": "halo",
+     "lv": 8,
+     "base": 38.4,
+     "hits": 10,
+     "mult": 1.0,
+     "dps": 384
+    },
+    {
+     "wid": "glowstick",
+     "lv": 8,
+     "base": 357.4,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 357
+    },
+    {
+     "wid": "phone",
+     "lv": 8,
+     "base": 12.4,
+     "hits": 8,
+     "mult": 1.0,
+     "dps": 99
+    },
+    {
+     "wid": "blade",
+     "lv": 8,
+     "base": 53.0,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 53
+    },
+    {
+     "wid": "extinguisher",
+     "lv": 8,
+     "base": 37.5,
+     "hits": 10,
+     "mult": 1.0,
+     "dps": 375
+    }
+   ]
+  }
+ ],
+ "extreme": [
+  {
+   "name": "X1 全增益拉满（5被动满+meta满）",
+   "dps": 1999,
+   "single": 710,
+   "ratio": 0.95,
+   "hp": 100,
+   "revive": 2,
+   "threat": 13.0,
+   "survive_s": 15.4,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 8,
+     "base": 26.2,
+     "hits": 8,
+     "mult": 1.35,
+     "dps": 283
+    },
+    {
+     "wid": "halo",
+     "lv": 8,
+     "base": 38.4,
+     "hits": 10,
+     "mult": 1.35,
+     "dps": 520
+    },
+    {
+     "wid": "glowstick",
+     "lv": 8,
+     "base": 357.4,
+     "hits": 1.0,
+     "mult": 1.35,
+     "dps": 484
+    },
+    {
+     "wid": "phone",
+     "lv": 8,
+     "base": 12.4,
+     "hits": 8,
+     "mult": 1.35,
+     "dps": 134
+    },
+    {
+     "wid": "blade",
+     "lv": 8,
+     "base": 53.0,
+     "hits": 1.0,
+     "mult": 1.35,
+     "dps": 72
+    },
+    {
+     "wid": "extinguisher",
+     "lv": 8,
+     "base": 37.5,
+     "hits": 10,
+     "mult": 1.35,
+     "dps": 507
+    }
+   ]
+  },
+  {
+   "name": "X9 越界·冷却11级（超出上限5+meta5）",
+   "dps": 1999,
+   "single": 710,
+   "ratio": 0.95,
+   "hp": 100,
+   "revive": 2,
+   "threat": 20.0,
+   "survive_s": 10.0,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 8,
+     "base": 26.2,
+     "hits": 8,
+     "mult": 1.35,
+     "dps": 283
+    },
+    {
+     "wid": "halo",
+     "lv": 8,
+     "base": 38.4,
+     "hits": 10,
+     "mult": 1.35,
+     "dps": 520
+    },
+    {
+     "wid": "glowstick",
+     "lv": 8,
+     "base": 357.4,
+     "hits": 1.0,
+     "mult": 1.35,
+     "dps": 484
+    },
+    {
+     "wid": "phone",
+     "lv": 8,
+     "base": 12.4,
+     "hits": 8,
+     "mult": 1.35,
+     "dps": 134
+    },
+    {
+     "wid": "blade",
+     "lv": 8,
+     "base": 53.0,
+     "hits": 1.0,
+     "mult": 1.35,
+     "dps": 72
+    },
+    {
+     "wid": "extinguisher",
+     "lv": 8,
+     "base": 37.5,
+     "hits": 10,
+     "mult": 1.35,
+     "dps": 507
+    }
+   ]
+  },
+  {
+   "name": "X11 三武器全进化+满增益（币值上限）",
+   "dps": 1934,
+   "single": 858,
+   "ratio": 0.92,
+   "hp": 100,
+   "revive": 2,
+   "threat": 13.0,
+   "survive_s": 15.4,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": "E:evolve_whip",
+     "base": 26.2,
+     "hits": 8,
+     "mult": 2.3,
+     "dps": 481
+    },
+    {
+     "wid": "halo",
+     "lv": "E:evolve_halo",
+     "base": 38.4,
+     "hits": 10,
+     "mult": 1.89,
+     "dps": 727
+    },
+    {
+     "wid": "glowstick",
+     "lv": "E:evolve_glowstick",
+     "base": 357.4,
+     "hits": 1.0,
+     "mult": 2.03,
+     "dps": 725
+    }
+   ]
+  },
+  {
+   "name": "X2 纯AOE极限（进化蒜+圣经+斧+范围满）",
+   "dps": 1026,
+   "single": 105,
+   "ratio": 0.49,
+   "hp": 100,
+   "revive": 2,
+   "threat": 13.0,
+   "survive_s": 15.4,
+   "detail": [
+    {
+     "wid": "halo",
+     "lv": "E:evolve_halo",
+     "base": 28.8,
+     "hits": 10,
+     "mult": 1.89,
+     "dps": 546
+    },
+    {
+     "wid": "phone",
+     "lv": 8,
+     "base": 9.3,
+     "hits": 8,
+     "mult": 1.35,
+     "dps": 100
+    },
+    {
+     "wid": "extinguisher",
+     "lv": 8,
+     "base": 28.1,
+     "hits": 10,
+     "mult": 1.35,
+     "dps": 381
+    }
+   ]
+  },
+  {
+   "name": "X6 六武器Lv8 零被动（槽位极值）",
+   "dps": 735,
+   "single": 262,
+   "ratio": 0.35,
+   "hp": 100,
+   "revive": 0,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 8,
+     "base": 13.1,
+     "hits": 8,
+     "mult": 1.0,
+     "dps": 105
+    },
+    {
+     "wid": "halo",
+     "lv": 8,
+     "base": 19.2,
+     "hits": 10,
+     "mult": 1.0,
+     "dps": 192
+    },
+    {
+     "wid": "glowstick",
+     "lv": 8,
+     "base": 178.7,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 179
+    },
+    {
+     "wid": "phone",
+     "lv": 8,
+     "base": 6.2,
+     "hits": 7.5,
+     "mult": 1.0,
+     "dps": 46
+    },
+    {
+     "wid": "blade",
+     "lv": 8,
+     "base": 26.5,
+     "hits": 1.0,
+     "mult": 1.0,
+     "dps": 26
+    },
+    {
+     "wid": "extinguisher",
+     "lv": 8,
+     "base": 18.8,
+     "hits": 10,
+     "mult": 1.0,
+     "dps": 188
+    }
+   ]
+  },
+  {
+   "name": "X3 单武器极限（进化鞭+全增益）",
+   "dps": 481,
+   "single": 60,
+   "ratio": 0.23,
+   "hp": 100,
+   "revive": 2,
+   "threat": 13.0,
+   "survive_s": 15.4,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": "E:evolve_whip",
+     "base": 26.2,
+     "hits": 8,
+     "mult": 2.3,
+     "dps": 481
+    }
+   ]
+  },
+  {
+   "name": "X10 越界·范围11级",
+   "dps": 477,
+   "single": 50,
+   "ratio": 0.23,
+   "hp": 100,
+   "revive": 0,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "detail": [
+    {
+     "wid": "halo",
+     "lv": "E:evolve_halo",
+     "base": 28.8,
+     "hits": 10,
+     "mult": 1.4,
+     "dps": 403
+    },
+    {
+     "wid": "phone",
+     "lv": 8,
+     "base": 9.3,
+     "hits": 8,
+     "mult": 1.0,
+     "dps": 74
+    }
+   ]
+  },
+  {
+   "name": "X7 被动满+单武器（被动力极值）",
+   "dps": 283,
+   "single": 35,
+   "ratio": 0.13,
+   "hp": 200,
+   "revive": 2,
+   "threat": 13.0,
+   "survive_s": 30.8,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 8,
+     "base": 26.2,
+     "hits": 8,
+     "mult": 1.35,
+     "dps": 283
+    }
+   ]
+  },
+  {
+   "name": "X4 龟壳（蒜Lv1+全防御，零输出）",
+   "dps": 45,
+   "single": 11,
+   "ratio": 0.02,
+   "hp": 200,
+   "revive": 0,
+   "threat": 13.0,
+   "survive_s": 15.4,
+   "detail": [
+    {
+     "wid": "halo",
+     "lv": 1,
+     "base": 10.7,
+     "hits": 4.2,
+     "mult": 1.0,
+     "dps": 45
+    }
+   ]
+  },
+  {
+   "name": "X5 纯走位（鞭Lv1+全生存）",
+   "dps": 36,
+   "single": 14,
+   "ratio": 0.02,
+   "hp": 200,
+   "revive": 2,
+   "threat": 13.0,
+   "survive_s": 30.8,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 1,
+     "base": 10.3,
+     "hits": 2.6,
+     "mult": 1.35,
+     "dps": 36
+    }
+   ]
+  },
+  {
+   "name": "X8 零构筑对照（鞭Lv1，什么都不点）",
+   "dps": 20,
+   "single": 8,
+   "ratio": 0.01,
+   "hp": 100,
+   "revive": 0,
+   "threat": 20.0,
+   "survive_s": 5.0,
+   "detail": [
+    {
+     "wid": "whip",
+     "lv": 1,
+     "base": 7.7,
+     "hits": 2.6,
+     "mult": 1.0,
+     "dps": 20
+    }
+   ]
+  }
+ ],
+ "marginal": {
+  "damage": [
+   {
+    "lv": 1,
+    "delta_pct": 10.0,
+    "cum_pct": 10.0
+   },
+   {
+    "lv": 2,
+    "delta_pct": 9.1,
+    "cum_pct": 20.0
+   },
+   {
+    "lv": 3,
+    "delta_pct": 8.3,
+    "cum_pct": 30.0
+   },
+   {
+    "lv": 4,
+    "delta_pct": 7.7,
+    "cum_pct": 40.0
+   },
+   {
+    "lv": 5,
+    "delta_pct": 7.1,
+    "cum_pct": 50.0
+   }
+  ],
+  "cooldown": [
+   {
+    "lv": 1,
+    "delta_pct": 5.3,
+    "cum_pct": 5.3
+   },
+   {
+    "lv": 2,
+    "delta_pct": 5.6,
+    "cum_pct": 11.1
+   },
+   {
+    "lv": 3,
+    "delta_pct": 5.9,
+    "cum_pct": 17.6
+   },
+   {
+    "lv": 4,
+    "delta_pct": 6.2,
+    "cum_pct": 25.0
+   },
+   {
+    "lv": 5,
+    "delta_pct": 6.7,
+    "cum_pct": 33.3
+   }
+  ],
+  "area": [
+   {
+    "lv": 1,
+    "delta_pct": 7.0,
+    "cum_pct": 7.0
+   },
+   {
+    "lv": 2,
+    "delta_pct": 6.5,
+    "cum_pct": 14.0
+   },
+   {
+    "lv": 3,
+    "delta_pct": 6.1,
+    "cum_pct": 21.0
+   },
+   {
+    "lv": 4,
+    "delta_pct": 5.8,
+    "cum_pct": 28.0
+   },
+   {
+    "lv": 5,
+    "delta_pct": 5.5,
+    "cum_pct": 35.0
+   }
+  ]
+ },
+ "combo": [
+  {
+   "dmg": 5,
+   "cd": 5,
+   "area": 5,
+   "mult": 2.7
+  },
+  {
+   "dmg": 5,
+   "cd": 3,
+   "area": 5,
+   "mult": 2.382
+  },
+  {
+   "dmg": 3,
+   "cd": 5,
+   "area": 5,
+   "mult": 2.34
+  },
+  {
+   "dmg": 5,
+   "cd": 5,
+   "area": 2,
+   "mult": 2.28
+  },
+  {
+   "dmg": 3,
+   "cd": 3,
+   "area": 5,
+   "mult": 2.065
+  },
+  {
+   "dmg": 5,
+   "cd": 0,
+   "area": 5,
+   "mult": 2.025
+  },
+  {
+   "dmg": 5,
+   "cd": 3,
+   "area": 2,
+   "mult": 2.012
+  },
+  {
+   "dmg": 5,
+   "cd": 5,
+   "area": 0,
+   "mult": 2.0
+  }
+ ],
+ "breakeven": [
+  {
+   "t": 60,
+   "mm": "01:00",
+   "garlic_r": 119.0,
+   "in_circle": 1.46,
+   "garlic_dps": 28.1,
+   "wand_dps": 178.7
+  },
+  {
+   "t": 300,
+   "mm": "05:00",
+   "garlic_r": 119.0,
+   "in_circle": 2.66,
+   "garlic_dps": 51.1,
+   "wand_dps": 178.7
+  },
+  {
+   "t": 600,
+   "mm": "10:00",
+   "garlic_r": 119.0,
+   "in_circle": 6.11,
+   "garlic_dps": 117.4,
+   "wand_dps": 178.7
+  },
+  {
+   "t": 900,
+   "mm": "15:00",
+   "garlic_r": 119.0,
+   "in_circle": 7.64,
+   "garlic_dps": 146.7,
+   "wand_dps": 178.7
+  },
+  {
+   "t": 1200,
+   "mm": "20:00",
+   "garlic_r": 119.0,
+   "in_circle": 9.17,
+   "garlic_dps": 176.0,
+   "wand_dps": 178.7
+  },
+  {
+   "t": 1500,
+   "mm": "25:00",
+   "garlic_r": 119.0,
+   "in_circle": 10.7,
+   "garlic_dps": 205.4,
+   "wand_dps": 178.7
+  },
+  {
+   "t": 1800,
+   "mm": "30:00",
+   "garlic_r": 119.0,
+   "in_circle": 12.22,
+   "garlic_dps": 234.7,
+   "wand_dps": 178.7
+  }
+ ],
+ "hp_calibration": [
+  {
+   "t": 60,
+   "mm": "01:00",
+   "supply_dps": 9,
+   "spawn_rate": 6.38,
+   "hp_needed": 1.5,
+   "hp_current": 3.2,
+   "gap_ratio": 0.46
+  },
+  {
+   "t": 300,
+   "mm": "05:00",
+   "supply_dps": 39,
+   "spawn_rate": 11.61,
+   "hp_needed": 1.6,
+   "hp_current": 3.9,
+   "gap_ratio": 0.42
+  },
+  {
+   "t": 600,
+   "mm": "10:00",
+   "supply_dps": 154,
+   "spawn_rate": 26.67,
+   "hp_needed": 2.1,
+   "hp_current": 4.9,
+   "gap_ratio": 0.44
+  },
+  {
+   "t": 900,
+   "mm": "15:00",
+   "supply_dps": 308,
+   "spawn_rate": 33.33,
+   "hp_needed": 3.4,
+   "hp_current": 6.0,
+   "gap_ratio": 0.57
+  },
+  {
+   "t": 1200,
+   "mm": "20:00",
+   "supply_dps": 714,
+   "spawn_rate": 40.0,
+   "hp_needed": 5.3,
+   "hp_current": 7.1,
+   "gap_ratio": 0.74
+  },
+  {
+   "t": 1500,
+   "mm": "25:00",
+   "supply_dps": 984,
+   "spawn_rate": 46.67,
+   "hp_needed": 5.2,
+   "hp_current": 8.4,
+   "gap_ratio": 0.62
+  },
+  {
+   "t": 1800,
+   "mm": "30:00",
+   "supply_dps": 1478,
+   "spawn_rate": 53.33,
+   "hp_needed": 6.8,
+   "hp_current": 9.7,
+   "gap_ratio": 0.7
+  }
+ ],
+ "sensitivity": [
+  {
+   "knob": "血量时间指数",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": -21.0,
+   "ratio_pct": 26.6,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "敌人血量基准 hp_base",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": -20.0,
+   "ratio_pct": 25.0,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "血量时间指数",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 26.6,
+   "ratio_pct": -21.0,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "刷怪批次增长",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": -15.0,
+   "ratio_pct": 17.6,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "敌人血量基准 hp_base",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 20.0,
+   "ratio_pct": -16.7,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "刷怪批次增长",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 15.0,
+   "ratio_pct": -13.0,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "刷怪批次基数",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": -5.0,
+   "ratio_pct": 5.3,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "刷怪批次基数",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 5.0,
+   "ratio_pct": -4.8,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "Sp阶敌速",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "Sp阶敌速",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "接触伤害",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": -20.0,
+   "survive_pct": 25.0
+  },
+  {
+   "knob": "接触伤害",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": 20.0,
+   "survive_pct": -16.7
+  },
+  {
+   "knob": "接触 cadence",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": -37.5,
+   "survive_pct": 60.0
+  },
+  {
+   "knob": "接触 cadence",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": -16.7,
+   "survive_pct": 20.0
+  },
+  {
+   "knob": "玩家无敌帧",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": 0.0,
+   "survive_pct": 0.0
+  },
+  {
+   "knob": "玩家无敌帧",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": -50.0,
+   "survive_pct": 100.0
+  },
+  {
+   "knob": "玩家生命上限",
+   "factor": 0.8,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": 0.0,
+   "survive_pct": -20.0
+  },
+  {
+   "knob": "玩家生命上限",
+   "factor": 1.2,
+   "supply_pct": 0.0,
+   "demand_pct": 0.0,
+   "ratio_pct": 0.0,
+   "threat_pct": 0.0,
+   "survive_pct": 20.0
+  }
+ ],
+ "xp_supply": {
+  "xp_entered": 130792,
+  "xp_killable": 81332,
+  "xp_picked": 73199,
+  "kill_gain": 0.9,
+  "pickup_rate": 0.9
+ },
+ "xp_table": [
+  {
+   "pickup": 0.7,
+   "xp_picked": 56932,
+   "level_30min": 42,
+   "level_remaining_xp": 914,
+   "level_cap": 48
+  },
+  {
+   "pickup": 0.8,
+   "xp_picked": 65065,
+   "level_30min": 43,
+   "level_remaining_xp": 4551,
+   "level_cap": 48
+  },
+  {
+   "pickup": 0.9,
+   "xp_picked": 73199,
+   "level_30min": 45,
+   "level_remaining_xp": 2954,
+   "level_cap": 48
+  },
+  {
+   "pickup": 1.0,
+   "xp_picked": 81332,
+   "level_30min": 47,
+   "level_remaining_xp": 322,
+   "level_cap": 48
+  }
+ ],
+ "level_pacing": [
+  {
+   "level": 1,
+   "need_xp": 6,
+   "approx_sec": 1.0
+  },
+  {
+   "level": 2,
+   "need_xp": 10,
+   "approx_sec": 1.7
+  },
+  {
+   "level": 3,
+   "need_xp": 17,
+   "approx_sec": 2.9
+  },
+  {
+   "level": 4,
+   "need_xp": 28,
+   "approx_sec": 4.8
+  },
+  {
+   "level": 5,
+   "need_xp": 42,
+   "approx_sec": 7.4
+  },
+  {
+   "level": 6,
+   "need_xp": 61,
+   "approx_sec": 10.7
+  },
+  {
+   "level": 7,
+   "need_xp": 85,
+   "approx_sec": 14.8
+  },
+  {
+   "level": 8,
+   "need_xp": 113,
+   "approx_sec": 19.6
+  }
+ ],
+ "roster_impact": {
+  "rows": [
+   {
+    "mm": "00:00",
+    "t": 0,
+    "demand_old": 16,
+    "demand_new": 19,
+    "gap_pct": 13.3,
+    "R_old": 0.47,
+    "R_new": 0.41
+   },
+   {
+    "mm": "01:00",
+    "t": 60,
+    "demand_old": 20,
+    "demand_new": 23,
+    "gap_pct": 13.3,
+    "R_old": 0.46,
+    "R_new": 0.41
+   },
+   {
+    "mm": "05:00",
+    "t": 300,
+    "demand_old": 91,
+    "demand_new": 97,
+    "gap_pct": 6.2,
+    "R_old": 0.42,
+    "R_new": 0.4
+   },
+   {
+    "mm": "10:00",
+    "t": 600,
+    "demand_old": 352,
+    "demand_new": 368,
+    "gap_pct": 4.4,
+    "R_old": 0.44,
+    "R_new": 0.42
+   },
+   {
+    "mm": "15:00",
+    "t": 900,
+    "demand_old": 538,
+    "demand_new": 562,
+    "gap_pct": 4.4,
+    "R_old": 0.57,
+    "R_new": 0.55
+   },
+   {
+    "mm": "20:00",
+    "t": 1200,
+    "demand_old": 967,
+    "demand_new": 999,
+    "gap_pct": 3.4,
+    "R_old": 0.74,
+    "R_new": 0.71
+   },
+   {
+    "mm": "25:00",
+    "t": 1500,
+    "demand_old": 1593,
+    "demand_new": 1636,
+    "gap_pct": 2.7,
+    "R_old": 0.62,
+    "R_new": 0.6
+   },
+   {
+    "mm": "30:00",
+    "t": 1800,
+    "demand_old": 2111,
+    "demand_new": 2167,
+    "gap_pct": 2.7,
+    "R_old": 0.7,
+    "R_new": 0.68
+   }
+  ],
+  "peak_mm": "20:00",
+  "peak_R": 0.71,
+  "monotone_peak_ok": false,
+  "turns": 2,
+  "note": "R_new 峰值 0.71 @ 20:00；有效转折 2 次（<=1 即单峰，噪声带 0.02）"
+ },
+ "boss": {
+  "rows": [
+   {
+    "t": 900,
+    "mm": "15:00",
+    "hp": 2800,
+    "single_dps": 135,
+    "eff_dps": 94,
+    "kill_s": 29.7,
+    "in_band": true,
+    "hp_for_30s": 2800.0
+   },
+   {
+    "t": 1500,
+    "mm": "25:00",
+    "hp": 6100,
+    "single_dps": 292,
+    "eff_dps": 204,
+    "kill_s": 29.9,
+    "in_band": true,
+    "hp_for_30s": 6100.0
+   },
+   {
+    "t": 1800,
+    "mm": "30:00",
+    "hp": 11000,
+    "single_dps": 525,
+    "eff_dps": 367,
+    "kill_s": 29.9,
+    "in_band": true,
+    "hp_for_30s": 11000.0
+   }
+  ],
+  "mob_spawn_during_boss": 0.35,
+  "verdict": "全部落在 20~40s 带内时可保留；超出则按 eff_dps×30s 反推 HP"
+ },
+ "pickups": {
+  "kills": 50103,
+  "rows": [
+   {
+    "id": "magnet",
+    "drop_rate": 0.0005,
+    "per_run": 25.1,
+    "interval_s": 72.0,
+    "effect": "立刻吸走全屏经验宝石"
+   },
+   {
+    "id": "bomb",
+    "drop_rate": 0.0002,
+    "per_run": 10.0,
+    "interval_s": 180.0,
+    "effect": "清掉当前屏幕内所有非 Boss 敌人"
+   },
+   {
+    "id": "bento",
+    "drop_rate": 0.0003,
+    "per_run": 15.0,
+    "interval_s": 120.0,
+    "effect": "回复 30% 最大生命"
+   }
+  ],
+  "total_per_run": 50.1,
+  "mean_interval_s": 35.9
+ }
+}

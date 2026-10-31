@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160">
+  <!-- 皮影班主：细长条。剪影形如一枚竖立的皮影签子 ——
+       乌纱帽的两道翅横向伸出，是五个人里唯一"头比肩宽"的轮廓。 -->
+  <defs>
+    <radialGradient id="sg" gradientUnits="userSpaceOnUse" cx="64" cy="92" r="78">
+      <stop offset="0" stop-color="#5C7BB8" stop-opacity="0.40"/>
+      <stop offset="0.55" stop-color="#2B3A5C" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#2B3A5C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#33456B"/><stop offset="1" stop-color="#1A243A"/>
+    </linearGradient>
+    <linearGradient id="skin4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EFE2C6"/><stop offset="1" stop-color="#D2BE97"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="160" fill="#08111E"/>
+  <circle cx="64" cy="92" r="78" fill="url(#sg)"/>
+  <path d="M137.5 80.0L134.5 100.7L125.8 119.7L112.8 136.4L94.8 147.3L74.6 154.0L53.6 152.2L33.5 146.8L15.1 136.4L2.0 119.8L-6.6 100.7L-11.7 80.0L-7.1 59.1L1.9 40.1L14.9 23.3L32.9 11.8L53.5 7.2L74.4 8.0L94.7 12.7L111.9 24.7L126.9 39.6L134.0 59.4Z" fill="#0F1B2D" opacity="0.85"/>
+
+  <!-- 长衫：上窄下阔，摆口铺开（皮影正面剪影的经典形状） -->
+  <path d="M51 84q13-7 26 0l10 34 6 36H38l6-36z" fill="url(#gown)"/>
+  <path d="M48 120h32" stroke="#B08A3E" stroke-width="2" opacity="0.75"/>
+  <path d="M56 118l-4 36M72 118l4 36" stroke="#0E1524" stroke-width="1.4" opacity="0.7"/>
+  <path d="M64 84l-8 12 4 3 4-6 4 6 4-3z" fill="#C8B07A"/>
+  <!-- 腰带下的玉牌：班主的行头 -->
+  <rect x="60" y="122" width="8" height="10" rx="2" fill="#B08A3E"/>
+
+  <!-- 脖子 -->
+  <path d="M60 72h8v12h-8z" fill="#C9B893"/>
+  <!-- 头：窄脸、削下巴 -->
+  <path d="M48 54q0-18 16-18t16 18v8q0 14-16 14t-16-14z" fill="url(#skin4)"/>
+  <!-- 乌纱帽：帽体方正 + 两侧翅，翅是这张图最强的识别点 -->
+  <path d="M49 40h30v-8H49z" fill="#15181E"/>
+  <path d="M46 34h36v-7H46z" fill="#0E1013"/>
+  <path d="M46 30h-10v4h10zM82 30h10v4H82z" fill="#0E1013"/>
+  <path d="M44 33h-8M92 33h8" stroke="#B08A3E" stroke-width="1.6" stroke-linecap="round"/>
+  <!-- 细长的眉眼 + 一缕须 -->
+  <path d="M54 52h7M67 52h7" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="57" cy="57" r="1.8" fill="#1A1A1A"/>
+  <circle cx="71" cy="57" r="1.8" fill="#1A1A1A"/>
+  <path d="M62 66q2 2 4 0" stroke="#8A5030" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M64 70v5" stroke="#8A5030" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- 左手竹签 + 皮影小人：签子从手里伸向右上，末端挂着一个活动的影人 -->
+  <path d="M44 96l-8 14" stroke="url(#gown)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M40 108l24-30" stroke="#C8A45E" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M64 78l-2-14M64 78l8-10M64 78l-7 8M64 78l9 6" stroke="#C8A45E" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="62" cy="62" r="4" fill="#D9B96E"/>
+  <path d="M58 58h8" stroke="#8A6A30" stroke-width="1.4"/>
+  <circle cx="64" cy="78" r="2" fill="#E8B04B"/>
+
+  <rect x="6" y="6" width="116" height="148" rx="4" fill="none" stroke="#5C7BB8" stroke-width="2" opacity="0.55"/>
+</svg>

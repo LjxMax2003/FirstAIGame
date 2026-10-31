@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/Player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/GarlicRing.gd" id="2_halo"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/characters/shouyiren_front.svg" id="3_art"]
+[ext_resource type="Texture2D" path="res://assets/art_shouyiren/weapons/lantern_halo.svg" id="4_halo"]
+
+[sub_resource type="CircleShape2D" id="playercol"]
+radius = 12.0
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+motion_mode = 1
+script = ExtResource("1_player")
+
+[node name="Col" type="CollisionShape2D" parent="."]
+position = Vector2(0, -22)
+shape = SubResource("playercol")
+
+[node name="GarlicRing" type="Node2D" parent="."]
+z_index = -1
+script = ExtResource("2_halo")
+
+[node name="Ring" type="Sprite2D" parent="GarlicRing"]
+texture = ExtResource("4_halo")
+
+[node name="Art" type="Sprite2D" parent="."]
+texture = ExtResource("3_art")
+offset = Vector2(0, -18)
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(0, -18)

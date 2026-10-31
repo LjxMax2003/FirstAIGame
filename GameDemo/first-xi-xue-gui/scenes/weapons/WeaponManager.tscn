@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/WeaponManager.gd" id="1_weapons"]
+
+[node name="Weapons" type="Node2D" groups=["weapons"]]
+script = ExtResource("1_weapons")

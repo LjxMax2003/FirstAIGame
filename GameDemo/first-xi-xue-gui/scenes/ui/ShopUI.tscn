@@ -1,0 +1,80 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/ShopUI.gd" id="1_shop"]
+
+[node name="ShopUI" type="CanvasLayer"]
+layer = 11
+script = ExtResource("1_shop")
+
+[node name="Mask" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.07, 0.88)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="VB" type="VBoxContainer" parent="Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Head" type="HBoxContainer" parent="Center/Panel/Margin/VB"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/Panel/Margin/VB/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.88, 0.5, 1)
+theme_override_font_sizes/font_size = 28
+text = "百工谱"
+
+[node name="Coins" type="Label" parent="Center/Panel/Margin/VB/Head"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.36, 1)
+theme_override_font_sizes/font_size = 26
+text = "0 枚"
+horizontal_alignment = 2
+
+[node name="Sub" type="Label" parent="Center/Panel/Margin/VB"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.62)
+theme_override_font_sizes/font_size = 13
+text = "一夜一夜攒下的手艺 · 与口诀相乘，不占传承卡"
+horizontal_alignment = 1
+
+[node name="Rows" type="VBoxContainer" parent="Center/Panel/Margin/VB"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Hint" type="Label" parent="Center/Panel/Margin/VB"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.72, 0.84, 1)
+theme_override_font_sizes/font_size = 14
+text = "铜钱来自每夜结算 · 灯灭也算"
+horizontal_alignment = 1
+
+[node name="Close" type="Button" parent="Center/Panel/Margin/VB"]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+text = "返回"

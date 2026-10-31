@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="96" viewBox="0 0 64 96">
+  <defs>
+    <linearGradient id="vmBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3A5288"/>
+      <stop offset="1" stop-color="#1F2E52"/>
+    </linearGradient>
+    <linearGradient id="vmGlass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B8F6FF"/>
+      <stop offset="1" stop-color="#2E6B7A"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="92" rx="22" ry="4" fill="#0E1626" opacity="0.4"/>
+  <rect x="8" y="4" width="48" height="86" rx="4" fill="url(#vmBody)"/>
+  <rect x="13" y="10" width="28" height="58" rx="2" fill="url(#vmGlass)"/>
+  <g fill="#E86A5A"><rect x="16" y="14" width="8" height="10" rx="1.5"/><rect x="27" y="14" width="8" height="10" rx="1.5"/><rect x="16" y="36" width="8" height="10" rx="1.5"/><rect x="27" y="58" width="8" height="8" rx="1.5"/></g>
+  <g fill="#FFD36E"><rect x="27" y="36" width="8" height="10" rx="1.5"/><rect x="16" y="58" width="8" height="8" rx="1.5"/></g>
+  <g fill="#52E0D6"><rect x="16" y="27" width="8" height="6" rx="1.5"/><rect x="27" y="27" width="8" height="6" rx="1.5"/><rect x="16" y="49" width="8" height="6" rx="1.5"/><rect x="27" y="49" width="8" height="6" rx="1.5"/></g>
+  <rect x="44" y="12" width="8" height="20" rx="2" fill="#10182B"/>
+  <circle cx="48" cy="38" r="2" fill="#FFD36E"/>
+  <circle cx="48" cy="45" r="2" fill="#6FD8FF"/>
+  <rect x="43" y="60" width="10" height="5" rx="1.5" fill="#10182B"/>
+  <rect x="13" y="72" width="28" height="12" rx="2" fill="#10182B"/>
+  <path d="M15 78 L26 78" stroke="#52E0D6" stroke-width="2" stroke-linecap="round"/>
+  <path d="M10 8 Q20 2 30 6" stroke="#FFB37A" stroke-width="1.6" fill="none" opacity="0.7"/>
+</svg>
