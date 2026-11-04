@@ -86,6 +86,8 @@ func _show_next() -> void:
 	get_tree().paused = true
 	mask.visible = true
 	popup.visible = true
+	# 升级音在卡面出现的同时播。连升多级时由这里逐张播，天然不会叠成一串。
+	Audio.play_sfx("levelup")
 
 	var options: Array[Dictionary] = UpgradeDB.draw(UpgradeDB.CARD_COUNT)
 	if options.is_empty():

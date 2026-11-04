@@ -21,11 +21,13 @@ config/icon="res://icon.svg"
 MetaSave="*res://scripts/MetaSave.gd"
 GameManager="*res://scripts/GameManager.gd"
 Settings="*res://scripts/Settings.gd"
+Audio="*res://scripts/Audio.gd"
 
 [display]
 
 window/size/viewport_width=720
 window/size/viewport_height=1280
+window/handheld/orientation=1
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
@@ -68,3 +70,4 @@ pointing/emulate_touch_from_mouse=true
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true

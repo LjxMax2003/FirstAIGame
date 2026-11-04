@@ -1,8 +1,0 @@
-[application]
-
-config/name="ShouYiRenAssetRenderCheck"
-run/main_scene=""
-
-[rendering]
-
-renderer/rendering_method="mobile"

@@ -176,6 +176,9 @@ func _ready() -> void:
 	tips.bind(self, player)
 	# 开局先给一小波，避免前三秒空场
 	_spawn_burst(4)
+	# BGM 在场景真正开始跑之后才切换：主菜单曲的淡出与战斗曲的淡入
+	# 由 Audio 用两个播放器交叉完成，不会出现一段静音。
+	Audio.play_bgm("combat")
 
 func _process(delta: float) -> void:
 	# 三现的光效要一直贴着残面走（它会追人），所以每帧同步一次。
@@ -378,6 +381,9 @@ func _check_boss() -> void:
 	spawn_boss_visual(idx)
 	hud.flash_boss("残面 %s  ·  %d/%d" % [BOSS_APPEAR_NAME[clampi(idx, 0, 2)],
 		idx + 1, WaveTable.boss_count()])
+	# 登场重音与红色横幅同一个时点：听到和看到必须是同一件事，
+	# 晚 0.1s 就会读成"横幅先响、声音后补"。
+	Audio.play_sfx("boss_spawn")
 
 # ---------------------------------------------------------------- 残面三现（T13）
 ## 挂上第 phase 现所对应的全部层。一现只有 1 层，三现是 1+2+3 = 三层一起。
@@ -464,6 +470,9 @@ func _check_mini_boss() -> void:
 		WaveTable.MINI_BOSS_XP, String(b["kind"]), true,
 		WaveTable.CONTACT_DAMAGE * WaveTable.MINI_BOSS_DAMAGE_MULT, false, false)
 	hud.flash_boss("%s 现身" % String(b["name"]))
+	# 小 Boss 用同一个素材但压低 8 dB：玩家要能听出"又来了一个硬的"，
+	# 但不能和终局残面的登场声一样重 —— 那会削弱真 Boss 的分量。
+	Audio.play_sfx("boss_spawn", -8.0)
 
 ## 潮涌：只做"预警 + 尖峰"，不改敌人单体数值。
 ## 预警是功能性的 —— 尖峰 R 会砸到 0.17~0.33，玩家必须提前决定"绕圈还是放震吼"。
@@ -493,6 +502,9 @@ func _show_surge_ring() -> void:
 
 func _on_enemy_died(pos: Vector2, xp: int, kind: String) -> void:
 	kills += 1
+	# 击杀声。满屏清怪时一秒可能几十次，节流与并行上限在 Audio 里统一做；
+	# 这里只管"发生了一次击杀"这件事。
+	Audio.play_sfx("enemy_die")
 	gems.spawn(pos, xp)
 	# 每次击杀掷一次掉落（磁铁/炸弹/烤鸡）。掉落物不吃 xp，所以顺序无所谓。
 	pickups.roll_drop(pos, self)
@@ -687,6 +699,9 @@ func _open_chest() -> bool:
 	CodexDB.unlock(form_id)
 	weapons.spawn_evolve(player.global_position)
 	hud.flash_evolve("传承！ %s" % String(EvolutionDB.form(form_id).get("name", pick)))
+	# 传承是单局里最重的一次正反馈（横幅、特效都上了），声音也要同级；
+	# 复用升级音但抬 2 dB，和"多了一张卡"区分开。
+	Audio.play_sfx("levelup", 2.0)
 	return true
 
 ## 调试 / 测试用：不走宝箱直接查配方是否满足

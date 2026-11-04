@@ -47,6 +47,9 @@ func _process(delta: float) -> void:
 
 func _collect(g: Gem) -> void:
 	_recycle(g)
+	# 灯花入袋的"叮"。铜铃一吸可能一帧收几十颗，Audio 里按 0.06s 节流 +
+	# 2 个并行，听感是一条连续的细响，而不是几十个声音同时炸开。
+	Audio.play_sfx("gem")
 	if _player != null and is_instance_valid(_player):
 		_player.gain_xp(g.value)
 

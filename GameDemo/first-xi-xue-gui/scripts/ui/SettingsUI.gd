@@ -41,6 +41,10 @@ var _fx_full: Button
 var _fx_low: Button
 var _shake_btn: Button
 var _tips_btn: Button
+var _music_slider: HSlider
+var _sfx_slider: HSlider
+var _music_val: Label
+var _sfx_val: Label
 
 
 func _ready() -> void:
@@ -134,10 +138,11 @@ func _build() -> void:
 	tip_row.add_child(_tips_btn)
 	_root.add_child(tip_row)
 
-	# ---- 音量：本轮不做音频（v7 L-02 单列），这里**放一行说明而不是控件**。
-	# 放一个拖了没反应的滑块，比明说"还没做"更伤信任。
-	var vol := _hint("音量 · 本版尚未接入音频，暂不可调")
-	_root.add_child(vol)
+	# ---- 音量：音乐 / 音效两条总线各一条滑条。
+	# 拖动立即生效（游戏音正在播，滑条必须能当场听出大小），松手即写盘。
+	_root.add_child(_label("音量"))
+	_root.add_child(_vol_row("音乐", true))
+	_root.add_child(_vol_row("音效", false))
 
 	_root.add_child(_rule())
 
@@ -209,6 +214,55 @@ func _action(text: String, cb: Callable, color: Color = C_TEXT) -> Button:
 	b.add_theme_color_override("font_color", color)
 	return b
 
+## 一行音量：标题 + 滑条 + 百分比。
+## 百分比必须给：滑条只能读"大概三分之一"，而玩家调音量时想知道的是"到底多大声"。
+func _vol_row(text: String, music: bool) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.name = "VolMusic" if music else "VolSfx"
+	row.add_theme_constant_override("separation", 10)
+	var l := _label(text)
+	l.custom_minimum_size = Vector2(64, 0)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(l)
+	var s := HSlider.new()
+	s.min_value = 0.0
+	s.max_value = 1.0
+	s.step = 0.05
+	s.value = Settings.music_volume if music else Settings.sfx_volume
+	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	s.custom_minimum_size = Vector2(0, 30)
+	row.add_child(s)
+	var v := Label.new()
+	v.custom_minimum_size = Vector2(52, 0)
+	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	v.add_theme_font_size_override("font_size", 15)
+	v.add_theme_color_override("font_color", C_DIM)
+	row.add_child(v)
+	if music:
+		_music_slider = s
+		_music_val = v
+	else:
+		_sfx_slider = s
+		_sfx_val = v
+	# 先摆好初值再连信号，避免构建过程中白写一次盘
+	s.value_changed.connect(func(val: float) -> void: _on_volume(music, val))
+	_update_vol_label(music, s.value)
+	return row
+
+func _update_vol_label(music: bool, v: float) -> void:
+	var l: Label = _music_val if music else _sfx_val
+	if l != null:
+		l.text = "%d%%" % int(round(clampf(v, 0.0, 1.0) * 100.0))
+
+func _on_volume(music: bool, v: float) -> void:
+	if music:
+		Settings.set_music_volume(v)
+	else:
+		Settings.set_sfx_volume(v)
+	Audio.apply_volumes()
+	_update_vol_label(music, v)
+
 # ---------------------------------------------------------------- 状态刷新
 func refresh() -> void:
 	if _fx_full == null:
@@ -219,6 +273,12 @@ func refresh() -> void:
 	_shake_btn.add_theme_color_override("font_color", C_ON if Settings.shake else C_OFF)
 	_tips_btn.text = "开" if Settings.tips else "关"
 	_tips_btn.add_theme_color_override("font_color", C_ON if Settings.tips else C_OFF)
+	if _music_slider != null:
+		_music_slider.set_value_no_signal(Settings.music_volume)
+		_update_vol_label(true, Settings.music_volume)
+	if _sfx_slider != null:
+		_sfx_slider.set_value_no_signal(Settings.sfx_volume)
+		_update_vol_label(false, Settings.sfx_volume)
 
 # ---------------------------------------------------------------- 动作
 func _set_fx(v: int) -> void:

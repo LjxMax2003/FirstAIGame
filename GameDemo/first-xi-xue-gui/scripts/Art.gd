@@ -195,6 +195,32 @@ const BOSS_MASK_GLOW := "res://assets/art_shouyiren/fx/boss_mask_glow.svg"
 const BOSS_LANTERN_DRAIN := "res://assets/art_shouyiren/fx/boss_lantern_drain.svg"
 const BOSS_WARNING_RING := "res://assets/art_shouyiren/fx/boss_warning_ring.svg"
 
+# ---- v8 长夜巡更（docs/design/v8-changye-plan.md §7.3 必须 + 推荐）
+# 生成器 assets/craftkeepers/v8_build.py；只登记资源，不接线。
+# 忘市地貌 / 摊位构件 / 新杂兵与新武器先落盘，等玩法侧开火与刷怪再接。
+const TOMB_TILE := "res://assets/art_shouyiren/ground/tomb_tile.svg"
+const OLD_AWNING := "res://assets/art_shouyiren/stalls/old_awning.svg"
+const CLOTH_PILE := "res://assets/art_shouyiren/stalls/cloth_pile.svg"
+const BRICK_PILE := "res://assets/art_shouyiren/stalls/brick_pile.svg"
+const ENEMY_BRICK := "res://assets/art_shouyiren/enemies/enemy_brick.svg"
+const BOSS_TOP := "res://assets/art_shouyiren/enemies/boss_top.svg"
+const TONGCAO := "res://assets/art_shouyiren/weapons/tongcao.svg"
+const TONGCAO_PETAL := "res://assets/art_shouyiren/weapons/tongcao_petal.svg"
+const BANGZI := "res://assets/art_shouyiren/weapons/bangzi.svg"
+const CHAR_WATCH := "res://assets/art_shouyiren/characters/char_watch.svg"
+
+# ---- v8 推荐件（§7.3 同批交付）
+# enemy_brick 只有 1 帧：**刻意不进 ENEMY_FRAMES / ENEMY_SHELL**。
+# 案里 §4.2 明确"结壳层是视觉骗人的推荐件"，接线前先确认玩法要骗，
+# 否则一只 48px 砖怪突然换贴图，玩家会读成"刷了只新的"。
+const ENEMY_BRICK_SHELL := "res://assets/art_shouyiren/enemies/enemy_brick_shell.svg"
+const TONGCAO_EVOLVED := "res://assets/art_shouyiren/weapons/tongcao_evolved.svg"
+const BANGZI_EVOLVED := "res://assets/art_shouyiren/weapons/bangzi_evolved.svg"
+const AWNING_ROLL := "res://assets/art_shouyiren/stalls/awning_roll.svg"
+const OLD_STALL := "res://assets/art_shouyiren/stalls/old_stall.svg"
+# 花瓣飘落的 SVG 原型：推荐方案是 shader 粒子，这张只做对照/兜底。
+const FX_PETAL_DRIFT := "res://assets/art_shouyiren/fx/petal_drift.svg"
+
 # ---- 全部路径清单（给冒烟测试的"资源齐备性"守卫用）
 # 新增资源时**必须**在这里补一行，否则换图漏接不会被测试发现。
 const ALL_PATHS: Array[String] = [
@@ -224,6 +250,11 @@ const ALL_PATHS: Array[String] = [
 	ENEMY_CUP_2, ENEMY_CUP_3, ENEMY_CUP_SHELL,
 	ENEMY_CUP_FAST_2, ENEMY_CUP_FAST_3, ENEMY_CUP_FAST_SHELL,
 	ENEMY_BAG_2, ENEMY_BAG_3, ENEMY_BAG_SHELL,
+	# v8 长夜巡更：10 张必须 + 6 张推荐
+	TOMB_TILE, OLD_AWNING, CLOTH_PILE, BRICK_PILE,
+	ENEMY_BRICK, BOSS_TOP, TONGCAO, TONGCAO_PETAL, BANGZI, CHAR_WATCH,
+	ENEMY_BRICK_SHELL, TONGCAO_EVOLVED, BANGZI_EVOLVED,
+	AWNING_ROLL, OLD_STALL, FX_PETAL_DRIFT,
 ]
 
 # ---- 资源语义键（给测试用）
@@ -324,6 +355,8 @@ const EVOLVED_WEAPON_SVG: Dictionary = {
 	"gong": GONG_EVOLVED,
 	"inkline": INKLINE_EVOLVED,
 	"extinguisher": EXTINGUISHER_EVOLVED,
+	"tongcao": TONGCAO_EVOLVED,
+	"bangzi": BANGZI_EVOLVED,
 }
 
 static func evolved_weapon_svg(weapon_id: String) -> String:

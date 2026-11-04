@@ -352,6 +352,9 @@ var last_hit_source: StringName = &""
 func take_damage(amount: float, source: StringName = &"") -> void:
 	if invuln_left > 0.0 or not GameManager.started:
 		return
+	# 被盾吃掉的伤害也要有声音：玩家看不到血条变化，只剩"挨了一下"这一个信息。
+	# 盾吸收时压低 6 dB —— 听感是"隔着一层东西被撞"，而不是直接受伤。
+	Audio.play_sfx("hurt", -6.0 if shield_hp >= amount else 0.0)
 	# 结界先吃：盾没破之前血量一点不掉。无敌帧照常消耗 ——
 	# 否则贴身时每个物理帧都会来一次结算，一层 105 的盾会在 0.1 秒内被磨光。
 	var left: float = maxf(amount, 0.0)

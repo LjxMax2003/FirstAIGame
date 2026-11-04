@@ -61,6 +61,9 @@ func _ready() -> void:
 	btn_settings.pressed.connect(_on_settings)
 	btn_quit.pressed.connect(_on_quit)
 	refresh()
+	# 主菜单 BGM。从一局回来时 Audio 会自动交叉淡出战斗曲，
+	# 所以这里不需要判断"是不是已经在播"——重复请求同一首会被 Audio 直接忽略。
+	Audio.play_bgm("menu")
 
 # ---------------------------------------------------------------- 文案
 func refresh() -> void:

@@ -525,6 +525,9 @@ func fire_gong(player: Node2D) -> void:
 	var lv: int = maxi(weapon_level("gong"), 1)
 	var d: Dictionary = WeaponDB.def("gong")
 	_cd["gong"] = WeaponDB.cooldown_at("gong", lv, stat("cooldown"))
+	# 铜锣是本作唯一有专属音效的武器：这一声"咚"就是它的判定读数的一部分，
+	# 所以放在冷却写入之后、命中结算之前 —— 空敲也要响，否则玩家会以为技能没触发。
+	Audio.play_sfx("gong")
 	var radius: float = (float(d.get("radius", 150.0))
 		+ float(d.get("radius_per_level", 10.0)) * float(lv - 1)) * stat("area") * _area_mult("gong")
 	var dmg: float = weapon_damage("gong", lv)
