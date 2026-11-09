@@ -7,7 +7,7 @@ Godot 4.7.2（Mobile 渲染器，D3D12 / Vulkan）导出的可运行版本。竖
 三个文件都超过 GitHub 普通仓库的单文件上限（Windows 单文件 exe 约 117 MB > 100 MB），
 因此**托管在本仓库的 Releases 页**，不从源码树分发：
 
-> **下载地址**：<https://github.com/LjxMax2003/FirstXiXueGui/releases/tag/v2.0>
+> **下载地址**：<https://github.com/LjxMax2003/FirstAIGame/releases/tag/v2.0>
 
 | 附件 | 平台 | 说明 |
 | --- | --- | --- |
