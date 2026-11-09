@@ -66,6 +66,7 @@
 | T-18 | 迭代 03 策划案（技能关联二段：进化机制化） | 迭代 | ✅ `iteration-03-evolve-mechanic.md` 702 行；主线 M-01~M-09（6 条机制 + 声明位互锁 + 视觉分层 + 测试同步）/ 配套 C-02·N-02·U-02 / 八项连带同步 / 7 条待拍板 | team-lead |
 | **T-18** | **迭代 02 代码落地（主线 + 3 配套）** | **迭代** | **✅ 已完成：S-01 三配方 / S-02 卡面三态 / S-03 空箱横幅 / S-04 术语收口 / S-05 九把全覆盖 / C-01 推镜 / N-01 环绕 2→3 / U-01 开脸徽章；双轨见 §3.3** | **team-lead** |
 | **T-19** | **迭代 03 代码落地（进化机制化 B0~B5）** | **迭代** | **✅ 已完成：M-01 声明位 / M-02 十字扫 / M-03 灯心公转 / M-04 门神镇守 / M-05 糖水粘连 / M-06 铜锣回响 / M-07 墨线穿透累进 / M-08 视觉分层 / M-09 文档同步 + `05` 21 处重锚 / U-02 三处音效 / C-02 旧墓砖；双轨见 §3.4** | **code-orchestrator** |
+| **T-20** | **迭代 04 代码落地（升级选卡界面重构 B0~B5）** | **迭代** | **✅ 已完成：UI-01 层级 20 / UI-02 双层墨幕 / UI-03 伪 3D 五线索 / UI-04 入场 0.42s / UI-05 出场 0.27s+输入锁 / UI-06 悬停 / UI-07 连升不重播标题 / UI-02b 战场降调 / B5 探针 `LevelUpShot` + 六处文档；双轨见 §3.5** | **code-orchestrator** |
 | **T-14** | **整编收口 + 治理状态总线** | **7** | **✅ `project-design-db-v1.0.md`；三遍审计 / 8 条裁定 / 11 条缺陷总账** | **team-lead** |
 
 ### 2.2 上一轮：表现层 v9
@@ -136,6 +137,26 @@
 
 **占位与资产**：本轮零新增资产（M-05 糖浆复用 `burst_ellipse`；M-08 复用既有 shader）；无【待资产块交付】。**待数据层登记 1 项**：`04` 图鉴机制句尚未进 `EvolutionDB`（需结构增字段，见 §6.5 Q17）。
 
+### 3.5 迭代 04 验收结论（代码落地后实测，2026-11-09）
+
+| 项 | 判据 | 实测 |
+|---|---|---|
+| UI-01 层级归位 | `LevelUpUI` layer = 20 > HUD 的 10 | ✅ `LevelUpShot` 断言 1；升级时摇杆/血条被墨幕盖住（`shots/ui_lv_idle.png`） |
+| UI-02 双层墨幕 | `Mask` 纯色 0→0.80 + `Vignette` 径向 0→1.0，初始全 0 | ✅ 四张截图；`mouse_filter=2` 三处不漏 |
+| UI-03 伪 3D | 三层投影 y=24/17/11 a=0.26/0.14/0.07 + 右侧厚度 + `TILT_DEG 3.2` + `SIDE_SCALE 0.965` + 扫光 | ✅ 三卡位姿断言全绿；几何实测三卡底边 y=[280,280,280]、投影最大间距 31px |
+| UI-04 入场 | 0.42s，错峰 0.055s；入场起 alpha<0.35、收尾全部回位姿 | ✅ `LevelUpShot` 入场 2 项断言；`shots/ui_lv_enter_0.png` |
+| UI-05 出场 + 输入锁 | 被选卡 `scale:x→0.02` + 上移 50 + 淡出；落选 ±14° + 下移 36 + 淡出；连点只生效 1 张 | ✅ 收尾 `scale.x=0.02`、落选 \|rot\| 实测 16.4~17.2°；连点 3 次只 apply 1 次 |
+| UI-06 悬停 | 转正 + 上移 12px + `HOVER_SCALE 1.055` + 投影 a×0.55 / y×1.35 + 扫光一次 | ✅ 6 项断言；`shots/ui_lv_hover.png` |
+| UI-07 连升节奏 | 标题只在第一批入场（`_first_show`），后续批次只换卡 | ✅ 连升 3 批断言 |
+| UI-02b 战场降调 | `World.modulate → Color(0.58,0.56,0.66)`，关界面回白 | ✅ 降调断言 + 收尾 `modulate == Color.WHITE` |
+| B5 探针 | 新建 `tools/LevelUpShot.gd/.tscn`（33 断言 + 4 截图）；`CardShot` 文件头 +2 行 | ✅ `LevelUpShot` 33/0/exit 0；`CardShot` PASS / FAIL 0（117 张全扫） |
+| 双轨验证 | 窗口实跑 + headless 冒烟 + 数值脚本 | ✅ `LevelUpShot` **33/0 / exit 0**（窗口）；`CardShot` PASS / FAIL 0（窗口）；`SmokeTest` **340 ok / 0 FAIL / exit 0**（headless）；`HaloLogic` 37/0；`HaloShot` 8/8；`FxInGame` PASS；`V5InGame` 165/0；`V71Content` 66/0；`python` PASS 314 / FAIL 0 / exit 0；全程无 SCRIPT ERROR / PARSE ERROR |
+| 文档同步 | `02` UI 层级表 / `09` §六 三条规则 / `06` 零新增资产 / `01` A-4 不变 / `SHOUYIREN_TEXT` 4 行重锚 / `interface` R7 | ✅ 六处已改；全库 `grep "LevelUpUI.gd:[0-9]"` 仅剩 0 处业务引用（`interface.md` 内已改符号引用） |
+| 锁区 | `MetaSave` / `TRACKS.mult` / `coin_reward` / 复活 / `ShopUI` 零改动 | ✅ `git status` 无锁区文件 |
+| 缺口（如实登记） | 真人手指连点 3 个升级的观感确认 | ⚠️ 自动化已覆盖输入锁与连升；**真人观感走查未做** → 【需人工介入（仅观感走查）】，见 §6.6 Q21 |
+
+**占位与资产**：本轮零新增资产（墨幕 `Gradient`/`GradientTexture2D`、扫光 `Gradient` 均 runtime 生成；投影/厚度复用 `UI_CARD_FRAME`）；无【待资产块交付】、无【待数据层登记】。
+
 ---
 
 ## 四、回退条件
@@ -197,6 +218,15 @@
 - **锁区遵守**：`MetaSave` / `Game.coin_reward()` / `ShopUI` / `TRACKS.mult` / 复活 / 局外经济**零改动**；`GarlicRing.gd` **零改动**（0 行）；`WeaponDB` 数值零改动；`scenes/*.tscn` 零改动；未提交 git（未收到提交指令）
 - **§8 停手信号核对**：未新增 DOT / 拉拽 / 距离场类能力字段（M-05 的 `_root_left` / `_root_immune` / `_root_tinted` 是主件 §5.3 自身规定的定身字段）；未给 `EnemyPool` 加 `farthest`；未改 `EvolutionDB` 结构；未扩 `Audio.play_sfx` 签名（已有 `extra_db`）→ **四项均未触发能力集扩展**
 
+**迭代 04 · 代码批次改动范围预声明（L2 经用户指令「继续根据文件，完成godot4.7.2的游戏代码」+ `iteration-04-handoff.md` 确认）**：
+- **整份替换** `scenes/ui/LevelUpUI.tscn`（`layer=20` + `Vignette` + 2 个 `GradientTexture2D`；46→约 70 行）
+- **追加/替换** `scripts/ui/LevelUpUI.gd`（+11 常量、+5 成员、+1 `@onready vignette`、+11 函数；`close_all` / `_show_next` / `_make_card` / `_on_pick` 四段替换；287→约 560 行）
+- **新增** `tools/LevelUpShot.gd` + `LevelUpShot.tscn`（8 条断言 + 4 张截图）
+- **修改** `scenes/ui/PauseUI.tscn`（`layer 9→21`）、`scenes/ui/DeathUI.tscn`（补 `layer=22`）—— 按执行单 §13 第 1 条建议执行
+- **修改** `tools/CardShot.gd`（仅文件头 +2 行注释，不改断言）
+- **文档同步** `02`（UI 层级表）、`09`（三条表现规则）、`06`（零新增资产确认）、`01`（A-4 条目不新增音效点）、`docs/design/*.md` 中 50 处 `LevelUpUI.gd:NNN` 引用（按 §13 第 2 条改符号引用）
+- **锁区遵守**：`MetaSave` / `Game.coin_reward()` / `ShopUI` / `TRACKS.mult` / 复活 / 局外经济零改动；`CARD_W` / `CARD_H` / `Audio.play_sfx` 签名 / `LevelUpUI` 类名与父节点零改动
+
 ---
 
 ## 六、问题与决策
@@ -211,7 +241,7 @@
 | R4 | 资源点重生语义 | **代码为真值**（同 key 重生），注释过期 | `ResourceField.gd:176` |
 | R5 | `EN_` 命名空间被资产变体越界 | **5 条判错用，登记待迁，不返工** | `EN_PAPER_BRICK`/`_SHELL`/`EN_GEM_BIG`/`EN_COIN`/`EN_SHELL_CRUST` 无对应实体；`enemy_brick` 是孤儿资产（`Art.gd:205/213`） |
 | R6 | 小 Boss 是否给独立实体身份 | **不给** | 复用精英通道、实体侧零专属代码；给独立身份 = 给 `Enemy` 加分支，与「不建状态机」冲突 |
-| R7 | `PROJECT_OVERVIEW` 三条分层红线 | **降级为「约定」** | 已被越过：数据层写状态（`UpgradeDB.gd:174-180`）、逻辑层直调 UI（`Game.gd:288/408/645/664/753`）、UI 写数值（`LevelUpUI.gd:95`）。真硬线只剩「伤害经 `take_damage`」「写盘经 `MetaSave`」 |
+| R7 | `PROJECT_OVERVIEW` 三条分层红线 | **降级为「约定」** | 已被越过：数据层写状态（`UpgradeDB.gd:174-180`）、逻辑层直调 UI（`Game.gd:288/408/645/664/753`）、UI 写状态（`LevelUpUI.gd:_on_pick` 直接调 `UpgradeDB.apply`、`LevelUpUI.gd:_show_next` 直接切 `paused`）。真硬线只剩「伤害经 `take_damage`」「写盘经 `MetaSave`」 |
 | R8 | 「匠人只差起始武器」 | **维持** | 公平性设计选择（`CharacterDB.gd:14-23` 自述跨度未收敛，属已知张力） |
 
 ### 6.2 已确认事实（代码实证，供后续引用）
@@ -267,7 +297,31 @@
 | Q16 | `garlic_ring.position` 的写入权归属 | **已决**：唯一写者改为 `WeaponManager._lamp_center`（未开脸写 `(0, -18)`，开脸写 `(0, -18) + off`）；`Player` 只读 `ART_FOOT_OFFSET` |
 | Q17 | `04` 图鉴 6 条机制句尚未入库 | 实机 `CodexDB.gd:115` 仍按模板生成；入库需给 `EvolutionDB` 增字段（`§8` 停手信号）。**【待数据层登记】**，留下一轮 |
 | Q18 | M-03 视觉 V-1~V-4 截图与实机「每步有声」走查 | **视觉已闭环**：新增 `tools/HaloShot.tscn` 窗口探针，像素量尺 8/8（截图 `shots/m03_v1_step0.png` / `m03_v2_pulse1_right.png` / `m03_v3_pulse3_down.png` / `m03_v4_reset.png`）。**仍缺**：实机逐屏音效的人工听觉走查。**【需人工介入（仅听觉走查）】** |
-| Q19 | GitHub 留痕的远端推送 | 本地提交 `9e4fc1d`（50 文件 / +2722 / −100）与标签 `iter-03-code` 已建立；`git push origin main` 两次均失败：`github.com:443` 连接被重置 / 21s 超时（沙箱内外均失败，非凭证问题，`gh auth status` 正常）。**【待网络恢复后重推】**，不影响本地状态 |
+| Q19 | GitHub 留痕的远端推送 | 本地提交 `9e4fc1d`（50 文件 / +2722 / −100）与标签 `iter-03-code` 已建立；`git push origin main` 两次均失败：`github.com:443` 连接被重置 / 21s 超时（沙箱内外均失败，非凭证问题，`gh auth status` 正常）。**【待网络恢复后重推】**，不影响本地状态。**迭代 04 复测（2026-11-09）**：本地提交 `64ce6c3` + 标签 `iter-04-code` 已建立；`git push origin main` 再失败 2 次 —— 沙箱内 `Recv failure: Connection was reset`，沙箱外 `Failed to connect to github.com port 443 after 21095 ms`。**【待网络恢复后重推】** |
+
+---
+
+### 6.6 迭代 04 决策与偏离登记（2026-11-09）
+
+**按执行单 `iteration-04-handoff.md` §13 推荐值落地（用户未逐条点头，按执行单执行并留痕）**：
+
+| # | 议题 | 结论 / 状态 |
+|---|---|---|
+| D-6 | `PauseUI` layer 9→21、`DeathUI` 补 `layer = 22` | 按 §13 第 1 条建议执行：升级 20 / 暂停 21 / 结算 22 三层层序唯一位次；`ShopUI`（11）本轮不动 |
+| D-7 | **`_enter()` 调用位置（偏离 handoff §6.1）** | 原文让在 `_show_next` 的 `mask.visible` / `popup.visible` 两行处调 `_enter()`，但该处卡片尚未 `add_child`，`_enter` 会因 `cards.get_child_count() == 0` 立即早退 → 完全没有入场动画。已改在 `for option in options: cards.add_child(...)` 之后调用，并留 3 行注释说明 |
+| D-8 | **`_exit` 的角度加法（偏离 handoff §7.3 写法）** | 原文 `side * 10.0` 直接加到弧度 `rot` 上是单位错误（会转 ≈573°）。改为 `side * deg_to_rad(14.0)`（落选摆幅按主件 §3 取 14°），winner 的 4° 同样 `deg_to_rad(4.0)` |
+| D-9 | **`_exit` 补撤墨幕（handoff §7.3 未列）** | 原文出场只动卡片。若不撤遮罩会有两处硬切：①单次升级结束 `close_all()` 把 0.80 遮罩瞬间隐藏（暗→亮跳变）；②连升下一批 `_enter` 的 `.from(0.0)` 把 0.80 瞬间归零再淡入（战场闪一帧）。已补 2 条 fade（0.20s / delay 0.02，压在 0.22s 内，不延长 §5.2 的 0.27s 总时长） |
+| D-10 | 静态 Hint 文案 | tscn 默认值按迭代 02 术语写「选一张手艺卡或心法卡」（handoff 原文写「传承」）；运行时仍由 `_show_next` 按等级与 `_pending` 覆盖 |
+| D-11 | **`SmokeTest` 三处时序适配（测试侧）** | 迭代 04 起：入场 0.42s 期间 `_picking` 锁输入、出场 0.27s 之后才结算。原「等 2 帧」断言必然假失败（实测失败 3 条）。改为 `_wait_enter_done()`（等入场放行）与 `_wait_unpause()`（等界面收尾）两个有界等待。**断言内容未放宽** |
+| D-12 | **`LevelUpShot` 取样方式（测试侧）** | 截图回读会阻塞主线程，墙钟 `SceneTreeTimer` 与 tween 的推进不同步（实测墙钟 0.19s 时动画只走 0.115s）。改为 `await _ui._tw.finished` 与按帧等待；判据（`scale.x 0.02` / `\|rot\|>8°` / `HOVER_SCALE 1.055` / `rest_y−12`）一条未放宽 |
+| D-13 | **`SmokeTest._prep(freeze_xp=false)` 补清 `xp`（测试侧，收尾复跑时发现）** | Step4 会留下未吃完的宝石经验，带进 Step5 后 `gain_xp(xp_next)` 只升 1 级（断言当帧成立），但恢复游戏的那一帧立刻再升 1 级 → `paused` 被同帧的新批次置回 true，`_wait_unpause` 轮询永远看不到 `false` → 「选卡后恢复游戏」假失败（连续 2 次复跑稳定复现）。修法：`else` 分支同时置 `_player.xp = 0`（与 `freeze_xp` 分支口径一致）。**断言未放宽**，修后 340 ok / 0 FAIL |
+
+**本轮新增待确认**：
+
+| # | 议题 | 结论 / 状态 |
+|---|---|---|
+| Q20 | §13 五条（层级归位 / 符号引用 / tilt 3.2 / exit 0.27 / 战场降调）无用户逐条点头 | **按执行单推荐值落地**（D-6/D-8/D-9 即回滚锚点）。如需改回任一项，按 D-6~D-9 单点回滚即可，不牵连其他批 |
+| Q21 | 真人观感走查（连升三批不闪标题、悬停扫光、出场翻面） | 自动化已覆盖（`LevelUpShot` 33/0）；**真人手指连点 3 个升级的观感未做** →【需人工介入（仅观感走查）】 |
 
 ---
 
@@ -327,6 +381,16 @@
 | `Enemy._root_left` / `_root_immune` / `_root_tinted` | `float` / `float` / `bool`；**唯一写者** `apply_root` 与 `_advance`（递减）；染色的唯一写者是 `_sync_root_tint` | `scripts/Enemy.gd` | 均在本文件内（本轮无跨模块读者；未新增 `is_rooted()`） |
 | `Audio.play_sfx(id, extra_db)` | `void`（沿用两参，不扩签名） | `scripts/Audio.gd` | 迭代03 新增三处：`ActiveSkill`（`boss_spawn -6dB`）、`MainMenu`（`ui_confirm`）、`DeathUI`（`ui_click`）、`WeaponManager._gong_echo`（`gong -6dB`） |
 
+### 7.5 迭代 04 新增 / 变更接口（跨模块只走本表）
+
+| 接口 | 签名 / 字段 | 定义处 | 使用方 |
+|---|---|---|---|
+| `LevelUpUI._on_level_up()` | `-> void`（签名未变） | `LevelUpUI.gd` | `Game.gd`（经验满）、`CardShot` / `LevelUpShot` |
+| `LevelUpUI.close_all()` | `-> void`（签名未变，语义加严）：复位 `_picking=false` / `_first_show=true` / kill tween / `_dim_world(false)` / `paused=false` | `LevelUpUI.gd` | `Game.gd`（死亡/重开）、`CardShot` / `LevelUpShot` |
+| `LevelUpUI._on_pick(index)` | **签名变更**：入参由 `entry: Dictionary` 改为 `index: int`（由 `btn.pressed.connect(_on_pick.bind(order))` 绑入） | `LevelUpUI.gd` | 仅本文件按钮；`SmokeTest` 走 `Button.pressed.emit()` 真实通路 |
+| `LevelUpUI._hover(card, on)` | `-> void`；悬停姿态与扫光（含 `_picking` 早退） | `LevelUpUI.gd` | 仅本文件按钮 `mouse_entered/exited` |
+| 其余 9 个内部函数 | `_pose` / `_decorate` / `_gloss_tex` / `_enter` / `_exit` / `_pick_async` / `_entry_of` / `_dim_world` / `_world` / `_kill_tween` | `LevelUpUI.gd` | 均在本文件内，**无跨模块调用**（本轮不新增跨模块接口） |
+
 ---
 
 ## 八、变更记录
@@ -351,3 +415,5 @@
 | 2026-11-08 | iter-03-evolve-mechanic | 新建 `iteration-03-evolve-mechanic.md`（702 行）。**主线仍是技能关联，但换层**：迭代 02 解决覆盖度（9/9 有终点），本轮解决深度（当前 9 条里只有 1 条 `extinguisher` 真有行为机制）。六条纯倍率形态各加一个机制：M-02 师刀第二刀改竖劈 / M-03 花灯灯心 8 方位公转 / M-04 年画落点镇守 30%×4s / M-05 糖画四发分锁 / M-06 铜锣回响 / M-07 墨线穿透后折返一次。M-01 在 `WeaponManager` 末尾加 `EVOLVE_MECHANIC` 声明常量（不碰 `EvolutionDB` 结构，避免 227 项行号连锁漂移）；M-08 满级觉醒与开脸视觉分层；M-09 五处文档同步。配套 C-02 `TOMB_TILE` 死资产接入 / N-02 第 2 主动技规格（不实现）/ U-02 震吼零音效 + 3 面板 UI 音。**代码零改动，只出策划案。** | team-lead |
 | **2026-11-09** | **iter-03-code** | **迭代 03 代码落地**（code-orchestrator 按 `iteration-03-handoff.md` B0→B5 逐批执行 / 三子智能体职责由主控收口）：M-01 `WeaponManager.EVOLVE_MECHANIC` 9 条 + `_lamp_step`；M-02 师刀第二刀竖劈（`_delay_arc_v`/`_second_arc_v`）；M-03 灯心公转（`_lamp_center`，写 `garlic_ring.position`，偏移 `0.40R`）；M-04 门神镇守（`apply_slow(0.30, 4.0)`）；M-05 糖水粘连（`Enemy.apply_root(1.0)` + `ROOT_IMMUNE 2.5s` + `GLUE_TINT`）；M-06 铜锣回响（`_gong_echo`，0.28s 后 ×0.45）；M-07 墨线穿透累进（`pierce +1`、每多穿一只 +25% 封顶 ×1.75、全程笔直、`scale.y` 加粗）；M-08 视觉分层；U-02 三处确认音；C-02 街区外旧墓砖；M-09 文档 `05`（表 C 行为机制列 + R-29~R-31 + 21 处重锚）/ `02`（唯一写入者 +2 行）/ `04`（6 条机制句）/ `06`（零新增资产）；新增 `tools/HaloShot.tscn` 视觉量尺探针 + `shots/m03_*.png` 四张（V-1~V-4 8/8，偏差 ≤1.7%）。**验收：SmokeTest 340/0/exit0、HaloLogic 37/37、FxInGame 18/18、V5InGame 165/0、python PASS 314/FAIL 0/exit0，无 SCRIPT ERROR / PARSE ERROR**。偏离主件 2 处（D-1 C-4 几何、D-2 删 `Player` 每帧兜底）已登记 §6.5；`GarlicRing.gd` 0 行改动、锁区零改动。 | code-orchestrator |
 | 2026-11-09 | iter-03-code-git | **本地留痕完成**：提交 `9e4fc1d`（迭代 02+03 累计 50 文件 / +2722 / −100）+ 附注标签 `iter-03-code`；`interface.md` 首次入库。**推送未完成**：`git push origin main` 与 tag 两次失败（`github.com:443` 连接重置 / 21s 超时，沙箱内外一致），见 §6.5 Q19。**复验**：`check_numeric_tables` PASS 314 / FAIL 0；`SmokeTest` 全部通过（含 M-06 实测 1.450 ±0.01）；`HaloLogic` 37/0；`FxInGame` PASS；`V5InGame` 165/0；`V71Content` 66/0；`HaloShot` 8/8；全程无 SCRIPT ERROR / PARSE ERROR。 | code-orchestrator |
+| **2026-11-09** | **iter-04-levelup-ui** | **迭代 04 升级选卡界面重构代码落地**（code-orchestrator 按 `iteration-04-handoff.md` B0→B5 拆解，`ui-scene-building` 主执行、`gameplay-logic`/`architecture-data-layer` 本轮无接口改动）：UI-01 `LevelUpUI.tscn` `layer=20`（盖住 HUD 10）；UI-02 `Mask`（纯色 0→0.80）+ `Vignette`（径向 0→1.0，`GradientTexture2D` 256²）；UI-03 伪 3D 五线索（三层投影 `y=24/17/11` `a=0.26/0.14/0.07` 复用 `UI_CARD_FRAME` + 右侧厚度 + `TILT_DEG 3.2`/`SIDE_SCALE 0.965` 插值位姿 + 移入扫光一次）；UI-04 `_enter()` 0.42s 错峰（`K_ENTER_STAGGER 0.055`，`TRANS_BACK`）；UI-05 `_exit()` 0.27s（被选卡 `scale:x→0.02` + 上移 50 / 落选 ±14° + 下移 36）+ `_picking` 输入锁；UI-06 `_hover()` 转正/上移 12px/`1.055`/投影 `a×0.55`·`y×1.35`；UI-07 `_first_show` 连升不重播标题；UI-02b `World.modulate → (0.58,0.56,0.66)`；配套 `PauseUI` layer 9→21、`DeathUI` 补 `layer=22`；`SmokeTest` 时序适配 + `_prep` 清零 `xp`（D-11/D-13）；`CardShot` 文件头 +3 行；**新增 `tools/LevelUpShot.gd/.tscn`**（33 断言 + 4 张截图，几何实测三卡底边 y=[280,280,280]、投影最大间距 31px）。**验收：`SmokeTest` 340 ok / 0 FAIL / exit 0（headless）、`LevelUpShot` 33/0 / exit 0（窗口）、`CardShot` PASS / FAIL 0、`python` PASS 314 / FAIL 0 / exit 0，无 SCRIPT ERROR / PARSE ERROR**。偏离 handoff 3 处（D-7 `_enter` 调用位置、D-8 `deg_to_rad(14)`、D-9 出场补撤墨幕）+ 测试侧 3 处（D-11/D-12/D-13）已登记 §6.6；锁区零改动（`MetaSave`/`coin_reward`/`ShopUI`/`TRACKS.mult`/复活/局外经济）。 | code-orchestrator |
+| 2026-11-09 | iter-04-git | **本地留痕完成**：提交 `64ce6c3`（9 文件 / +676 / −30，含新增 `LevelUpShot.gd/.tscn`）+ 附注标签 `iter-04-code`。**推送**：本轮再次尝试 `git push origin main`（结果按实际登记于 §6.5 Q19，不假装成功）。**复验**：`SmokeTest` 340/0/exit 0、`LevelUpShot` 33/0/exit 0、`CardShot` PASS、`python` 314/0/exit 0。**versions 归档**：本轮无被取代的旧版本（`iteration-04-levelup-ui.md` 与 `iteration-04-handoff.md` 仍为现行件），`docs/design/versions/` 无新增。 | code-orchestrator |
