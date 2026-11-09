@@ -3,6 +3,9 @@ extends Node2D
 # ============================================================================
 # 花灯（halo）语义探针：**站桩领域** 还是 **绕身环绕**？
 # ----------------------------------------------------------------------------
+# 迭代01 扩充（IT-03 / D-1，策划案 Q-1 裁定并入本探针）：⑧⑨ 两条断言钉住
+# 皮影（phone）的环绕伤害链 —— 它曾是死代码（_cd["phone"] 每帧被 fire() 写回 0.28，
+# 伤害闸门恒假），修复后在这里防回归：⑧ 验"会掉血"，⑨ 验"按 0.28s 节拍掉血"。
 # 玩家问的问题只有一个：花灯到底是"围着主角转、转到谁身上谁掉血"，
 # 还是"以主角为圆心的一块区域、每隔 0.5s 烧一次里面所有人"？
 # 顺带验：可见的圈和真正的判定圈是不是同一个圈。
@@ -58,11 +61,15 @@ func _ready() -> void:
 	print("\n===== 花灯语义探针 =====")
 	await _case_visual_matches_hitbox()
 	await _case_not_orbiting()
+	await _case_orbits_when_evolved()
 	await _case_full_circle_one_frame()
 	await _case_outside_untouched()
 	await _case_pulse_cadence()
 	await _case_slow_applied()
 	await _case_phone_is_the_orbit_contrast()
+	await _case_phone_orbit_damage()
+	await _case_phone_damage_cadence()
+	await _case_phone_orbit_count_bonus()
 	await _shot()
 
 	print("\n---------- 汇总 ----------")
@@ -91,7 +98,11 @@ func _equip(ids: Array, lv: int) -> void:
 	_weapons._cd = {}
 	for id in ids:
 		_weapons.owned[String(id)] = lv
-	# Player 每帧按 has_weapon("halo") 重设常驻圈，等几帧让它生效
+	# Player 是在 _physics_process 里按 has_weapon("halo") 重设常驻圈的（Player.gd:494）。
+	# 本探针把 Engine.max_fps 摘成 0 之后，4 个 process 帧可能全部落不进一个
+	# 物理帧间隔（16.67ms），① 就会读到还没 set_radius 的圈 —— 先等两个物理帧兜底。
+	await get_tree().physics_frame
+	await get_tree().physics_frame
 	await _frames(4)
 
 func _pick(pos: Vector2, name: String) -> Enemy:
@@ -121,7 +132,11 @@ func _case_visual_matches_hitbox() -> void:
 	_check(absf(lantern_o - r) / r < 0.05,
 		"最外可见像素（灯笼外沿）与判定半径偏差 %.1f%% < 5%%" % (absf(lantern_o - r) / r * 100.0))
 
-# ---------------------------------------------------------------- ② 不是环绕
+# ---------------------------------------------------------------- ② 不是环绕（未开脸的花灯）
+## 【迭代03 M-03 语义改口】这条现在测的是"**未开脸**的花灯不会偏心"。
+## 开脸后会整体绕玩家公转（见 ⑪），所以"不会绕圈"这个说法已不成立。
+## 断言本体不动（本用例跑在 evolved 为空的状态），保留它是白送的回归守卫：
+## 一旦 _lamp_center 的未开脸复位分支失效，这里会红。
 func _case_not_orbiting() -> void:
 	print("\n[②] 圈是钉在玩家脚下的，还是在绕圈飞")
 	var ring: GarlicRing = _player.garlic_ring
@@ -142,6 +157,69 @@ func _case_not_orbiting() -> void:
 	_check(absf(ring.ring.rotation - rot0) < 0.0001 and absf(rot0) < 0.0001,
 		"光圈不自转（rotation 恒为 0）")
 	_check(_player.global_position.distance_to(p0) < 0.5, "玩家本身没被推走（对照组前提成立）")
+
+# ---------------------------------------------------------------- ⑪ 开脸后：灯心绕玩家公转（迭代03 M-03）
+func _case_orbits_when_evolved() -> void:
+	print("\n[⑪] 开脸后花灯是否整体偏心轮转（M-03）")
+	_enemies.clear_all()
+	await _equip(["halo"], 8)
+	var ring: GarlicRing = _player.garlic_ring
+	var base: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
+
+	# C-1 未开脸：连采 8 次都钉在 base（判定的脚底 + 视觉上抬 18px）
+	var samp0: Array[Vector2] = []
+	for _i in 8:
+		_weapons.fire_halo(_player)
+		samp0.append(ring.position)
+	var c1_ok: bool = true
+	for s in samp0:
+		if not s.is_equal_approx(base):
+			c1_ok = false
+	print("  未开脸 8 次采样 ring.position 首条 = %s" % str(samp0[0]))
+	_check(c1_ok, "C-1 未开脸 8 次采样恒为 %s" % str(base))
+
+	# C-2 / C-3 开脸后：8 方位互不重复，且每个偏移长度 == 0.40R
+	_weapons.evolved = {"halo": "evolve_halo"}
+	# r 必须在开脸**之后**取：进化配方带 area ×1.6，halo_radius 会跟着变大，
+	# 拿未开脸的 r 去算 0.40R 会得到偏小的期望值（C-3 会假失败）。
+	var r: float = _weapons.halo_radius()
+	var dirs: Dictionary = {}
+	var lens_ok: bool = true
+	var offs: Array[Vector2] = []
+	for _i in 8:
+		_weapons.fire_halo(_player)
+		var off: Vector2 = ring.position - base
+		offs.append(off)
+		if absf(off.length() - r * 0.40) > 0.01:
+			lens_ok = false
+		var deg: float = rad_to_deg(off.angle())
+		dirs[int(round(deg / 45.0)) % 8] = true
+	print("  开脸后 8 次偏移 = %s" % str(offs))
+	_check(dirs.size() == 8, "C-2 8 个偏移方位互不重复（集合 size = %d）" % dirs.size())
+	_check(lens_ok, "C-3 每个偏移长度 == 0.40R（R = %.1f，期望偏移 %.1f）" % [r, r * 0.40])
+
+	# C-4 判定真的跟着灯心走：第 1 脉冲灯心在 +X，只应命中 +X 那只。
+	# 【偏离主件】主件本节写"两只都放 0.40R"，但几何上不成立：
+	# 灯心在 +0.40R 时，敌人在 -0.40R 距灯心 0.80R < R，必定同圈。
+	# 要证明判定位移，反侧必须落在灯心半径外：-1.10R ⇒ 距灯心 1.50R > R。
+	_enemies.clear_all()
+	_weapons._cd["halo"] = 999.0          # 只让手动这一发决定结果，挡住自动脉冲
+	await _frames(2)
+	var plus: Enemy = _pick(_player.global_position + Vector2(r * 0.40, 0.0), "plusx")
+	var minus: Enemy = _pick(_player.global_position + Vector2(-r * 1.10, 0.0), "minusx")
+	await _frames(2)
+	var plus_hp: float = plus.hp
+	var minus_hp: float = minus.hp
+	_weapons._lamp_step = 0
+	_weapons.fire_halo(_player)
+	print("  第 1 脉冲：+X 侧 %.1f → %.1f，-X 侧 %.1f → %.1f"
+		% [plus_hp, plus.hp, minus_hp, minus.hp])
+	_check(plus.hp < plus_hp - 0.01, "C-4 第 1 脉冲命中 +X（灯心侧）")
+	_check(is_equal_approx(minus.hp, minus_hp), "C-4 第 1 脉冲 -X 侧不掉血（判定跟着灯心位移）")
+
+	# 复位：后续 ③④ 必须跑在未开脸状态（否则它们的"以脚底为圆心"会一起红）
+	_weapons._lamp_step = 0
+	await _equip(["halo"], 1)
 
 # ---------------------------------------------------------------- ③ 同帧命中整圈
 func _case_full_circle_one_frame() -> void:
@@ -281,6 +359,109 @@ func _case_phone_is_the_orbit_contrast() -> void:
 	print("  皮影环绕体 0.4s 内位移 %.1f px（花灯光圈为 0）" % dmax)
 	_check(dmax > 20.0, "环绕体确实在飞（位移 %.1f px > 20）" % dmax)
 	print("  → 结论：\"绕身\"是皮影的机制；花灯是站桩圆域。两者在代码里是两套完全不同的东西。")
+
+# ---------------------------------------------------------------- ⑧ 皮影伤害链（A-3 / IT-03）
+# 机械上等价于"shadow 开局"：皮影班主的起始武器就是 phone（CharacterDB.gd:48-49），
+# 探针直接装备 phone，走的就是同一条伤害链。
+func _case_phone_orbit_damage() -> void:
+	print("\n[⑧] 皮影环绕物是否真的造成伤害（A-3 / 迭代01 IT-03）")
+	_enemies.clear_all()
+	await _equip(["phone"], 1)
+	# 探针的 _equip 只写 owned、不走 acquire()，没人给 _orbit_cd 赋 first_delay；
+	# 手动归零 = 第一帧就进入结算窗口，与 acquire 的首轮节拍语义一致。
+	_weapons._orbit_cd = 0.0
+	var sprites: Array = _weapons._orbit_sprites
+	_check(sprites.size() > 0, "皮影环绕体已生成（%d 个）" % sprites.size())
+	if sprites.is_empty():
+		return
+	var e: Enemy = _pick(Vector2.ZERO, "orbitdmg")
+	await _frames(2)
+	var hp0: float = e.hp
+	# "贴到环绕半径内"的最严形式：每帧钉在 0 号环绕体上，全程保持接触。
+	# 每次伤害节拍都应结算一次；3 秒内 hp 必须下降（旧代码这条链是死的，恒不掉血）。
+	var s0: Sprite2D = sprites[0] as Sprite2D
+	var t := 0.0
+	while t < 3.0:
+		e.global_position = s0.global_position
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		if not e.alive:
+			break
+	print("  钉住环绕体 3.0s：hp %.1f → %.1f" % [hp0, e.hp])
+	_check(e.hp < hp0 - 0.01, "A-3：3 秒内 hp 下降（%.1f → %.1f）" % [hp0, e.hp])
+
+# ---------------------------------------------------------------- ⑨ 皮影结算频率（A-4 / IT-03）
+func _case_phone_damage_cadence() -> void:
+	print("\n[⑨] 皮影伤害节拍 ≈ 1/0.28 次/秒，不是按帧结算（A-4 / 迭代01 IT-03）")
+	# 沿用 ⑧ 的装备与探针怪（仍是钉住环绕体的布置）
+	var e: Enemy = null
+	for it in _enemies.active:
+		if it.alive and String(it.name) == "probe_orbitdmg":
+			e = it
+			break
+	_check(e != null, "找到 ⑧ 的探针怪 probe_orbitdmg")
+	var sprites: Array = _weapons._orbit_sprites
+	if e == null or sprites.is_empty():
+		return
+	var s0: Sprite2D = sprites[0] as Sprite2D
+	var cd: float = WeaponDB.cooldown_at("phone", 1, _weapons.stat("cooldown"))
+	# 与 ⑤ 同一口径：逐帧记掉血时刻、用间隔分布判定节拍 —— 只断言"掉过血"会放过
+	# 按帧结算的错误实现（那种实现伤害高 60 倍，反而更容易过⑧）。
+	var stamps: Array[float] = []
+	var prev: float = e.hp
+	var t := 0.0
+	var dur := 3.0
+	while t < dur:
+		e.global_position = s0.global_position
+		await get_tree().process_frame
+		t += get_process_delta_time()
+		if e.hp < prev - 0.01:
+			stamps.append(t)
+			prev = e.hp
+	var freq: float = float(stamps.size()) / dur
+	var want: float = 1.0 / cd
+	print("  %.2fs 内结算 %d 次（%.2f 次/秒），期望 %.2f 次/秒（cd=%.3fs）；时刻 %s" % [dur, stamps.size(), freq, want, cd, str(_fmt(stamps))])
+	_check(stamps.size() >= 8, "结算次数足够判定节拍（%d 次 / %.2fs）" % [stamps.size(), dur])
+	_check(absf(freq - want) / want < 0.10,
+		"A-4：结算频率 %.2f 次/秒 ≈ 1/%.3fs（±10%% 带内；按帧结算会是几十次/秒）" % [freq, cd])
+	if stamps.size() >= 3:
+		var gaps: Array[float] = []
+		for i in range(1, stamps.size()):
+			gaps.append(stamps[i] - stamps[i - 1])
+		var avg: float = 0.0
+		for g in gaps:
+			avg += g
+		avg /= float(gaps.size())
+		print("  相邻结算间隔 %s，均值 %.3fs" % [str(_fmt(gaps)), avg])
+		_check(absf(avg - cd) / cd < 0.10, "A-4：平均结算间隔 %.3fs ≈ 冷却 %.3fs（±10%%）" % [avg, cd])
+
+# ---------------------------------------------------------------- ⑩ 满堂彩：环绕体 2 → 3（迭代02 N-01）
+# 这一条只验"数量"：进化表 orbit_count_bonus 必须真的落到可见精灵上。
+# 加成来源必须是 EvolutionDB（武器侧只读表），所以不同步武器表也能过。
+func _case_phone_orbit_count_bonus() -> void:
+	print("\n[⑩] 满堂彩（evolve_phone）的 orbit_count_bonus：环绕体 2 → 3")
+	_enemies.clear_all()
+	await _equip(["phone"], 1)
+	await _frames(3)
+	var base_n: int = _visible_orbits()
+	_check(base_n == 2, "未进化时同屏环绕体 = 2（实测 %d）" % base_n)
+	_weapons.evolved["phone"] = "evolve_phone"
+	await _frames(4)
+	var evo_n: int = _visible_orbits()
+	print("  未进化 %d 只 → 进化后 %d 只（加读取自 EvolutionDB.form() 的 orbit_count_bonus）" % [base_n, evo_n])
+	_check(evo_n == 3, "满堂彩同屏环绕体 = 3（实测 %d）" % evo_n)
+	# 池只扩不缩：回到未进化时，第三只必须被隐藏而不是停在原地
+	_weapons.evolved.clear()
+	await _frames(4)
+	var back_n: int = _visible_orbits()
+	_check(back_n == 2, "回到未进化时只剩 2 只可见（实测 %d）" % back_n)
+
+func _visible_orbits() -> int:
+	var n := 0
+	for s in _weapons._orbit_sprites:
+		if (s as Sprite2D).visible:
+			n += 1
+	return n
 
 # ---------------------------------------------------------------- 截图
 func _shot() -> void:

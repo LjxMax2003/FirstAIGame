@@ -92,6 +92,10 @@ func try_cast() -> bool:
 		dir = (pos - near.global_position).normalized() if near != null else Vector2.DOWN
 	_player.start_dash(dir, DASH_TIME)
 	_play_fx(pos)
+	# 迭代03 U-02：震吼原本全静音 —— 一个 25s CD、决定生死的大招放出来没声音。
+	# 不用 gong：铜锣的"咚"是它的判定读数（WeaponManager 明写），复用会让人以为铜锣也触发了。
+	# Audio.play_sfx 只有 (id, extra_db) 两个参数，所以只降 6 dB，不加 pitch。
+	Audio.play_sfx("boss_spawn", -6.0)
 	cast.emit()
 	return true
 

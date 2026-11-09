@@ -96,7 +96,7 @@ func _show_next() -> void:
 		_show_next()
 		return
 	title.text = "手艺精进  Lv %d" % GameManager.player.level
-	hint.text = "选一张传承卡 · 还有 %d 次待处理" % _pending if _pending > 0 else "选一张传承卡"
+	hint.text = "选一张手艺卡或心法卡 · 还有 %d 次待处理" % _pending if _pending > 0 else "选一张手艺卡或心法卡"
 	for option in options:
 		cards.add_child(_make_card(option))
 
@@ -134,13 +134,13 @@ func _make_card(entry: Dictionary) -> Control:
 	root.add_child(icon)
 
 	var kind := Label.new()
-	# 卡面标签：武器 → 传承，被动 → 口诀（真值表 §0）。
+	# 卡面标签：武器 → 手艺，被动 → 心法（真值表 §0）。
 	# 新解锁保留一个"新"字：原来写"新武器"，只换 noun 会让"这张是新拿到的"
 	# 这条信息消失；13px × 4 字约 52px，卡宽 200 装得下。
 	if is_weapon:
-		kind.text = "传承 · 新" if is_new else "传承"
+		kind.text = "手艺 · 新" if is_new else "手艺"
 	else:
-		kind.text = "口诀 %d/%d" % [int(entry["new_level"]), UpgradeDB.STAT_MAX]
+		kind.text = "心法 %d/%d" % [int(entry["new_level"]), UpgradeDB.STAT_MAX]
 	# 精炼卡：不是"升级"也不是"新武器"，标签必须单独一句，
 	# 否则玩家会以为这把武器还能继续涨等级（它已经 Lv8 了）。
 	var refine: int = int(entry.get("refine", 0))
@@ -168,9 +168,20 @@ func _make_card(entry: Dictionary) -> Control:
 	lv_label.text = "Lv 1" if is_new else "Lv %d → %d" % [int(entry["new_level"]) - 1, int(entry["new_level"])]
 	if refine > 0:
 		lv_label.text = "精炼 %d → %d（Lv%d 满级）" % [refine - 1, refine, WeaponDB.MAX_LEVEL]
-	# 满级武器补一句"等宝箱"：让玩家知道 8 级不是终点，进化才是
-	if is_weapon and refine <= 0 and int(entry["new_level"]) >= WeaponDB.MAX_LEVEL and EvolutionDB.can_evolve(id):
-		lv_label.text = "Lv %d · 满级可传承" % WeaponDB.MAX_LEVEL
+	# 满级武器补一句"等宝箱"：让玩家知道 8 级不是终点，进化才是。
+	# 满级后分三态，避免"已开脸"的武器还被提示"满级可开脸"。
+	if is_weapon and refine <= 0 and int(entry["new_level"]) >= WeaponDB.MAX_LEVEL:
+		var req: String = EvolutionDB.req_passive(id)
+		var wm: WeaponManager = GameManager.weapons as WeaponManager
+		var pl: Player = GameManager.player as Player
+		if wm != null and wm.is_evolved(id):
+			lv_label.text = "Lv %d · 已开脸" % WeaponDB.MAX_LEVEL
+		elif req != "" and pl != null and int(pl.level_upgrades.get(req, 0)) >= EvolutionDB.REQUIRE_PASSIVE_LEVEL:
+			lv_label.text = "Lv %d · 待宝箱开脸" % WeaponDB.MAX_LEVEL
+		elif req != "":
+			lv_label.text = "Lv %d · 开脸需「%s」" % [WeaponDB.MAX_LEVEL, UpgradeDB.stat_name(req)]
+		else:
+			lv_label.text = "Lv %d · 已至尽头" % WeaponDB.MAX_LEVEL
 	lv_label.add_theme_font_size_override("font_size", 14)
 	lv_label.add_theme_color_override("font_color", accent)
 	lv_label.position = Vector2(0.0, 160.0)
@@ -215,9 +226,21 @@ func _make_card(entry: Dictionary) -> Control:
 	btn.add_theme_stylebox_override("hover", _hover_style())
 	btn.add_theme_stylebox_override("pressed", _hover_style())
 	btn.pressed.connect(_on_pick.bind(entry))
+	btn.pressed.connect(_blip_hover)
 	root.add_child(btn)
 
 	root.pivot_offset = Vector2(CARD_W, CARD_H) * 0.5
+	# v9 E1/L14：三张卡错开 0.045s 依次"从 0.92 弹到 1.0"。
+	# 为什么闪一下而不是从下往上滑：滑入会改变卡片的最终位置，
+	# 而这三张卡的 y 是布局定死的（用户已经习惯那个位置），动位置等于改布局。
+	# 只动 scale + alpha，位置永远不变。
+	# ⚠️ 用 set_meta 存序号而不是闭包：tween 的 delay 必须在这里算好。
+	var order: int = cards.get_child_count()
+	var tw: Tween = root.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(root, "scale", Vector2.ONE, 0.16).set_delay(order * 0.045) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).from(Vector2.ONE * 0.92)
+	tw.tween_property(root, "modulate:a", 1.0, 0.13).set_delay(order * 0.045).from(0.0)
 	return root
 
 func _hover_style() -> StyleBoxFlat:
@@ -226,7 +249,15 @@ func _hover_style() -> StyleBoxFlat:
 	s.set_corner_radius_all(12)
 	return s
 
+## 悬停/按下时的轻响。和 _on_pick 的 ui_confirm 分工：
+## 这个只是"手摸到了"，按下才"决定了"。两个都存在，玩家才不会觉得界面是死板。
+func _blip_hover() -> void:
+	Audio.play_sfx("ui_click", -4.0)
+
 func _on_pick(entry: Dictionary) -> void:
+	# v9 F1：选卡是全流程里唯一"玩家做了决定"的界面动作，必须有声。
+	# 用 ui_confirm 而不是 ui_click —— 这是确认，不是点一下看看。
+	Audio.play_sfx("ui_confirm")
 	UpgradeDB.apply(entry)
 	_show_next()
 

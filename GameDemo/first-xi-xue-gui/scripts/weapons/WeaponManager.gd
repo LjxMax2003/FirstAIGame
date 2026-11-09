@@ -48,6 +48,10 @@ var resources: ResourceField = null
 var _side := 1
 var _cd: Dictionary = {}
 var _orbit_angle := 0.0
+## 环绕物（kind == "orbit"）自己的伤害节拍（迭代01 D-1-F1 / IT-03）。
+## 不复用 _cd：_cd 的语义是"离下次开火还有多久"，而环绕物从不"开火"，
+## 它只有"多久结算一次接触伤害"。同一个键被两套系统各写一次就是上次的 bug 根因。
+var _orbit_cd := 0.0
 var _bullets: Array[Bullet] = []
 var _zones: Array[Zone] = []
 var _fx: Array[Fx] = []
@@ -60,6 +64,8 @@ var _orbit_ghosts: Array[Sprite2D] = []
 ## 屏幕光晕的冷却（秒）。打铁花一次泼两发，两团光叠加会过曝；
 ## 用一个短冷却把"同时碎的两发"合并成一次屏幕闪光。只在 _shatter 里读写。
 var _glow_left := 0.0
+## 走马灯的轮转相位（0~7）。只在 evolved.has("halo") 时会推进；未开脸恒 0，不推进。
+var _lamp_step := 0
 
 @onready var _pool: EnemyPool = get_parent().get_node("EnemyPool") as EnemyPool
 
@@ -91,6 +97,10 @@ func _process(delta: float) -> void:
 	update_fx(delta)
 
 func _tick_cd(id: String, delta: float) -> void:
+	# 环绕类武器没有"开火"概念，不进开火冷却通道（迭代01 D-1-F1）：
+	# 它的伤害节拍由 _update_orbits 里的 _orbit_cd 单独递减与重置。
+	if WeaponDB.kind_of(id) == "orbit":
+		return
 	var left: float = float(_cd.get(id, 0.0)) - delta
 	_cd[id] = left
 	if left <= 0.0:
@@ -101,7 +111,12 @@ func acquire(id: String) -> void:
 	if owned.has(id) or not WeaponDB.has_weapon(id):
 		return
 	owned[id] = 1
-	_cd[id] = WeaponDB.first_delay(id)
+	# 环绕类武器不写 _cd（写了会被 _tick_cd 当开火冷却递减，而它根本没有开火分支）；
+	# 首轮伤害节拍由 _orbit_cd 承担（迭代01 D-1-F1 / IT-03）
+	if WeaponDB.kind_of(id) == "orbit":
+		_orbit_cd = WeaponDB.first_delay(id)
+	else:
+		_cd[id] = WeaponDB.first_delay(id)
 	# 图鉴（T12）：「拿到过」就是收录条件。挂在 acquire 而不是卡片点击上 ——
 	# 进化、宝箱、起始武器都会走到这里，只有 acquire 是"拥有"的唯一入口。
 	CodexDB.unlock(id)
@@ -117,6 +132,12 @@ func weapon_level(id: String) -> int:
 
 func stat(key: String) -> float:
 	return float(stats.get(key, 1.0))
+
+## 玩家"看起来"的中心：角色 origin 在脚底（art.offset 上抬 ART_FOOT_OFFSET），
+## 环绕类视觉（花灯爆闪 / 铜锣震波 / 皮影轨道）以身体中部为圆心才读作"绕着我"。
+## 判定一律不动：敌我双方 origin 同基准（都在各自脚底），判定公平性与平衡不变。
+func _visual_center(player: Node2D) -> Vector2:
+	return player.global_position + Vector2(0.0, -Player.ART_FOOT_OFFSET)
 
 func is_evolved(id: String) -> bool:
 	return evolved.has(id)
@@ -247,9 +268,7 @@ func fire(id: String, player: Node2D) -> void:
 			fire_inkline(player)
 		"print":
 			fire_print(player)
-		"phone":
-			# 手机环是持续环绕，不走 cd 开火；这里只刷新冷却占位
-			_cd["phone"] = 0.28
+		# 皮影（phone）没有开火分支：它是持续环绕，伤害节拍走 _orbit_cd（迭代01 D-1-F1）
 
 # ---------------------------------------------------------------- 鞭弧
 func fire_whip(player: Node2D) -> void:
@@ -288,10 +307,21 @@ func fire_whip(player: Node2D) -> void:
 	var dbl_from: int = int(d.get("double_sweep_from", 7))
 	if bool(d.get("double_sweep", false)) and lv >= dbl_from:
 		var ratio: float = float(d.get("double_sweep_ratio", 0.60))
-		_delay_sweep(x0, x1, y0, y1, dmg * ratio)
-		# 第二刀的**视觉**。原先是只补判定不补画面 —— 玩家血条对面掉了，屏幕上一片安静，
-		# 读起来像"数字 bug"而不是"又扫了一刀"。v6 §5 要求 slash_arc 双段，就是这个缺口。
-		_delay_arc(p, length, width, sign_x, lv)
+		if evolved.has("whip"):
+			# 迭代03 M-02 火神开脸：回手第二刀改竖劈，与第一刀成十字。
+			# 竖劈的"长"取横扫的 length、"宽"取横扫的 width —— 判定旋转 90°，
+			# 不改任何数，只改几何朝向。玩家开脸后会突然能打到贴身上下的怪。
+			var vx0: float = p.x - width * 0.5
+			var vx1: float = p.x + width * 0.5
+			var vy0: float = p.y - length * 0.5
+			var vy1: float = p.y + length * 0.5
+			_delay_sweep(vx0, vx1, vy0, vy1, dmg * ratio)
+			_delay_arc_v(p, length, width, lv)
+		else:
+			_delay_sweep(x0, x1, y0, y1, dmg * ratio)
+			# 第二刀的**视觉**。原先是只补判定不补画面 —— 玩家血条对面掉了，屏幕上一片安静，
+			# 读起来像"数字 bug"而不是"又扫了一刀"。v6 §5 要求 slash_arc 双段，就是这个缺口。
+			_delay_arc(p, length, width, sign_x, lv)
 
 	var arc: Sprite2D = _take_fx(Art.WHIP_ARC)
 	arc.position = Vector2(p.x + sign_x * length * 0.30, p.y + width * 0.06)
@@ -352,7 +382,10 @@ func _second_arc(p: Vector2, length: float, width: float, sign_x: float, lv: int
 	arc.scale = Vector2(0.9, 1.15) * (length / 115.0) * 0.92
 	# Lv8 觉醒「怒目傩面」：第二刀染暗红，读作"另一张脸补的"。
 	# 只在这把武器满级时上色 —— 平时两刀同色，才不会让 Lv7 就看起来像满级。
-	arc.modulate = Color(1.0, 0.54, 0.48, 0.95) if lv >= WeaponDB.MAX_LEVEL \
+	# 迭代03 M-08：开脸后不再染红 —— "开脸"是另一条视觉通道（spawn_evolve 的暖红），
+	# 两条同时染红会让玩家以为"红=满级"就是开脸。
+	arc.modulate = Color(1.0, 0.54, 0.48, 0.95) \
+		if lv >= WeaponDB.MAX_LEVEL and not evolved.has("whip") \
 		else Color(1.0, 1.0, 1.0, 0.95)
 	_push_fx(arc, 0.16, 1.55, 1.15)
 	ShaderFX.slash(arc, 0.12, true, false)
@@ -370,7 +403,9 @@ func fire_halo(player: Node2D) -> void:
 	# 读的是**命中前**的减速状态 —— 先判再上减速，否则第一下就吃到加成，
 	# 等于变成"花灯无条件 +20%"，那就不需要把怪留在圈里了。
 	var slow_bonus: float = float(d.get("slow_dmg", 0.20))
-	_pool.query_circle(player.global_position, radius, _scratch)
+	# 迭代03 M-03：灯心可能偏心（开脸后绕玩家公转），判定与视觉、资源点必须同圆心。
+	var center: Vector2 = _lamp_center(player, radius)
+	_pool.query_circle(center, radius, _scratch)
 	if not _scratch.is_empty():
 		for e in _scratch:
 			var dealt: float = dmg * (1.0 + slow_bonus) if e.is_slowed() else dmg
@@ -383,12 +418,13 @@ func fire_halo(player: Node2D) -> void:
 		# 灯晕"跳一下"：只在**真的烧到东西**时才放，不是每次冷却都放。
 		# 光环 cd 只有 0.5s，若每次都放，画面会变成常亮的环——反而看不出命中。
 		# rays = 0：纯环不带光条，和"灼烧"的语义一致，光条读起来像"爆炸"。
+		# 圆心对齐身体中部（-18 口径），并与判定圆心同源（center）。
 		ShaderFX.burst_ellipse(
-			self, player.global_position, radius * 2.0, radius * 2.0,
+			self, center + Vector2(0.0, -Player.ART_FOOT_OFFSET), radius * 2.0, radius * 2.0,
 			Color(1.0, 0.78, 0.32), 0, 0.28
 		)
 	if resources != null:
-		resources.try_hit(player.global_position, radius, dmg)
+		resources.try_hit(center, radius, dmg)
 
 # ---------------------------------------------------------------- 弹道类（荧光棒 / 美工刀）
 func fire_projectile(player: Node2D, id: String) -> void:
@@ -423,6 +459,8 @@ func fire_projectile(player: Node2D, id: String) -> void:
 		# 穿透里程碑：Lv4 / Lv8 各 +1（不是每级线性给）
 		b.pierce = WeaponDB.pierce_at(id, lv)
 		b.bounce = int(d.get("bounce", 0))
+		# 剩余弹射次数独立计次（迭代01 D-2-F1）：bounce 是类型判据不能动，计次走这里
+		b.bounces_left = b.bounce
 		b.bounce_range = bounce_r
 		b.radius = float(d.get("bullet_radius", 12.0))
 		b.node = node
@@ -552,14 +590,17 @@ func fire_gong(player: Node2D) -> void:
 	#   ① 形状：铜锣带径向声波刺 + 一圈回震向内收；花灯是光滑环且只往外推
 	#   ② 色相：铜锣是金属被敲响的白热反光（近白暖金）；花灯是烛火的橙
 	#   ③ 尺寸：铜锣半径约为花灯的 1.8 倍，一次性炸到边界就没了
-	ShaderFX.shockwave(self, player.global_position, radius * 2.0, GONG_WAVE_COLOR, 16, 0.30)
+	# 圆心对齐身体中部（_visual_center）：震波画在脚底会读成"圈歪了"。
+	ShaderFX.shockwave(self, _visual_center(player), radius * 2.0, GONG_WAVE_COLOR, 16, 0.30)
 	# Lv8 觉醒：每脉冲再外扩**一圈**声波环（v6 §6「锣面震波实化为扩散金环」）。
 	# 只加环、不加伤害 —— 这是"满级"的视觉读法，不是第二个结算口。
 	# 半径 1.26×：比主波远一档，两圈同屏时一眼能数出"荡了两下"；
 	# 若与主波同半径，加法混合会让它糊进第一圈里，等于没加。
-	if lv >= WeaponDB.MAX_LEVEL:
+	# 迭代03 M-08：开脸后这一圈让位给"回响"（_gong_echo 的第二圈）。
+	# 否则开脸那一下同屏三圈（满级外扩 + 主波 + 回响），读不出"回响"是新东西。
+	if lv >= WeaponDB.MAX_LEVEL and not evolved.has("gong"):
 		ShaderFX.burst_ellipse(
-			self, player.global_position, radius * 2.0 * 1.26, radius * 2.0 * 1.26,
+			self, _visual_center(player), radius * 2.0 * 1.26, radius * 2.0 * 1.26,
 			Color(1.0, 0.86, 0.46), 20, 0.34, 0.16
 		)
 	# 锣面本体：这是"铜锣"这个技能唯一的实体，也是玩家认出它的锚点。
@@ -568,7 +609,10 @@ func fire_gong(player: Node2D) -> void:
 	# 落到玩家之下（Player 在 z = -1）：锣面是不透明的实心圆盘，
 	# 盖在头上会让人"看不见自己在哪" —— 走位信息比这个特效重要得多。
 	face.z_index = -2
-	face.position = player.global_position + Vector2(0.0, -4.0)
+	# 用 global_position 而不是 position：face 是 WeaponManager 的子节点，
+	# 若 Weapons 自身有位移（当前在原点但不保证永远），局部坐标会偏。
+	# 圆心对齐身体中部（_visual_center）：锣面画在脚底会读成"圈歪了"。
+	face.global_position = _visual_center(player)
 	face.rotation = randf_range(-0.05, 0.05)
 	face.flip_h = false
 	# 范围直径的 0.42。这个数是被"看得见声波"卡住的：
@@ -578,6 +622,12 @@ func fire_gong(player: Node2D) -> void:
 	# 纯白不压暗：锣面是玩家认出"这是铜锣"的唯一实体，得比那圈冷白声波更亮
 	face.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	_ring_face_anim(face)
+	if evolved.has("gong"):
+		# 迭代03 M-06 开市锣：锣声有回响 —— 0.28s 后原地再响一次，45% 伤 + 短控。
+		# 用 tween 而不是 await：fire_* 必须保持同步（与 :303-304 同一个理由）。
+		var tw: Tween = create_tween()
+		tw.tween_interval(0.28)
+		tw.tween_callback(_gong_echo.bind(_visual_center(player), radius, dmg * 0.45, cap))
 
 # ---------------------------------------------------------------- 墨斗（直线穿透）
 ## 单点头牌 + 浆壳兵官方解。射出一道笔直墨线，穿透 pierce_at 个目标。
@@ -607,6 +657,11 @@ func fire_inkline(player: Node2D) -> void:
 	b.life = range_px / maxf(speed, 1.0)
 	b.dmg = weapon_damage("inkline", lv)
 	b.pierce = WeaponDB.pierce_at("inkline", lv)
+	# 迭代03 M-07：龙筋绷得更长 —— 开脸后多穿一只（2 只 → 3 只）。
+	# inkline 在 WeaponDB 里没有 pierce_milestone（只有 "pierce": 1），
+	# 所以 pierce_at 对它恒返回 1、Lv8 也不会自然涨。这里补的是"进化给的"，不是"等级给的"。
+	if evolved.has("inkline"):
+		b.pierce += 1
 	b.radius = float(d.get("bullet_radius", 14.0))
 	b.spin = 0.0
 	b.node = node
@@ -647,7 +702,7 @@ func fire_print(player: Node2D) -> void:
 ## 落点区：先显影、到点再结算。用节点自己的 tween 做倒计时（不轮询 state）。
 func _push_zone(pos: Vector2, radius: float, dmg: float, delay: float) -> void:
 	var s: Sprite2D = _take_fx(Art.WOODBLOCK_PRINT)
-	s.position = pos
+	s.global_position = pos
 	s.rotation = 0.0
 	s.flip_h = false
 	# 目标直径 / 源图 120px：雕版本身要和落点区一样大，否则玩家判断不了范围
@@ -676,7 +731,7 @@ func _push_zone(pos: Vector2, radius: float, dmg: float, delay: float) -> void:
 func _drop_seal(pos: Vector2, radius: float, delay: float) -> void:
 	var seal: Sprite2D = _take_fx(Art.WOODBLOCK_SEAL)
 	var base: float = radius * 2.0 / 160.0
-	seal.position = pos + Vector2(0.0, -64.0)
+	seal.global_position = pos + Vector2(0.0, -64.0)
 	seal.rotation = 0.0
 	seal.flip_h = false
 	seal.z_index = -2          # 压在怪与玩家之下，只在地面上留一枚印
@@ -712,24 +767,21 @@ func _land_zone(z: Zone) -> void:
 	for e in _scratch:
 		e.take_damage(z.dmg, &"print")
 		spawn_spark(e.global_position, 1.0)
+		if evolved.has("print"):
+			# 迭代03 M-04 门神镇宅：落点把这一片"镇"住 —— 圈内敌人被拖慢 4s。
+			# 只给减速不给持续伤害：DOT 是 new system（Enemy 没有 DOT 字段），
+			# 而 apply_slow 是现成的，语义也正好是"守着不让人走快"。
+			# 4s 比落点间隔长（cd ≈ 1.0s），所以同一片区域会被反复刷新 —— 这是有意的。
+			e.apply_slow(0.30, 4.0)
 	if resources != null:
 		resources.try_hit(z.pos, z.radius, z.dmg)
 	ShaderFX.burst_ellipse(
 		self, z.pos, z.radius * 2.0, z.radius * 2.0,
 		Color(1.0, 0.72, 0.38), 8, 0.30
 	)
-	# 落点金线描边（v6 §5「magic_circle 浮雕光印 + 金线描边」）。
-	# 用 magic_circle 而不是再画一圈 cast_burst：法阵有**内部纹样**，
-	# 是"盖章"的语言；cast_burst 是"力"的语言，那是冲击波的活。
-	var ring: ColorRect = ShaderFX.spawn_circle(self, z.radius * 2.4, Color(1.0, 0.82, 0.42))
-	ring.z_index = -4          # 贴地：与 Game 的预警法阵同层，不盖角色
-	ring.global_position = z.pos - ring.size * 0.5
-	# ⚠️ spawn_circle 只负责"渐显到 1"，它自己不回收（Game 那边是手动 free 的）。
-	#    这里必须自己收尾，否则每落一次就漏一个 ColorRect + 材质。
-	var rt: Tween = ring.create_tween()
-	rt.tween_interval(0.55)
-	rt.tween_property(ring, "modulate:a", 0.0, 0.35)
-	rt.tween_callback(ring.queue_free)
+	# 落点不再叠 magic_circle（2026-11 实测反馈：法阵纹样读作"魔法阵"，
+	# 与年画的雕版/盖章语义违和）。落地的"砸"由上面的放射光条 +
+	# 雕版贴图淡出 + 印章落下（_drop_seal）承担。
 	# 落点贴图直接淡出并归还池子（不挂在 _fx 里：它已经播完渐显，不需要缩放收尾）
 	var s: Sprite2D = z.node
 	var tw: Tween = s.create_tween()
@@ -767,7 +819,13 @@ func _update_orbits(delta: float, player: Node2D) -> void:
 	var area_mul: float = stat("area") * _area_mult("phone")
 	var radius: float = (float(d.get("orbit_radius", 58.0))
 		+ float(d.get("orbit_radius_per_level", 5.0)) * float(lv - 1)) * area_mul
-	var count: int = int(d.get("orbit_count", 2))
+	# N-01：满堂彩（evolve_phone）的 orbit_count_bonus 让影人 2 → 3。
+	# 数量加成只从进化表读，不在武器表里再写一份，避免两个乘区重复计算。
+	var bonus: int = 0
+	var form_id: String = evolution_of("phone")
+	if form_id != "":
+		bonus = int(EvolutionDB.form(form_id).get("orbit_count_bonus", 0))
+	var count: int = int(d.get("orbit_count", 2)) + bonus
 	var dmg: float = weapon_damage("phone", lv)
 	var hit_r: float = float(d.get("hit_radius", 18.0))
 	# v5：命中给一次短促击退（0.15 = 按敌人尺寸比例后退，不是固定像素）
@@ -775,14 +833,19 @@ func _update_orbits(delta: float, player: Node2D) -> void:
 	_orbit_angle += float(d.get("orbit_speed", 2.4)) * delta
 
 	_ensure_orbit_sprites(count)
-	var p: Vector2 = player.global_position
+	# 轨道圆心对齐身体中部：影人绕脚踝转会读成"绕的不是我"（实测截图反馈）。
+	# 判定随环绕物位置一起走（hit 半径容错 ≫ 上移量），不另开口。
+	var p: Vector2 = _visual_center(player)
 	# 这里**不画**轨迹圈。皮影的"绕身"由影人本体表达：它们一直在动，
 	# 玩家自己就能看出轨道。原先铺一圈 area_ripple 作为轨迹提示，结果是
 	# 同屏出现"花灯式的波纹"——两个技能的视觉语言撞在一起，反而把花灯的
 	# 范围场读糊了（用户反馈"皮影的水波纹去掉"就是这个）。
-	var tick: bool = float(_cd.get("phone", 0.0)) <= 0.0
+	# 递减必须在闸门之前（先减 delta 再判 <= 0），否则节拍停在 first_delay 永不触发
+	# —— 这正是策划案 §1.3 改法 B 的失败路径（iteration-01-fix-plan / D-1-F1）
+	_orbit_cd = maxf(0.0, _orbit_cd - delta)
+	var tick: bool = _orbit_cd <= 0.0
 	if tick:
-		_cd["phone"] = WeaponDB.cooldown_at("phone", lv, stat("cooldown"))
+		_orbit_cd = WeaponDB.cooldown_at("phone", lv, stat("cooldown"))
 
 	for i in count:
 		var ang: float = _orbit_angle + TAU * float(i) / float(maxi(count, 1))
@@ -810,6 +873,12 @@ func _update_orbits(delta: float, player: Node2D) -> void:
 			# 资源点判定放在敌人之后：可破坏物不该抢走本该打在怪身上的伤害
 			if resources != null:
 				resources.try_hit(pos, hit_r, dmg)
+	# _ensure_orbit_sprites 只扩不缩：进化回退（测试里 evolved.clear()）后
+	# 池里仍留着第 3 只，不隐藏会残留一个停在原地的影人。
+	for i in range(count, _orbit_sprites.size()):
+		_orbit_sprites[i].visible = false
+	for i in range(count, _orbit_ghosts.size()):
+		_orbit_ghosts[i].visible = false
 
 func _ensure_orbit_sprites(count: int) -> void:
 	var tex: Texture2D = Art.tex(Art.PHONE_ORBIT)
@@ -870,15 +939,34 @@ func update_bullets(delta: float) -> void:
 					if b.bounce > 0 and bool(bd.get("bounce_falloff", false)) \
 							and b.hits_done > int(bd.get("bounce_falloff_after", 2)):
 						dmg *= float(bd.get("bounce_falloff_ratio", 0.70))
+					# 迭代03 M-07：线越绷越紧 —— 同一发子弹每多穿一只，后一只吃得更重。
+					# 几何一动不动（vel / rotation 全程恒定），这是"墨斗弹线必须笔直"下的增强方式。
+					# hits_done 在上面已自增，所以第一只拿到的就是 ×1.00。
+					if b.id == "inkline" and evolved.has("inkline"):
+						dmg *= 1.0 + minf(0.25 * float(b.hits_done - 1), 0.75)
 					e.take_damage(dmg, StringName(b.id))
 					spawn_spark(b.pos, 0.7)
+					# 迭代03 M-07：每多穿一只加粗 15%，从第 2 只起算（第 1 只是"进入笔尖"）。
+					# 池化精灵在 _take_bullet 会把 scale 重置成 ONE，所以这里改了不用还原。
+					if b.id == "inkline" and evolved.has("inkline") and b.hits_done >= 2:
+						b.node.scale.y = minf(b.node.scale.y * 1.15, 2.8)
+					# 迭代03 M-05：糖水粘连。只粘每根糖丝的**第一跳** ——
+					# 后两跳是穿透顺带的，全粘等于一次冷却定住 12 只（Lv8 4 发 × 穿透 3）。
+					var glued: bool = false
+					if b.id == "glowstick" and evolved.has("glowstick") and b.hits_done == 1:
+						glued = e.apply_root(GLUE_TIME)
 					# ---- 逐武器命中表现（v6 §5 复用清单）----
 					# 糖画：糖晶迸裂。只给前两跳做 —— 糖丝穿透 3 个目标 × 最多 4 根，
 					# 每跳都开一个 ColorRect + 材质，一秒能开出十几个节点，
 					# 而第二跳之后的画面反正已经被第一跳的迸裂盖住了。
 					if b.id == "glowstick" and b.hits_done <= 2:
-						ShaderFX.burst_ellipse(self, b.pos, 46.0, 46.0,
-							Color(1.0, 0.90, 0.56), 6, 0.18)
+						# 粘住的那一下读「糖浆摊开」（无射线、更慢、更大），没粘住的仍是「糖晶迸裂」。
+						# 不做成第二次 burst 调用：burst 每次都要 new ColorRect + new ShaderMaterial，
+						# 一秒 4 根 × 2 跳已经是 8 个，翻倍会顶到渲染开销。
+						ShaderFX.burst_ellipse(self, b.pos,
+							66.0 if glued else 46.0, 66.0 if glued else 46.0,
+							Enemy.GLUE_TINT if glued else Color(1.0, 0.90, 0.56),
+							0 if glued else 6, 0.30 if glued else 0.18)
 					# 剪纸：弹射点的"纸花绽放"。放在这里而不是弹射分支里，
 					# 是因为读到这里 b.pos 还是**被咬中的那个点**，弹射后它就不动了。
 					elif b.id == "blade" and b.bounce > 0:
@@ -892,13 +980,16 @@ func update_bullets(delta: float) -> void:
 						if b.hit_cap <= 0:
 							dead = true
 							break
-					if b.bounce > 0:
-						# 美工刀：弹射到附近另一个目标，不衰减
+					if b.bounce > 0 and b.bounces_left > 0:
+						# 美工刀：弹射到附近另一个目标，不衰减。
+						# 次数封顶（迭代01 D-2 / IT-06）：单发最多 1 + bounce 次命中；
+						# bounces_left 归零后落入下方 pierce 分支，下一次命中即回收。
 						var nxt: Enemy = _pool.nearest_except(b.pos, b.bounce_range, b.hit_ids)
 						if nxt != null:
 							var dir: Vector2 = (nxt.global_position - b.pos).normalized()
 							b.vel = dir * b.vel.length()
 							b.life = maxf(b.life, 0.5)
+							b.bounces_left -= 1
 						else:
 							dead = true
 							break
@@ -1066,7 +1157,7 @@ func fx_active_count() -> int:
 ## 一次爆发几十个火花，多一张图就多一次纹理切换（掉合批）。
 func spawn_spark(pos: Vector2, size_mul: float, color := Color(1.0, 1.0, 1.0)) -> void:
 	var s: Sprite2D = _take_fx(Art.FX_SPARK)
-	s.position = pos
+	s.global_position = pos
 	s.rotation = randf() * TAU
 	s.flip_h = randf() < 0.5
 	s.scale = Vector2.ONE * (0.55 * size_mul)
@@ -1076,7 +1167,7 @@ func spawn_spark(pos: Vector2, size_mul: float, color := Color(1.0, 1.0, 1.0)) -
 ## 进化特效：开箱时在玩家身上放一颗星
 func spawn_evolve(pos: Vector2) -> void:
 	var s: Sprite2D = _take_fx(Art.FX_EVOLVE)
-	s.position = pos
+	s.global_position = pos
 	s.rotation = 0.0
 	s.flip_h = false
 	s.scale = Vector2.ONE * 1.2
@@ -1133,6 +1224,103 @@ func update_fx(delta: float) -> void:
 static func climb(t: float) -> float:
 	return clampf(t * 1.6, 0.0, 1.0)
 
+## 火神开脸的第二刀：竖劈弧光。复用同一张 WHIP_ARC，旋转 90°。
+## 不复用 _second_arc 的两个理由：① 它按 sign_x 翻水平方向，竖劈没有左右；
+## ② 它对 Lv8 染暗红，而竖劈本身就是开脸的标志，再染红会让"满级"和"开脸"糊在一起（见 M-08）。
+func _delay_arc_v(p: Vector2, length: float, width: float, lv: int) -> void:
+	var tw: Tween = create_tween()
+	tw.tween_interval(0.12)
+	tw.tween_callback(_second_arc_v.bind(p, length, width, lv))
+
+func _second_arc_v(p: Vector2, length: float, width: float, _lv: int) -> void:
+	var arc: Sprite2D = _take_fx(Art.WHIP_ARC)
+	arc.position = Vector2(p.x + width * 0.10, p.y - length * 0.18)
+	arc.rotation = PI * 0.5
+	arc.flip_h = false
+	arc.scale = Vector2(0.9, 1.15) * (length / 115.0) * 0.92
+	arc.modulate = Color(1.0, 0.78, 0.42, 0.95)    # 暖金：与横向白弧明确区分
+	_push_fx(arc, 0.16, 1.55, 1.15)
+	ShaderFX.slash(arc, 0.12, false, false)
+
+# ---------------------------------------------------------------- 迭代03 M-03：灯心公转
+## 花灯的"灯心"：未开脸 = 玩家脚下；开脸后 = 绕玩家 8 方位轮转的点。
+##
+## 【为什么连视觉一起搬，而不是新建一个环】
+## GarlicRing 的四层视觉全部以自身节点原点为圆心（Ring 无 offset；
+## ShaderFX.field / ripple / lantern_stream 都写 rect.position = -size*0.5），
+## 而 Player.gd 只在初始化(:114) 写过它的 position，每帧只改 visible / set_radius / set_awakened。
+## 所以改它的 position = 整套光环视觉平移，GarlicRing.gd 一行不用改，
+## 判定圈与可见边界圈永远同心同半径。
+##
+## 【为什么硬跳 45°，不做平滑插值】
+## 判定圆心只在每次脉冲更新（cd 0.5s）。视觉若用 tween 滑过去，中间那 0.16s 里
+## 看见的圈和正在结算的圈是两个位置 —— 那正是"表现与判定脱节"。
+## 走马灯本来就是一格一格换画，跳格是它的本义。
+func _lamp_center(player: Node2D, radius: float) -> Vector2:
+	var base: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
+	var p: Player = player as Player
+	if p == null:
+		return player.global_position
+	if not evolved.has("halo"):
+		# 未开脸：复位。复活(:146)已写回 base，这里再兜一次是因为 _lamp_step
+		# 不会自己归零 —— 卸下花灯又装回来时会带着上一轮的脏偏移。
+		if p.garlic_ring.position != base:
+			p.garlic_ring.position = base
+		return player.global_position
+	# 8 方位轮转：每次脉冲 +45°，偏移 0.40R。
+	# 0.40 < 1.0 ⇒ 玩家到灯心 0.40R < 判定半径 R ⇒ 玩家恒在圈内（数学必然），
+	# 所以"灯心明显偏心"和"贴身怪不漏"可以同时成立。
+	# 顺序是"先用相位、再自增"：第一次脉冲落在 0°（正右），第二次 45°，第三次 90°（正下），
+	# 这样验收表 V-2/V-3 才说得通。写成先自增会让 V-2 变成 45°（斜下），对不上。
+	var off: Vector2 = Vector2.RIGHT.rotated(TAU * float(_lamp_step) / 8.0) * (radius * 0.40)
+	_lamp_step = (_lamp_step + 1) % 8
+	p.garlic_ring.position = base + off
+	return player.global_position + off
+
+# ---------------------------------------------------------------- 迭代03 M-06：铜锣回响
+## 开市锣的回响。判定口径与主敲一致（最近 cap 只），但**不碰资源点**：
+## 同一次敲击把资源点打两遍，会让"可拆资源点"的血量预期整体错位（ResourceField 按 key 去重，
+## 所以不会重复扣，但会白跑一遍遍历）。
+func _gong_echo(pos: Vector2, radius: float, dmg: float, cap: int) -> void:
+	_pool.query_circle(pos, radius, _scratch)
+	if _scratch.is_empty():
+		return
+	for e in _nearest_n(pos, cap):
+		e.take_damage(dmg, &"gong")
+		e.apply_slow(0.25, 0.8)
+		spawn_spark(e.global_position, 0.6, GONG_SPARK_COLOR)
+	# 第二圈波：半径 0.92，比主波小一圈 —— 读作"回音从墙上反弹回来"
+	ShaderFX.burst_ellipse(
+		self, pos, radius * 2.0 * 0.92, radius * 2.0 * 0.92,
+		GONG_WAVE_COLOR, 8, 0.26
+	)
+	Audio.play_sfx("gong", -6.0)
+
+## 糖水系留时间（秒）。这是「固定」，不是「变慢」 —— 见 Enemy.apply_root。
+## 减速硬上限 85%（Enemy 里 clampf(_slow_pct, 0, 0.85)），所以 apply_slow(1.0) 做不到站住，
+## 必须走 Enemy 的第二条正交通道 _root_left。
+const GLUE_TIME := 1.0
+
+# ---------------------------------------------------------------- 迭代03：进化机制声明
+## 每条进化的"行为机制"落在哪。这张表是**声明**，不是数据源 ——
+## 武器侧照旧用 evolved.has(id) 判定（沿用 EvolutionDB.gd:87-91 的既有决定）。
+## 存在的意义只有一个：让"9 条进化里几条真有机制"这件事可以被测试断言，
+## 而不是靠人去 _shatter / update_bullets / fire_projectile 三处翻。
+##
+## 键 = 武器 id；值 = "机制名:落点函数"。
+## 值必须是**真实存在的方法名**：断言会拿它跑 has_method()，重命名函数时这里会红。
+const EVOLVE_MECHANIC: Dictionary = {
+	"whip": "十字扫:_second_arc_v",
+	"halo": "灯心公转:_lamp_center",
+	"glowstick": "糖水粘连:update_bullets",      # 敌人侧落在 Enemy.apply_root
+	"gong": "回响:_gong_echo",
+	"inkline": "穿透累进:update_bullets",
+	"print": "门神镇守:_land_zone",
+	"extinguisher": "二次溅射:_shatter",       # 迭代前既有
+	"phone": "环绕 +1:_ensure_orbit_sprites",   # 迭代前既有（orbit_count_bonus）
+	"blade": "弹射半径:fire_projectile",        # 迭代前既有（bounce_range_scaled）
+}
+
 # ---------------------------------------------------------------- 聚合数据（带类型，不用 Dictionary 手搓）
 class Bullet:
 	var id := ""
@@ -1142,6 +1330,10 @@ class Bullet:
 	var dmg := 0.0
 	var pierce := 0
 	var bounce := 0
+	## 剩余弹射次数（迭代01 D-2-F1 / IT-06）。与 bounce 严格分离：
+	## bounce 是"弹射类"的类型判据 + 初始上限（旋转对齐 :855 与衰减判据 :870 都读它，
+	## 递减它会让纸鹊飞着飞着突然开始自转），bounces_left 只负责消耗，归零即停弹。
+	var bounces_left := 0
 	var bounce_range := 240.0
 	var hit_cap := 0
 	var radius := 8.0

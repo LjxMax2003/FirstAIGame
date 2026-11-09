@@ -354,20 +354,20 @@ func _case_enemy_frames() -> void:
 
 # ---------------------------------------------------------------- T12 图鉴
 ## 四段各查一件事：
-## ① 表本身：33 条、四类 9/6/9/9、id 唯一、图标能 load、说明非空；
+## ① 表本身：36 条、四类 9/9/9/9、id 唯一、图标能 load、说明非空；
 ## ② 解锁口径：四条真实路径（拿到 / 点过 / 开脸 / 杀过）各自能把条目点亮，
 ##    且重复触发不再返回"首次"（否则每局都会弹一遍"新收录"）；
 ## ③ 持久化：落盘后重新读盘仍在 —— 图鉴最容易写成"看着有、其实没存"；
 ## ④ 面板：未收录显示"尚未收录"且不盖章，收录后名字与说明都要变，页签数字同步。
 func _case_codex() -> void:
-	print("\n[5] T12 图鉴（33 条）")
+	print("\n[5] T12 图鉴（36 条）")
 	var all: Array[Dictionary] = CodexDB.entries()
-	_check(all.size() == 33, "图鉴共 33 条（%d）" % all.size())
+	_check(all.size() == 36, "图鉴共 36 条（%d）" % all.size())
 	_check(CodexDB.total_of(CodexDB.KIND_WEAPON) == 9
-		and CodexDB.total_of(CodexDB.KIND_FORM) == 6
+		and CodexDB.total_of(CodexDB.KIND_FORM) == 9
 		and CodexDB.total_of(CodexDB.KIND_STAT) == 9
 		and CodexDB.total_of(CodexDB.KIND_FOE) == 9,
-		"四类分别 9 / 6 / 9 / 9（手艺·开脸·心法·对手）")
+		"四类分别 9 / 9 / 9 / 9（手艺·开脸·心法·对手）")
 
 	var ids: Dictionary = {}
 	var dup: Array[String] = []
@@ -382,10 +382,10 @@ func _case_codex() -> void:
 			bad_svg.append(id)
 		if String(e["name"]) == "" or String(e["desc"]) == "" or String(e["tag"]) == "":
 			bad_text.append(id)
-	_check(dup.is_empty(), "33 个 id 互不重复%s" % ("" if dup.is_empty() else "（重复 %s）" % [dup]))
-	_check(bad_svg.is_empty(), "33 条图标都能 load 成 Texture2D%s"
+	_check(dup.is_empty(), "36 个 id 互不重复%s" % ("" if dup.is_empty() else "（重复 %s）" % [dup]))
+	_check(bad_svg.is_empty(), "36 条图标都能 load 成 Texture2D%s"
 		% ("" if bad_svg.is_empty() else "（缺 %s）" % [bad_svg]))
-	_check(bad_text.is_empty(), "33 条都有名字 / 分类 / 说明%s"
+	_check(bad_text.is_empty(), "36 条都有名字 / 分类 / 说明%s"
 		% ("" if bad_text.is_empty() else "（缺 %s）" % [bad_text]))
 
 	# 从零开始：把 codex 清空，但保留其它局外进度（别把玩家的金币也清了）
@@ -393,14 +393,14 @@ func _case_codex() -> void:
 	var zero: Dictionary = backup.duplicate()
 	zero["codex"] = {}
 	MetaSave.debug_set(int(zero["coins"]), zero["levels"], zero)
-	_check(CodexDB.seen_count() == 0 and CodexDB.progress_line() == "0 / 33",
-		"空存档时 0 / 33（%s）" % CodexDB.progress_line())
+	_check(CodexDB.seen_count() == 0 and CodexDB.progress_line() == "0 / 36",
+		"空存档时 0 / 36（%s）" % CodexDB.progress_line())
 
 	# ② 解锁口径
 	_check(CodexDB.unlock("whip") and CodexDB.is_seen("whip"),
 		"收录第一条后 is_seen 为真")
 	_check(not CodexDB.unlock("whip"), "同一条重复收录返回 false（不会重复弹『新收录』）")
-	_check(CodexDB.progress_line() == "1 / 33", "计数口径同步（%s）" % CodexDB.progress_line())
+	_check(CodexDB.progress_line() == "1 / 36", "计数口径同步（%s）" % CodexDB.progress_line())
 	_check(not CodexDB.unlock("no_such_entry"), "收录不存在的 id 返回 false（接错线不会崩）")
 
 	var g: GameScene = (load(GAME_SCENE) as PackedScene).instantiate() as GameScene

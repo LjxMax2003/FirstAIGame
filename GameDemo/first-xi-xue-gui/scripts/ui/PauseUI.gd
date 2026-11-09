@@ -41,6 +41,10 @@ func _ready() -> void:
 	restart_btn.pressed.connect(_on_restart)
 	settings_btn.pressed.connect(_on_settings)
 	menu_btn.pressed.connect(_on_menu)
+	# v9 F1：三个"离开暂停"的按钮都要有声，用 ui_click（轻，不代表确认）。
+	# 接在 pressed 上而不是单独包一层 _on_xxx：那就是这四项各自的第一件事。
+	for b in [resume_btn, restart_btn, settings_btn, menu_btn]:
+		(b as Button).pressed.connect(_blip)
 
 	_settings = SettingsUI.new()
 	_settings.name = "SettingsPanel"
@@ -53,6 +57,11 @@ func _ready() -> void:
 
 func bind(game: GameScene) -> void:
 	_game_ref = game
+
+## 按钮轻响。单独一个函数而不是在四处各写一行 Audio.play_sfx：
+## 之后要改那个音（或调 gain）只改这里一处，不会漏。
+func _blip() -> void:
+	Audio.play_sfx("ui_click")
 
 func is_open() -> bool:
 	return popup.visible

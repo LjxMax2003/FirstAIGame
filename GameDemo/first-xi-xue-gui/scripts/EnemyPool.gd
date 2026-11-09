@@ -106,8 +106,15 @@ func deactivate(e: Enemy) -> void:
 func modulate_free(e: Enemy) -> void:
 	e.modulate = Color.WHITE
 	e.scale = Vector2.ONE
-	# 贴图本体的染色也要复位，否则复用时第一帧还是红的
-	(e.get_node("Art") as Sprite2D).modulate = Color.WHITE
+	# 贴图本体的染色、位移、缩放都要复位，否则复用时第一帧还带着上一具尸体的状态：
+	#   · modulate 不复位 → 第一帧还是红的
+	#   · art.scale 不复位 → 上一具尸体没走完的"先胀后塌"会带进来，表现为
+	#     "复活的怪比别的怪大一圈"（这是 v9 之前就存在的债，一直被 1.12 的固定放大掩盖着）
+	#   · art.position 不复位 → 上一次受击位移的残余会让它在出生帧偏出去 4px
+	var a: Sprite2D = e.get_node("Art") as Sprite2D
+	a.modulate = Color.WHITE
+	a.scale = Vector2.ONE
+	a.position = Vector2.ZERO
 
 func clear_all() -> void:
 	for e in active.duplicate():
@@ -123,10 +130,16 @@ func clear_all() -> void:
 func _process(delta: float) -> void:
 	if active.is_empty():
 		return
+	# v9：尸体的时间走**真实时间**，不吃 Engine.time_scale。
+	# 顿帧（PresentationFX 把 time_scale 压到 0.35~0.72）期间，若用缩放后的 delta，
+	# 0.045s 的吨帧会变成"尸体的溶解也一起慢下来"，连带 MOB_DISSOLVE 的 0.30s
+	# 被拉长成 0.3/time_scale —— HudFxGap 用 [0.21,0.40] 锁死了这个时长，会被打穿。
+	# 除以 max(time_scale, 0.01) 而不是判 if：判 if 会在 time_scale=0 时除零。
+	var real_delta: float = delta / maxf(Engine.time_scale, 0.01)
 	var i: int = active.size() - 1
 	while i >= 0:
 		var e: Enemy = active[i]
-		if e.corpse_expired(delta):
+		if e.corpse_expired(real_delta):
 			deactivate(e)
 		i -= 1
 

@@ -75,7 +75,7 @@ func refresh() -> void:
 		hint.text = "传承开局自动带入 · 本作不保存单局进度"
 	else:
 		btn_load.text = "载入存档 · 无存档"
-		hint.text = "还没有留下手艺 · 先守一夜，铜钱与传承会自动存下"
+		hint.text = "还没有留下手艺 · 先撑一夜，铜钱与传承会自动存下"
 	# 把当前匠人写在按钮上：玩家的抱怨会是"我选了灯彩匠，怎么还是打铁花"，
 	# 而不是"我要去哪儿换人"。让选择在菜单上一直可见，成本只有这五个字。
 	var ch: Dictionary = CharacterDB.current()
@@ -111,6 +111,8 @@ func progress_text() -> String:
 
 # ---------------------------------------------------------------- 按钮
 func _on_new_game() -> void:
+	# 迭代03 U-02：主菜单原本全静音，按下「开始」没有任何反馈。
+	Audio.play_sfx("ui_confirm")
 	# 自动化验收只回报意图：开场会挡住这次场景切换，而用例要的是"意图有没有发出"。
 	# 生产路径 intent_hook 恒为空，所以这条分支只服务测试，不会让玩家跳过开场。
 	if intent_hook.is_valid() or MetaSave.intro_done:

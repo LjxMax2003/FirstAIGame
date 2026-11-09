@@ -34,7 +34,10 @@ const FADE := 0.75
 ## 暂停时音乐压低多少 dB
 const DUCK_DB := -10.0
 ## 音效播放器数量。按上面的并行上限粗算，10 个足够覆盖所有音效同时发生
-const VOICES := 10
+## v9：加到 14。新增的 hit_aoe(3) + hit_single(2) 会与原有的
+## enemy_die(3) / gem(2) 同时抢声部；10 个会在后期"人一多就没声音"，
+## 而且那种丢失是静默的（_take_voice 拿不到播放器就 return，不报错）。
+const VOICES := 14
 
 ## BGM 表：路径 + 基准音量。
 ## main_menu 素材 RMS 只有 -30 dB（比战斗曲轻 10 dB），不补正的话主菜单会像没开音乐。
@@ -68,6 +71,37 @@ const SFX_DEF: Dictionary = {
 	"gong": {
 		"file": "res://assets/audio/sfx/weapon/gong.wav",
 		"gain": 5.0, "gap": 0.20, "voices": 1, "pitch": 0.0,
+	},
+	# ---------------------------------------------------------------- v9 A4：命中音
+	# 此前 9 把武器共用 "enemy_die"，打中时**一声不响** —— 四条反馈通道里唯一全空的一条。
+	# 现在按"锐/钝"分两档，由 Enemy.take_damage 依 WeaponDB.dmg_kind 选择。
+	# ⚠️ gain 取负：命中每秒几十次，必须明显低于击杀音（enemy_die +10）。
+	#    命中音要是和击杀一样响，玩家就分不出"打中了"和"打死了"，反馈反而变糊。
+	# gap 0.040/0.045 都比 PresentationFX.QUIET_WINDOW(0.055) 短一点：
+	# 允许多把武器同时响（用 voices 收口），但同一把不会连成一串。
+	"hit_aoe": {
+		"file": "res://assets/audio/sfx/weapon/hit_aoe.wav",
+		"gain": 4.0, "gap": 0.040, "voices": 3, "pitch": 0.12,
+	},
+	"hit_single": {
+		"file": "res://assets/audio/sfx/weapon/hit_single.wav",
+		"gain": 2.0, "gap": 0.045, "voices": 2, "pitch": 0.09,
+	},
+	# ---------------------------------------------------------------- v9 F1：UI 音
+	# 全工程按钮此前是**完全静音**的（ui/ 目录是空的）。三档语义：
+	# click 无音高抖动（界面反馈不需要生机），confirm 稍响（这是"我决定好了"），
+	# back 压低（退回去不该比往前走更响亮）。
+	"ui_click": {
+		"file": "res://assets/audio/sfx/ui/ui_click.wav",
+		"gain": 0.0, "gap": 0.02, "voices": 2, "pitch": 0.0,
+	},
+	"ui_confirm": {
+		"file": "res://assets/audio/sfx/ui/ui_confirm.wav",
+		"gain": 2.0, "gap": 0.05, "voices": 1, "pitch": 0.0,
+	},
+	"ui_back": {
+		"file": "res://assets/audio/sfx/ui/ui_back.wav",
+		"gain": -1.0, "gap": 0.05, "voices": 1, "pitch": 0.0,
 	},
 }
 

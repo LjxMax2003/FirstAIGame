@@ -59,6 +59,14 @@ static func _stat_desc(id: String, unit: String) -> String:
 		return unit
 	return CardText.stat_desc(id, to_lv)
 
+## 被动 id → 显示名。给"还差哪张心法"这类文案用：
+## 配方表里存的是 id，卡面要印的是「夜行 / 护身 / 底气」，两者必须同源。
+static func stat_name(id: String) -> String:
+	for sd in STAT_DEFS:
+		if String(sd["id"]) == id:
+			return String(sd["name"])
+	return id
+
 static func is_weapon(id: String) -> bool:
 	return WeaponDB.has_weapon(id)
 

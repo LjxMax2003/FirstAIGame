@@ -1,0 +1,351 @@
+# INTERFACE — 《守艺人·百工夜行》策划工坊 状态总线
+
+> 全链唯一状态总线，八节结构。任何环节产出交接前必须在此登记。
+> **当前版本：db-v1.0**（as-built 基线库，2026-11-07 收口）
+> 详细结论一律看 `docs/design/project-design-db-v1.0.md`；本文件只记**状态**，不记内容。
+
+---
+
+## 一、内容索引
+
+### 1.1 策划数据库 v1.0（本轮主线，as-built 基线）
+
+| 编号 | 文件 | 标题 | 状态 | Owner |
+|---|---|---|---|---|
+| 01 | `docs/design/01-top-level-design.md` | 顶层玩法设计 | ✅ 已定稿（258 行） | game-lead-designer |
+| 02 | `docs/design/02-system-design.md` | 系统设计 | ✅ 已定稿（660 行） | game-system-designer |
+| 03 | `docs/design/03-entity-logic.md` | 实体逻辑 | ✅ 已定稿（602 行） | game-entity-logic-designer |
+| 04 | `docs/design/04-narrative-script.md` | 剧情文案 | ✅ 已定稿（549 行，图鉴 36 条） | game-narrative-designer |
+| 05 | `docs/design/05-numeric-tables.md` | 数值总表与全局公式 | ✅ 已定稿（791 行，脚本 PASS 314 / FAIL 0） | game-numeric-designer |
+| 06 | `docs/design/06-asset-requirements.md` | 资产需求 | ✅ 已定稿（575 行） | game-asset-requirements |
+| **DB** | **`docs/design/project-design-db-v1.0.md`** | **整编数据库 v1.0（入口）** | **✅ 已收口** | **team-lead** |
+| 附 | `docs/design/tools/check_numeric_tables.py` | 数值校验脚本（227 项行号锚定） | ✅ 退出码 0 | game-numeric-designer |
+| **IT** | **`docs/design/iteration-01-backlog.md`** | **迭代 01 可改项对接清单** | **✅ 已交付（22 条任务 / 6 批次；局外经济锁区）** | **team-lead** |
+| **FX** | **`docs/design/iteration-01-fix-plan.md`** | **B1 修复策划案（皮影恢复 / 剪纸删次数）** | **✅ 已定稿；B1 代码已落地（12/12 断言绿）** | **team-lead** |
+| **IT2** | **`docs/design/iteration-02-skill-synergy.md`** | **迭代 02 策划案 · 技能关联（6 主线 + 3 配套）** | **✅ 已定稿并执行（664 行；代码已落地，验收见 §3.3 / §8）** | **team-lead** |
+| **IT3** | **`docs/design/iteration-03-evolve-mechanic.md`** | **迭代 03 策划案 · 进化机制化（6 机制 + 3 配套）** | **✅ 已定稿（702 行，待执行）** | **team-lead** |
+| **ART** | **`docs/design/art-design-board.html`** | **场景与角色设计图册（79 张真图内联）** | **✅ 已生成（400 KB，只读资产）** | **team-lead** |
+| 附 | `docs/design/tools/build_art_board.py` | 图册生成器（可复跑） | ✅ 已跑通 | team-lead |
+
+**正文合计 3435 行 + 整编库 + 校验脚本 750 行。**
+
+### 1.2 表现层专项 v9（上一轮，仍有效）
+
+| 编号 | 文件 | 标题 | 状态 | Owner |
+|---|---|---|---|---|
+| 09 | `docs/design/09-presentation-top-level.md` | v9 表现力升级 — 顶层设计 | ✅ 定稿（340 行） | game-lead-designer |
+| 10 | `docs/design/10-presentation-system.md` | 表现层系统规范 | ✅ 定稿（395 行） | game-system-designer |
+| 11 | `docs/design/11-presentation-entity.md` | 表现层实体规范 | ✅ 定稿（395 行） | game-entity-logic-designer |
+| 12 | `docs/design/12-presentation-text.md` | 反馈文案与仪式感文本 | ✅ 定稿（300 行） | game-narrative-designer |
+| 13 | `docs/design/13-feel-tuning.md` | 手感参数与性能预算 | ✅ 定稿（344 行） | game-numeric-designer |
+| 14 | `docs/design/14-presentation-assets.md` | 表现层资产清单 | ⚠️ 定稿但口径需更新（5 SFX 缺口已闭合，见 DB §6.4） | game-asset-requirements |
+| 附 | `docs/design/tools/check_feel_params.py` | 手感参数校验脚本 | ✅ 退出码 0 | game-numeric-designer |
+
+### 1.3 参考（不参与验收）
+
+`audio-requirements.md`（v8 遗留音频需求）· `v8-changye-plan.md`（v8 长夜巡更方案）· `github-commit-playbook.md`（提交规范）
+
+---
+
+## 二、任务清单
+
+### 2.1 本轮：策划数据库 v1.0
+
+| ID | 任务 | Phase | 状态 | Owner |
+|---|---|---|---|---|
+| T-8 | 顶层玩法 as-built 反向建档 | 1 | ✅ `01` 258 行；8 维标签 / 双循环 / 33 个 `SYS_` | game-lead-designer |
+| T-9 | 系统设计 as-built 反向建档 | 2 | ✅ `02` 660 行；25 系统四件套 / 唯一写入者表 18 行 / 8 条关键规则 | game-system-designer |
+| T-10 | 实体逻辑 as-built 反向建档 | 3 | ✅ `03` 602 行；16 实体五段式 / 七枚举 70 格（✅16 ⚠️3 ❌51） | game-entity-logic-designer |
+| T-11 | 剧情文案 as-built 反向建档 | 4 | ✅ `04` 549 行；18 个 `ST_` / 图鉴 36 条 / 上屏文本 178 条 | game-narrative-designer |
+| T-12 | 数值表 as-built 反向建档 | 5 | ✅ `05` 791 行 + 脚本；六表 A~F / 227 项断言 / PASS 314 FAIL 0 | game-numeric-designer |
+| T-13 | 资产需求 as-built 反向建档 | 6 | ✅ `06` 575 行；135 项五类 / 缺口 A0·B21·C9 | game-asset-requirements |
+| T-14 | 迭代 01 可改项对接 | 迭代 | ✅ `iteration-01-backlog.md` 689 行；22 条任务 / B0~B5 六批次 / 局外经济锁区 / 7 处数据库修正 | team-lead |
+| T-15 | B1 两项修复定案（皮影恢复 / 剪纸删次数） | 迭代 | ✅ 定稿 + **代码已落地**：`WeaponManager` 8 处（`_orbit_cd` 剥离 / `bounces_left` 计次）+ `WeaponDB.kind_of()` + `HaloLogic` ⑧⑨ + 新工具 `BladeLogic`；回归 SmokeTest 313/0、HaloLogic 29/29、BladeLogic 9/9 全绿 | team-lead |
+| T-16 | 场景与角色设计图册 | 迭代 | ✅ `art-design-board.html` 400 KB；79 张真图 / 81 个 ID 全部命中 06 体系 / 0 自造 ID | team-lead |
+| T-17 | 迭代 02 策划案（技能关联主线） | 迭代 | ✅ `iteration-02-skill-synergy.md` 664 行；四方向实测取舍 / 主线 S-01~S-06 / 配套 C-01·N-01·U-01 / 七处连带同步清单 | team-lead |
+| T-18 | 迭代 03 策划案（技能关联二段：进化机制化） | 迭代 | ✅ `iteration-03-evolve-mechanic.md` 702 行；主线 M-01~M-09（6 条机制 + 声明位互锁 + 视觉分层 + 测试同步）/ 配套 C-02·N-02·U-02 / 八项连带同步 / 7 条待拍板 | team-lead |
+| **T-18** | **迭代 02 代码落地（主线 + 3 配套）** | **迭代** | **✅ 已完成：S-01 三配方 / S-02 卡面三态 / S-03 空箱横幅 / S-04 术语收口 / S-05 九把全覆盖 / C-01 推镜 / N-01 环绕 2→3 / U-01 开脸徽章；双轨见 §3.3** | **team-lead** |
+| **T-19** | **迭代 03 代码落地（进化机制化 B0~B5）** | **迭代** | **✅ 已完成：M-01 声明位 / M-02 十字扫 / M-03 灯心公转 / M-04 门神镇守 / M-05 糖水粘连 / M-06 铜锣回响 / M-07 墨线穿透累进 / M-08 视觉分层 / M-09 文档同步 + `05` 21 处重锚 / U-02 三处音效 / C-02 旧墓砖；双轨见 §3.4** | **code-orchestrator** |
+| **T-14** | **整编收口 + 治理状态总线** | **7** | **✅ `project-design-db-v1.0.md`；三遍审计 / 8 条裁定 / 11 条缺陷总账** | **team-lead** |
+
+### 2.2 上一轮：表现层 v9
+
+| ID | 任务 | Phase | 状态 |
+|---|---|---|---|
+| T-1~T-6 | v9 顶层 / 系统 / 实体 / 文案 / 数值 / 资产 | 1~6 | ✅ 全部交付（`09`~`14`） |
+| T-7 | v9 整编 + 落地实现 + 回归验证 | 7 | ⏸️ **未执行**（v9 部分实现已进工作区，未提交、未回归；详见 DB §2.2） |
+
+---
+
+## 三、验收对象
+
+### 3.1 本轮验收结论（主理人复核，非成员自评）
+
+| 项 | 判据 | 实测 |
+|---|---|---|
+| 行数合规 | 各文档落在约定区间 | 258 / 660 / 602 / 546 / 788 / 572 ✅ |
+| 合规红线 | 全文零命中合规红线禁用词 | 六份文档全部 0 命中 ✅ |
+| 命名规范 | 全英文文件名、ID 全大写、无中文文件名 | ✅ |
+| 数值可信 | 脚本实跑 | **PASS 314 / FAIL 0 / WARN 0，退出码 0**（主理人独立复跑）✅ |
+| 数值判别力 | 注入错误后应变红 | 改值 → FAIL+exit1；改行号 → FAIL「行号已失效」+exit1 ✅ |
+| 行号真实 | 抽查 | `WaveTable.gd:244-247`、`EnemyPool CAP/max_alive/GRID_CELL`、`Enemy.gd:286-291`、`Art.gd:48-50` 全对 ✅ |
+| 代码零改动 | `GameDemo/` 只读 | 无新增改动（现有 `M` 为建档前既有 v9 改动）✅ |
+
+### 3.2 已知验收缺口（**如实登记，不掩盖**）
+
+1. **§三 合规校验为整批一次，不是逐阶段一次**。原 SOP 要求每阶段过 `spec-compliance-checker` 后再进下一阶段；本轮为控制成本改为「成员自检 + Phase 7 整批复核」，复核结论见 3.1。**属流程简化，如认为不可接受，需重跑逐阶段校验。**
+2. **两位成员越权写过 `interface.md`**（01/03/04/05/06 五位各自追加过登记行）。内容无冲突，但违反「interface 由主理人统一落账」分工。本轮已整篇重排修正，后续按 §五 权限执行。
+3. **一名成员的口头回传与磁盘文件不符**（把 `kind` 原值 cup/fast/bag/box/red 当实体名报为「杯/风筝/书包/纸箱/红包」）。**磁盘文件正确**，本库按磁盘为准；该摘要已作废。
+
+### 3.3 迭代 02 验收结论（代码落地后实测，2026-11-08）
+
+| 项 | 判据 | 实测 |
+|---|---|---|
+| S-01 进化配方 9/9 | `EvolutionDB.FORMS` 9 条；三条新配方 dps/area = 1.45·1.30 / 1.40·1.50 / 1.55·1.35 | ✅ grep 9 条；SmokeTest Step8 通过 |
+| S-02 满级卡三态 | Lv8 卡分别显示「已开脸 / 待宝箱开脸 / 开脸需「被动名」」 | ✅ `shot_cards_evolve_states.png`；三行宽 136 / 108 / 80 px < 卡宽 200 |
+| S-03 空箱反馈 | 空候选开箱返回 false 且横幅「箱中无脸 · 化为一枚灯花」 | ✅ SmokeTest 断言实测：`箱中无脸 · 化为一枚灯花` |
+| S-04 术语收口 | `scripts/Game.gd` 与 `scripts/ui/` 下「传承 / 口诀」零命中（局外成长除外） | ✅ 战斗路径零命中；仅 MainMenu 5 / SettingsUI 4 / MetaSave 1（均为「局外永久成长」语义）保留 |
+| S-05 冒烟覆盖 | 9 条配方 / 9 把武器全覆盖 / req_passive 去重 ≥6 / 三条真实开箱 | ✅ SmokeTest 321 ok / FAIL 0 / exit 0 |
+| C-01 开脸推镜 | `_open_chest` → `PresentationFX.pull_zoom(1.06, 0.35)` | ✅ 落地；pull_zoom 只写 `camera.zoom`，低特效档不禁用 |
+| N-01 环绕 2→3 | 数量 = 武器表 `orbit_count` + `EvolutionDB.orbit_count_bonus` | ✅ HaloLogic ⑩ 实测 `2 → 3 → 2` |
+| U-01 开脸徽章 | 武器栏常驻「开脸 n/9」，分母读 `EvolutionDB.FORMS.size()` | ✅ 截图可见「开脸 0/9」，未溢出/未遮挡 |
+| 文档同步 | 04 / 05 / 06 + `check_numeric_tables.py` 的 FORMS 6→9 | ✅ python PASS 314 / FAIL 0 / exit 0 |
+| 双轨验证 | 窗口实跑真实 `Game.tscn` + headless 冒烟 | ✅ 无 SCRIPT ERROR / PARSE ERROR；截图见 user:// |
+| 已知红点（非本轮引入） | `HudFxGap` 11 项护盾断言 | ⚠️ HEAD 即不一致，见 §6.4 Q14，不计入本轮验收 |
+
+**占位与资产**：本轮无【待资产块交付】——新增配方复用既有 SVG 常量（`PHONE_ORBIT` / `KNIFE_BOXCUTTER` / `WOODBLOCK_PRINT`）；无【待策划确认】项。
+
+### 3.4 迭代 03 验收结论（代码落地后实测，2026-11-09）
+
+| 项 | 判据 | 实测 |
+|---|---|---|
+| M-01 声明位 | `EVOLVE_MECHANIC` 9 条、键全在 `WeaponDB.ORDER`、值为「机制名:落点函数」两段式 | ✅ SmokeTest `_step13` 3 条断言绿 |
+| M-02 十字扫 | 师刀第二刀方向与第一刀垂直（dot < 0.1） | ✅ dot ≈ 0；正上方第 1 刀不中、第 2 刀命中 |
+| M-03 灯心公转 | 连采 8 次方位集合 = 8、偏移 = `0.40R`、判定真的跟随 | ✅ HaloLogic ⑪ C-1~C-4 全绿；R=190.4 / 偏移 76.2；+X 命中、-X 不中 |
+| M-04 门神镇守 | 落点命中后 4s 内 `is_slowed()` 恒真 | ✅ `_slow_left = 4.00` |
+| M-05 糖水粘连 | 首跳定身 1.0s 位移 < 0.5px；2.5s 免疫窗口内第二次 `false` | ✅ 位移 0.00；第二次 false |
+| M-06 铜锣回响 | 单只 0.5s 吃 2 次、总伤/单次 = 1.45 ± 0.01 | ✅ 单次 42.0、比值 1.450 |
+| M-07 墨线穿透累进 | 全程笔直（首末角差 < 1e-4）+ 扣血比 1 : 1.25 : 1.50 | ✅ 角差 0.00000000；100 : 125 : 150 |
+| M-08 视觉分层 | 满级外扩环 / 双扫染色 / 二次溅射按开脸状态分层 | ✅ FxInGame 18/18 |
+| M-09 文档同步 | `05` 表 C +3 风险 + 21 处重锚；`02` +2 行；`04` 6 条机制句；`06` 零新增资产 | ✅ python PASS 314 / FAIL 0；`grep "WeaponManager.gd:"` 逐条核对 |
+| U-02 音效 | 升级 / 主菜单 / 死亡重开三处确认音 | ✅ `ActiveSkill` / `MainMenu` / `DeathUI` 各 1 行；V5InGame 165/0 |
+| C-02 旧墓砖 | 街区外（>760px）换 `TOMB_TILE`，街区内仍 `GROUND_TILE` | ✅ `Ground._draw` 按格选贴图；未单独截图（本轮只做代码路径核对） |
+| 双轨验证 | 窗口实跑 + headless 冒烟 + 数值脚本 | ✅ `SmokeTest` 340 ok / FAIL 0 / exit 0；`HaloLogic` 37/0；`FxInGame` 18/0（窗口，`frame_post_draw` 需渲染）；`V5InGame` 165/0；`V71Content` 66/0；`check_numeric_tables.py` PASS 314 / FAIL 0 / exit 0；全程无 SCRIPT ERROR / PARSE ERROR |
+| M-03 视觉 V-1~V-4 | 像素阈值 0.18、饱和 ≥0.45、容差 7%；截图 `shots/m03_*.png` | ✅ `HaloShot` 8/8（V-1 188/189、V-2 113/264、V-3 113/264、V-4 117/118；偏差 ≤1.7%） |
+| 缺口（如实登记） | 实机「主菜单→开始→升级→暂停→死亡→商店→重开」每步有声的人工听觉走查 | ⚠️ **未做人工听觉走查**（U-02 代码路径已证 + V5InGame/动手音效调用点均在，见 §6.5 Q18） |
+
+**占位与资产**：本轮零新增资产（M-05 糖浆复用 `burst_ellipse`；M-08 复用既有 shader）；无【待资产块交付】。**待数据层登记 1 项**：`04` 图鉴机制句尚未进 `EvolutionDB`（需结构增字段，见 §6.5 Q17）。
+
+---
+
+## 四、回退条件
+
+| 触发 | 处理 |
+|---|---|
+| 文档与代码冲突 | 以代码为准，冲突登记入 DB §8.2；**不回退重写文档**（本轮不迭代） |
+| 分册之间冲突 | 能靠代码判定的由主理人裁定（DB §9）；产品级转 DB §10.2 待确认 |
+| 数值脚本变红 | 打回 Phase 5，附「哪项 FAIL + 该行原文」；修表不许改脚本凑绿 |
+| 同一问题回退 2 次仍无果 | 主理人召集评审 → 裁决写入本文件 §六 → 无果标【需人工介入】冻结 |
+
+**跳过登记（三段式）**：本轮无环节被跳过。`ST_003`（首波世界观解释）与「对话/语音/过场」标 `⏭️ 无`，依据为代码实测不存在，属**内容缺失**而非流程跳过。
+
+**迭代 02 跳过 / 回退登记（三段式）**：无跳过、无回退。N-01 一度评估「环绕精灵按 2 建死、加不到 3」，实读 `_ensure_orbit_sprites` 为 while 动态扩池后确认可行，按 **参考**（`WeaponManager.gd:830-851`）/ **改动点**（`_update_orbits` 数量加成 + 多余精灵隐藏）/ **兜底**（若不可行则维持 2 只并撤销配方字段）登记后执行。`HudFxGap` 11 项为 HEAD 既有红点，不触发回退。
+
+---
+
+## 五、修改权限
+
+| 级别 | 范围 | 判定 |
+|---|---|---|
+| **L1 自动** | 写 `docs/design/*.md` 文档与 `interface.md`；跑校验脚本 | 自动执行 |
+| **L2 需人工确认** | 删除/覆盖他环节产出；改 `GameDemo/` 下 `scenes/*.tscn` 与 `scripts/*.gd`；删 `assets/art/` 旧素材 | 需用户确认 |
+| **L3 禁止** | 软件配置目录；引擎版本；渲染器；第三方依赖；`addons/godot_ai` 剥离 | 禁止 / 需用户拍板 |
+
+**本轮改动范围预声明（已执行完毕）**：
+- **新增** 7 个文件：`01`~`06` 六份 + `project-design-db-v1.0.md`
+- **新增** 1 个脚本：`tools/check_numeric_tables.py`
+- **重写** 1 个文件：本 `interface.md`（整篇重排）
+- **`GameDemo/` 零改动**（符合用户红线）
+
+**迭代 01 · B1 批次改动范围（已执行完毕，L2 经用户指令「根据这两个文件，迭代游戏」确认）**：
+- **修改** `GameDemo/first-xi-xue-gui/scripts/weapons/WeaponManager.gd`（8 处：D-1 `_orbit_cd` 四处 + D-2 `bounces_left` 三处 + 注释）
+- **修改** `GameDemo/first-xi-xue-gui/scripts/WeaponDB.gd`（纯新增 `kind_of()` 取值器，**零数值改动**）
+- **修改** `GameDemo/first-xi-xue-gui/tools/HaloLogic.gd`（新增用例⑧⑨ + `_equip()` 竞态修复：补等 2 个物理帧）
+- **新增** `GameDemo/first-xi-xue-gui/tools/BladeLogic.gd` / `BladeLogic.tscn`
+- **文档同步** `03` §7.1 C-1 与七枚举表、`05` §4 R-1/R-5/Q-1/Q-3 标闭合
+- **锁区遵守**：`MetaSave` / `Game.coin_reward()` / `ShopUI` / `WeaponDB` 数值 / `bounce_falloff` 机制 / 其余武器 `_cd` 语义 / `_orbit_ghosts` 均未动；未提交 git（未收到提交指令）
+
+**迭代 02 · 代码批次改动范围（已执行完毕，L2 经用户指令「继续迭代，记得是godot项目，找对子智能体」确认）**：
+- **修改** `scripts/EvolutionDB.gd`（+3 配方 `evolve_phone/blade/print`，新增 `orbit_count_bonus` 字段）
+- **修改** `scripts/UpgradeDB.gd`（+`stat_name(id)` 取值器，**零数值改动**）
+- **修改** `scripts/CodexDB.gd`（计数注释 33→36，派生逻辑未动）
+- **修改** `scripts/Game.gd`（空箱横幅 / 「开脸！」文案 / `pull_zoom`）
+- **修改** `scripts/weapons/WeaponManager.gd`（`_update_orbits` 读 `orbit_count_bonus` + 多余精灵隐藏）
+- **修改** `scripts/ui/LevelUpUI.gd`（满级三态提示 + 手艺/心法标签）/ `HUD.gd`（开脸计数 + n/9 徽章）/ `DeathUI.gd`（开脸计数）
+- **修改** `tools/SmokeTest.gd`（9 配方 / X11 口径 / 满堂彩倍率 / 空箱横幅）、`HaloLogic.gd`（用例⑩）、`V71Content.gd`（36 条）、`CardShot.gd`（三态截图）
+- **文档同步** `04` / `05` / `06` + `docs/design/tools/check_numeric_tables.py`（仅行号锚点，期望值零改动）
+- **锁区遵守**：`MetaSave` / 局外经济 / `WeaponDB` 数值 / `bounce_falloff` 机制 / `scenes/*.tscn` / `SettingsUI`&`MainMenu` 的「传承=局外成长」语义均未动；未提交 git（未收到提交指令）
+
+**迭代 03 · 代码批次改动范围（已执行完毕，L2 经用户指令「/goal 根据文件，完成任务」+ `iteration-03-handoff.md` 确认）**：
+- **修改** `scripts/weapons/WeaponManager.gd`（M-01 `EVOLVE_MECHANIC` + `_lamp_step`；M-02 `_second_arc_v`/`_delay_arc_v`；M-03 `_lamp_center`；M-04 年画减速；M-05 糖画定身；M-06 `_gong_echo`；M-07 墨线穿透累进；M-08 视觉分层）
+- **修改** `scripts/Enemy.gd`（新增 `apply_root` / `_advance` / `GLUE_TINT` / `ROOT_IMMUNE`；`_slow_pct` 仍单值覆盖）
+- **修改** `scripts/Player.gd`（**删除每帧 `garlic_ring.position` 兜底**，让出写入权给 `_lamp_center`；这是对 `fix-skill-center-v2` 的定向回退，见 §6.5 Q16）
+- **修改** `scripts/ActiveSkill.gd` / `scripts/ui/MainMenu.gd` / `scripts/ui/DeathUI.gd`（U-02 各 1 行确认音）
+- **修改** `scripts/Ground.gd`（C-02 `TOMB_TILE` 街区外换砖）
+- **修改** `tools/SmokeTest.gd`（新增 `_step13_evolve_mechanic`）、`tools/HaloLogic.gd`（新增用例⑪）、`tools/V5InGame.gd`（修为配方断言 6→9）
+- **文档同步** `05`（表 C 行为机制列 + §4 R-29~R-31 + 21 处行号重锚）、`02`（唯一写入者 +2 行）、`04`（6 条机制句）、`06`（零新增资产确认）、`docs/design/tools/check_numeric_tables.py`（`xp_for_level` 锚 530→531）
+- **锁区遵守**：`MetaSave` / `Game.coin_reward()` / `ShopUI` / `TRACKS.mult` / 复活 / 局外经济**零改动**；`GarlicRing.gd` **零改动**（0 行）；`WeaponDB` 数值零改动；`scenes/*.tscn` 零改动；未提交 git（未收到提交指令）
+- **§8 停手信号核对**：未新增 DOT / 拉拽 / 距离场类能力字段（M-05 的 `_root_left` / `_root_immune` / `_root_tinted` 是主件 §5.3 自身规定的定身字段）；未给 `EnemyPool` 加 `farthest`；未改 `EvolutionDB` 结构；未扩 `Audio.play_sfx` 签名（已有 `extra_db`）→ **四项均未触发能力集扩展**
+
+---
+
+## 六、问题与决策
+
+### 6.1 主理人裁定（8 条，DB §9 为完整版）
+
+| # | 议题 | 裁定 | 判据 |
+|---|---|---|---|
+| R1 | `SYS_EVOLUTION` 的 P 级 | **P1** + 独立标注「卖点等级：核心」 | 宝箱无配方补偿升级（`Game.gd:741-744`）→ 结构性不阻断；但开脸是签名卖点，资产/表现按核心排产。**P 级与卖点等级不混用判据** |
+| R2 | 「更次」两张表是不是冲突 | **不是冲突，是两套语义** | 显示跟 `WAVES`/`wave_index`（`HUD.gd:20-21` 注释「HUD 与刷怪必须同一份边界」），伤害跟 `DRUM_TIMES`/`drum_mult`。禁止统一 |
+| R3 | 终局残面是否必然刷出 | **不是必然** | `Game.gd:388-389` `has_boss` 闸优先；`01` §4.1「必然」过强 |
+| R4 | 资源点重生语义 | **代码为真值**（同 key 重生），注释过期 | `ResourceField.gd:176` |
+| R5 | `EN_` 命名空间被资产变体越界 | **5 条判错用，登记待迁，不返工** | `EN_PAPER_BRICK`/`_SHELL`/`EN_GEM_BIG`/`EN_COIN`/`EN_SHELL_CRUST` 无对应实体；`enemy_brick` 是孤儿资产（`Art.gd:205/213`） |
+| R6 | 小 Boss 是否给独立实体身份 | **不给** | 复用精英通道、实体侧零专属代码；给独立身份 = 给 `Enemy` 加分支，与「不建状态机」冲突 |
+| R7 | `PROJECT_OVERVIEW` 三条分层红线 | **降级为「约定」** | 已被越过：数据层写状态（`UpgradeDB.gd:174-180`）、逻辑层直调 UI（`Game.gd:288/408/645/664/753`）、UI 写数值（`LevelUpUI.gd:95`）。真硬线只剩「伤害经 `take_damage`」「写盘经 `MetaSave`」 |
+| R8 | 「匠人只差起始武器」 | **维持** | 公平性设计选择（`CharacterDB.gd:14-23` 自述跨度未收敛，属已知张力） |
+
+### 6.2 已确认事实（代码实证，供后续引用）
+
+| # | 事实 | 证据 |
+|---|---|---|
+| F1 | **皮影伤害链从未结算** —— `shadow` 开局无输出 | `WeaponManager.gd:250-252` 写死 `_cd["phone"]=0.28` → `:783` 闸门恒假 → `:804-813` 死代码。**已闭合（迭代 01 / IT-03）**：`_orbit_cd` 独立节拍，实测贴环绕 3s 结算 10 次、频率 3.67 次/s ≈ 1/0.28 |
+| F2 | **更鼓傀图鉴与机制方向相反** | `CodexDB.gd:70`（「对手更凶」）vs `WaveTable.gd:84-86`（「抬的是玩家」） |
+| F3 | **低配档关不掉任何 shader** | `fx_on()` 全仓仅定义 `Settings.gd:88`，无生产调用；`is_low()` 只在 `Game.gd:206` + `PresentationFX.gd:241`（震屏） |
+| F4 | `BULLET_CAP=128` 是装饰 | `WeaponManager.gd:17` 零引用，子弹池实际无上限 |
+| F5 | 美术资产实数 **106 张 SVG**（非 84，主理人先前加法有误） | `find assets/art_shouyiren -name "*.svg"` = 106 |
+| F6 | 16 个 shader **零 `SCREEN_TEXTURE`/`DEPTH_TEXTURE` 真实采样** | 3 处字面命中全是注释 |
+| F7 | 配音现状为零，13 条 `SND_VO_` 是需求规格 | `assets/audio/` 无 voice 目录；`Audio.gd` 无配音通道 |
+| F8 | 工作区代码 ≠ `release/` 包 | 11 个文件带未提交 v9 改动 + 2 个新脚本 + 3 个未跟踪 wav；脚本实数 **45** |
+
+### 6.3 待人工介入（12 条，DB §10.2 为完整版）
+
+分三档：**须修**（~~D1 皮影~~【已修，IT-03】/ D4 低配档）→ **须定**（D3 `BULLET_CAP` / ~~D7 剪纸弹射~~【已定并落地，IT-06】/ D10 `pull_zoom`）→ **须决**（Q2 局外经济 1.55 局买满 / Q4 定长与存档 / Q6 `addons/godot_ai` 剥离【L3】/ Q7 旧素材删除【L2】/ Q8 UI 音补 8 面板 / Q9 配音 13 条 / Q12 BGM 包体）。
+
+**本批新增（B1 代码落地时发现）**：
+- **Q13**【须决 · 策划批次】：`iteration-01-fix-plan.md` §2.3 把 `bounce_falloff` 写成「复利衰减」（第 3/4 跳 16.84/11.78、单发封顶 76.72），实测代码每跳从基础伤 `b.dmg` 重新起算 ×0.70（9.00→6.30→6.30，**非复利**，单发封顶实际 81.78）。机制按 §4 锁区未动，仅文档描述偏差，建议策划批次修订 §2.3 表文。
+- **Q-1（fix-plan §5）已决**：OrbitLogic 不新建，phone 断言并入 `HaloLogic`（用例⑧⑨）；blade 用例因结构差异独立为 `tools/BladeLogic.gd/.tscn`。
+- **Q-2（fix-plan §5）保持开放**：剪纸卡面是否补「最多弹 3 次」，归 B2 文案批次。
+
+### 6.4 迭代 02 决策与遗留（2026-11-08）
+
+| # | 议题 | 结论 / 状态 |
+|---|---|---|
+| Q-1 | 三条新进化形态命名 | 采用「满堂彩 / 百鸟朝凤 / 门神镇宅」✅ 已落地 |
+| Q-2 | S-04 第 4/5 条是否做 | 做：卡面「手艺 / 心法」+ hint 口径 ✅ 已落地 |
+| Q-3 | 空箱横幅配色 | 沿用金色 `flash_evolve`（截图中可读）✅ 已落地；若要更「失败」感可改灰青，留待观感复评 |
+| Q-4 | 环绕物动态扩池是否可行 | 实读为 while 扩池 → N-01 做 ✅ HaloLogic ⑩ `2→3→2` 绿 |
+| Q-5 | 零归属被动 | 留待下一轮 ⏸️ 未做 |
+| Q-14 | `HudFxGap` 11 项护盾断言红 | **非本轮引入**：HEAD 的 `HUD._update_shield` 已读 `stats["shield_cap"]`，而测试仍断言 `stats["shield"]=60`（v6 脉冲语义）。本轮未改这两处。【待人工/策划确认】测试是否按 v7 盾池语义修订 |
+| Q-15 | `04` §0 图鉴统计仍写「35 条 / 313 汉字」 | 条数已全库同步 36；汉字数统计口径未写死，无法机械复算 → 【待核】 |
+
+### 6.5 迭代 03 决策与偏离登记（2026-11-09）
+
+**偏离主件的地方（回执必写项，逐条如实登记）**：
+
+| # | 议题 | 结论 / 状态 |
+|---|---|---|
+| D-1 | **M-03 确认单 C-4 的几何不成立（偏离主件）** | 主件写「`+X` 与 `-X` 各放 `0.40R`，第 1 次脉冲只命中 `+X`」。灯心在 `+0.40R` 时，`-X` 侧敌人距灯心仅 `0.80R < R = 190.4`，**恒命中**，断言不可能成立。改为 `-X` 侧置 `-1.10R`（距灯心 `1.50R > R`）；`HaloLogic` 与 `SmokeTest` 同步。**判定逻辑未改，只改测试几何** |
+| D-2 | **`Player._physics_process` 每帧写回被删除（偏离 `fix-skill-center-v2`）** | `fix-skill-center-v2` 的「每帧强制 `garlic_ring.position = (0, -18)`」会让 M-03 灯心公转每帧被拉回 → 与主件「`Player.gd` 零改动、写入权让给 `_lamp_center`」直接冲突。已删该行并留 6 行偏离登记注释；复位由 `_ready` 一次性与 `_lamp_center` 的未开脸分支承担 |
+| D-3 | **M-05 未再向用户提问（依据主件 v3 拍板）** | 交接单 B2 要求「先问 §9 第 4 条」，但主件 v3（2026-11-09 08:10）已把 M-05 由「四向分锁」改为「糖水粘连」并标「✅ 已拍板（v3 换方向）」，按主件实现，不再追问 |
+| D-4 | **`V5InGame` 配方断言 6→9** | 迭代 02 新增 3 配方后 `V5InGame` 仍断 `FORMS.size() == 6`（过期断言，非本轮引入），修为 9 后 165/0 |
+| D-5 | **`check_numeric_tables.py` 锚点 530→531** | M-03 改动使 `Player.gd` 行号下移 1 行，`xp_for_level.base` 锚 530 失效「行号已失效」；改锚点为 531（期望值 5 不变）后 python 回 `PASS 314 / FAIL 0` |
+
+**本轮新增待确认**：
+
+| # | 议题 | 结论 / 状态 |
+|---|---|---|
+| Q16 | `garlic_ring.position` 的写入权归属 | **已决**：唯一写者改为 `WeaponManager._lamp_center`（未开脸写 `(0, -18)`，开脸写 `(0, -18) + off`）；`Player` 只读 `ART_FOOT_OFFSET` |
+| Q17 | `04` 图鉴 6 条机制句尚未入库 | 实机 `CodexDB.gd:115` 仍按模板生成；入库需给 `EvolutionDB` 增字段（`§8` 停手信号）。**【待数据层登记】**，留下一轮 |
+| Q18 | M-03 视觉 V-1~V-4 截图与实机「每步有声」走查 | **视觉已闭环**：新增 `tools/HaloShot.tscn` 窗口探针，像素量尺 8/8（截图 `shots/m03_v1_step0.png` / `m03_v2_pulse1_right.png` / `m03_v3_pulse3_down.png` / `m03_v4_reset.png`）。**仍缺**：实机逐屏音效的人工听觉走查。**【需人工介入（仅听觉走查）】** |
+
+---
+
+## 七、INTERFACE_MANIFEST
+
+### 7.1 ID 注册表（全库唯一，禁复用）
+
+| 前缀 | 归属 | 数量 | 定义处 |
+|---|---|---|---|
+| `SYS_` | 系统 | **33**（P0 16 / P1 14 / P2 3） | DB §2.1 |
+| `PL_` | 玩家实体 | 1 | DB §3.1 |
+| `EN_` | 敌人/掉落/可交互实体 | 16（+ 06 资产变体视图） | DB §3.1 |
+| `SK_W_` | 武器 | 9 | DB §3.3 |
+| `SK_E_` | 进化形态 | **9**（迭代 02 由 6 补至 9） | DB §4.2 表 C / `EvolutionDB.FORMS` |
+| `ST_` | 剧情节点 | 18 | DB §5.2 |
+| `EF_` | 特效贴图 | 9 | DB §6.1 |
+| `EF_SH_` | 着色器 | 16 | DB §6.1 |
+| `SND_` | 音效 | 11 | DB §6.1 |
+| `SND_VO_` | 配音（需求规格，未实现） | 13 | DB §5.4 |
+| `BGM_` | 背景音乐 | 2 | DB §6.1 |
+| `UI_` | 界面元素 | 见 `06` §1.1 | `06` |
+| `IT_` | 道具（**待迁入**：5 个越界 `EN_`，见 R5） | 0 | — |
+| `RES_` | 资源 | **未启用**（本轮无产出） | — |
+| `MAP_` / `NPC_` | 地图 / NPC | **未启用**（本作无该概念） | — |
+
+### 7.2 下游补登记提示
+
+- `IT_` 已预留但未启用 → R5 的 5 个越界 `EN_` 迁入时使用
+- `MAP_` / `NPC_` 本作无对应内容，**不要为了「用满 13 类」而造 ID**
+
+### 7.3 迭代 02 新增 / 变更接口（跨模块只走本表）
+
+| 接口 | 签名 / 字段 | 定义处 | 使用方 |
+|---|---|---|---|
+| `EvolutionDB.FORMS` | 9 条；新增 `evolve_phone` / `evolve_blade` / `evolve_print` | `scripts/EvolutionDB.gd` | `Game._open_chest`、`LevelUpUI`、`SmokeTest` |
+| `EvolutionDB.FORMS[].orbit_count_bonus` | `int`，缺省 0；`evolve_phone: 1` | `scripts/EvolutionDB.gd` | `WeaponManager._update_orbits` |
+| `UpgradeDB.stat_name(id)` | `static func(String) -> String`（未命中回退 id） | `scripts/UpgradeDB.gd:64` | `LevelUpUI` 满级三态 |
+| `Game._open_chest()` | `-> bool`（空箱 false + 横幅；成功 true + 开脸） | `scripts/Game.gd:736` | 宝箱链路、`SmokeTest` |
+| `HUD.flash_evolve(text)` | `void`（金色 1.6s 横幅） | `scripts/ui/HUD.gd` | `Game` 空箱 / 开脸 |
+| `HUD` 开脸徽章 | 文本 `"开脸 %d/%d"`，分母 `EvolutionDB.FORMS.size()` | `HUD._sync_weapon_row` | — |
+| `PresentationFX.pull_zoom(mul, sec)` | `void`（只写 `camera.zoom`，独占） | `scripts/PresentationFX.gd:174` | `Game` 开脸 |
+| `WeaponManager.evolved` | `Dictionary` weapon_id → form_id | `scripts/weapons/WeaponManager.gd` | `Game` / `LevelUpUI` / 测试 |
+
+### 7.4 迭代 03 新增 / 变更接口（跨模块只走本表）
+
+| 接口 | 签名 / 字段 | 定义处 | 使用方 |
+|---|---|---|---|
+| `WeaponManager.EVOLVE_MECHANIC` | `const Dictionary`，9 条；键 = `weapon_id`，值 = `"机制名:落点函数"`（两段式） | `scripts/weapons/WeaponManager.gd:1312-1322` | `SmokeTest._step13`（结构断言） |
+| `WeaponManager._lamp_step` | `int`，0~7；仅 `evolved.has("halo")` 时推进 | `WeaponManager.gd` 成员 | `_lamp_center` |
+| `WeaponManager._lamp_center(player, radius)` | `-> Vector2`；**唯一写 `player.garlic_ring.position`**，返回判定圆心 | `WeaponManager.gd` | `fire_halo` / 测试 |
+| `WeaponManager._gong_echo(pos, radius, dmg, cap)` | `-> void`；0.28s 后补响（伤害 ×0.45 + 减速 0.25/0.8 + 第二圈波） | `WeaponManager.gd` | `fire_gong`（Tween 回调） |
+| `WeaponManager.GLUE_TIME` | `const float = 1.0`（糖画首跳定身时长） | `WeaponManager.gd` | `update_bullets` |
+| `WeaponManager._delay_arc_v` / `_second_arc_v` | `-> void`（M-02 竖劈第二刀，内部） | `WeaponManager.gd` | `fire_whip` |
+| `Enemy.apply_root(duration)` | `-> bool`；成功置 `_root_left` 并进入 `ROOT_IMMUNE` 冷却 | `scripts/Enemy.gd:613-619` | `WeaponManager.update_bullets`（糖画首跳） |
+| `Enemy.ROOT_IMMUNE` | `const float = 2.5`（防连控窗口） | `scripts/Enemy.gd` | `apply_root` |
+| `Enemy.GLUE_TINT` | `const Color = Color(1.0, 0.96, 0.86)`（定身染色） | `scripts/Enemy.gd` | `Enemy._sync_root_tint` |
+| `Enemy._root_left` / `_root_immune` / `_root_tinted` | `float` / `float` / `bool`；**唯一写者** `apply_root` 与 `_advance`（递减）；染色的唯一写者是 `_sync_root_tint` | `scripts/Enemy.gd` | 均在本文件内（本轮无跨模块读者；未新增 `is_rooted()`） |
+| `Audio.play_sfx(id, extra_db)` | `void`（沿用两参，不扩签名） | `scripts/Audio.gd` | 迭代03 新增三处：`ActiveSkill`（`boss_spawn -6dB`）、`MainMenu`（`ui_confirm`）、`DeathUI`（`ui_click`）、`WeaponManager._gong_echo`（`gong -6dB`） |
+
+---
+
+## 八、变更记录
+
+| 日期 | 版本 | 变更 | Owner |
+|---|---|---|---|
+| 2026-11-07 | db-v1-phase1 | 新建 `01-top-level-design.md`（258 行） | game-lead-designer |
+| 2026-11-07 | db-v1-phase2 | 新建 `02-system-design.md`（660 行） | game-system-designer |
+| 2026-11-07 | db-v1-phase3 | 新建 `03-entity-logic.md`（602 行） | game-entity-logic-designer |
+| 2026-11-07 | db-v1-phase4 | 新建 `04-narrative-script.md`（546 行） | game-narrative-designer |
+| 2026-11-07 | db-v1-phase5 | 新建 `05-numeric-tables.md`（788 行）+ `tools/check_numeric_tables.py`（750 行，FAIL 0） | game-numeric-designer |
+| 2026-11-07 | db-v1-phase6 | 新建 `06-asset-requirements.md`（572 行） | game-asset-requirements |
+| **2026-11-07** | **db-v1.0** | **新建 `project-design-db-v1.0.md`（整编库）；整篇重排本 `interface.md` 八节；完成三遍审计（ID 唯一 / 引用全通 / 状态齐全）；产出 8 条裁定（§6.1）、8 条实证事实（§6.2）、11 条缺陷总账、12 条待确认。`GameDemo/` 零改动。** | **team-lead** |
+| 2026-11-08 | iter-01-backlog | 新建 `iteration-01-backlog.md`（22 条任务 / B0~B5 六批次）；**局外经济划为锁区零改动**；实读修正数据库 7 处（含图鉴与卡面文案双路径不一致）。`GameDemo/` 零改动。 | team-lead |
+| 2026-11-08 | iter-01-fix-plan | 新建 `iteration-01-fix-plan.md`：D-1 皮影恢复（不动数值，依据 `CharacterDB.gd:18-21` 模型实测 phone 57.1）、D-2 剪纸删次数（新增 `bounces_left`，不复用 `b.bounce`） | team-lead |
+| 2026-11-08 | iter-01-art-board | 新建 `art-design-board.html`（400 KB / 79 张真资产内联）+ `tools/build_art_board.py`；81 个资产 ID 全部命中 `06` 体系，零自造 ID。**只读资产，`GameDemo/` 零改动。** | team-lead |
+| 2026-11-08 | iter-01-b1-code | **B1 批次代码落地**（gameplay-logic 执行 / code-orchestrator 整合验证）：IT-03 `_orbit_cd` 从 `_cd` 剥离（`WeaponManager` 4 处 + `WeaponDB.kind_of()` 新增、零数值改动），IT-06 新增 `bounces_left` 计次（3 处，单发封顶 4 只）；`HaloLogic` 补用例⑧⑨、新增 `BladeLogic` 工具（B-2~B-5）。验收 12/12 绿；回归 SmokeTest 313/0、HaloLogic 29/29、BladeLogic 9/9。文档同步 `03` C-1 闭合、`05` R-1/R-5/Q-1/Q-3 闭合；新登记 Q13（fix-plan §2.3 复利描述与代码不符，待策划修订）。锁区零改动，未提交 git。 | team-lead |
+| 2026-11-08 | iter-02-skill-synergy | 新建 `iteration-02-skill-synergy.md`（664 行）。**主线 = 技能关联**：补 3 条进化配方（phone/blade/print）使 9/9 有终点、卡面三态提示、术语收口（传承/手艺/心法/开脸各归一位）、图鉴 33→36。配套 C-01 开脸镜头 / N-01 环绕数 2→3 / U-01 开脸徽章。**代码零改动，只出策划案。** | team-lead |
+| 2026-11-08 | iter-02-code | **迭代 02 代码落地**（code-orchestrator 拆解 → gameplay-logic / ui-scene-building 并行执行 → 主控整合双轨）：S-01 `EvolutionDB` +3 配方（FORMS 6→9）、S-02 `LevelUpUI` 满级三态、S-03 `Game._open_chest` 空箱横幅、S-04 术语收口 5 处、S-05 冒烟 9 把全覆盖、C-01 `pull_zoom(1.06,0.35)`、N-01 `orbit_count_bonus` 2→3、U-01 HUD「开脸 n/9」徽章；文档 `04`/`05`/`06` + 校验脚本同步（仅行号锚点）。**验收：SmokeTest 321/0/exit0、python 314/0/exit0、HaloLogic 32/32、CardShot 123/123、V71Content 66/66**；`HudFxGap` 11 项为 HEAD 既有护盾口径红点（非本轮引入，§6.4 Q14）。锁区零改动，未提交 git。 | team-lead |
+| 2026-11-08 | fix-skill-center | **视觉修复**（用户截图反馈）：① 花灯/皮影/铜锣的环绕中心从「脚底」改为「身体中部」——角色 origin 在脚底（`art.offset` 上抬 18px），`Player.gd` 给 `GarlicRing` 同步上移，`WeaponManager` 新增 `_visual_center()` 供 halo 爆闪 / gong 震波·锣面 / phone 轨道三处视觉使用；**判定一律不动**（敌我 origin 同基准，平衡零影响）。② 年画落地删除 `magic_circle` 法阵（`spawn_circle` 段），落地的"砸"由放射光条 + 雕版盖章（既有 `_drop_seal`）承担。**验收：SmokeTest 321/0/exit0、HaloLogic 32/32、SkillInGame PASS；截图 `skill_halo_field.png`（环心对齐身体）、`v6_look_halo8.png`（走马灯同心）、`print_land_check.png`（落地无法阵）**。 | team-lead |
+| 2026-11-08 | fix-skill-center-v2 | **坐标健壮性加固**（用户二次反馈「移动后中心变了」）：① `Player._physics_process` 每帧强制 `garlic_ring.position = (0, -ART_FOOT_OFFSET)`，兜底任何运行时意外重置；② `WeaponManager` 全部特效精灵（锣面 `face` / 火花 `spawn_spark` / 年画落点 `_push_zone` / 印章 `_drop_seal` / 进化星 `spawn_evolve`）由局部 `position` 改为 `global_position`，消除「父节点位移导致落点偏移」的隐患（此前依赖 Weapons 恒在原点的隐含假设）；③ 皮影轨道本就用 `global_position`，不变。**诊断结论**：5 秒持续监控中 GarlicRing 最大漂移 **0.0000 px**、皮影轨道漂移 ≤3.9 px（帧间相位差，可忽略）；自动化未复现用户截图的大幅偏移，判断为运行时状态意外 + 局部坐标假设共同导致，已用上述两层防御消除。**验收：SmokeTest exit0、HaloLogic 32/32、5s 监控 garlic 漂移 0**。 | team-lead |
+| 2026-11-08 | iter-03-evolve-mechanic | 新建 `iteration-03-evolve-mechanic.md`（702 行）。**主线仍是技能关联，但换层**：迭代 02 解决覆盖度（9/9 有终点），本轮解决深度（当前 9 条里只有 1 条 `extinguisher` 真有行为机制）。六条纯倍率形态各加一个机制：M-02 师刀第二刀改竖劈 / M-03 花灯灯心 8 方位公转 / M-04 年画落点镇守 30%×4s / M-05 糖画四发分锁 / M-06 铜锣回响 / M-07 墨线穿透后折返一次。M-01 在 `WeaponManager` 末尾加 `EVOLVE_MECHANIC` 声明常量（不碰 `EvolutionDB` 结构，避免 227 项行号连锁漂移）；M-08 满级觉醒与开脸视觉分层；M-09 五处文档同步。配套 C-02 `TOMB_TILE` 死资产接入 / N-02 第 2 主动技规格（不实现）/ U-02 震吼零音效 + 3 面板 UI 音。**代码零改动，只出策划案。** | team-lead |
+| **2026-11-09** | **iter-03-code** | **迭代 03 代码落地**（code-orchestrator 按 `iteration-03-handoff.md` B0→B5 逐批执行 / 三子智能体职责由主控收口）：M-01 `WeaponManager.EVOLVE_MECHANIC` 9 条 + `_lamp_step`；M-02 师刀第二刀竖劈（`_delay_arc_v`/`_second_arc_v`）；M-03 灯心公转（`_lamp_center`，写 `garlic_ring.position`，偏移 `0.40R`）；M-04 门神镇守（`apply_slow(0.30, 4.0)`）；M-05 糖水粘连（`Enemy.apply_root(1.0)` + `ROOT_IMMUNE 2.5s` + `GLUE_TINT`）；M-06 铜锣回响（`_gong_echo`，0.28s 后 ×0.45）；M-07 墨线穿透累进（`pierce +1`、每多穿一只 +25% 封顶 ×1.75、全程笔直、`scale.y` 加粗）；M-08 视觉分层；U-02 三处确认音；C-02 街区外旧墓砖；M-09 文档 `05`（表 C 行为机制列 + R-29~R-31 + 21 处重锚）/ `02`（唯一写入者 +2 行）/ `04`（6 条机制句）/ `06`（零新增资产）；新增 `tools/HaloShot.tscn` 视觉量尺探针 + `shots/m03_*.png` 四张（V-1~V-4 8/8，偏差 ≤1.7%）。**验收：SmokeTest 340/0/exit0、HaloLogic 37/37、FxInGame 18/18、V5InGame 165/0、python PASS 314/FAIL 0/exit0，无 SCRIPT ERROR / PARSE ERROR**。偏离主件 2 处（D-1 C-4 几何、D-2 删 `Player` 每帧兜底）已登记 §6.5；`GarlicRing.gd` 0 行改动、锁区零改动；未提交 git。 | code-orchestrator |

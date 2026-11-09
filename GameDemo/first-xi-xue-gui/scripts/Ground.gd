@@ -12,10 +12,14 @@ const TILE := 256.0
 
 var _camera: Camera2D = null
 var _tex: Texture2D = null
+## 街区外的旧砖（C-02）。原工程声明了 TOMB_TILE 却零引用；
+## 760 与 Game.SPAWN_RING 同值 —— 刷怪环就是街区边界，地面上"换砖"和"怪从这里来"两个信息互相加强。
+var _tomb: Texture2D = null
 
 func _ready() -> void:
 	z_index = -10
 	_tex = Art.tex(Art.GROUND_TILE)
+	_tomb = Art.tex(Art.TOMB_TILE)
 
 func bind(cam: Camera2D) -> void:
 	_camera = cam
@@ -66,4 +70,9 @@ func _draw() -> void:
 			# 相机怎么动、砖块从哪一格开始铺，同一块地的翻转/明暗都不会变。
 			var gx: int = cx + int(round(origin.x / TILE))
 			var gy: int = cy + int(round(origin.y / TILE))
-			draw_texture_rect(_tex, Rect2(p, Vector2(TILE, TILE)), false, _shade_at(gx, gy), _flip_at(gx, gy))
+			# C-02：格子中心到原点的距离决定用街区砖还是旧墓砖。
+			# 每格独立选贴图，接缝两侧都是 256 无缝砖，不会出现半格拼贴。
+			var cell_center := Vector2(p.x + TILE * 0.5, p.y + TILE * 0.5)
+			var tile_tex: Texture2D = _tomb \
+				if (_tomb != null and cell_center.length() > 760.0) else _tex
+			draw_texture_rect(tile_tex, Rect2(p, Vector2(TILE, TILE)), false, _shade_at(gx, gy), _flip_at(gx, gy))

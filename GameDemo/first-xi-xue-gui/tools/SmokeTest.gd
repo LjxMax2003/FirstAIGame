@@ -67,6 +67,8 @@ func _ready() -> void:
 	await _soak_density()
 	# ---- 阶段四（Step 12）
 	await _step12_meta_shop()
+	# ---- 阶段五（迭代03 进化机制）
+	await _step13_evolve_mechanic()
 	# ---- 呈现口径（帧率上限）
 	_case_frame_cap()
 	await _report()
@@ -843,9 +845,22 @@ func _step7_weapon_data() -> void:
 func _step8_evolution() -> void:
 	await _prep()
 	_auto_pick = false
-	print("\n[Step8] 进化配方（3 条）")
+	print("\n[Step8] 进化配方（9 条）")
 
-	_check(EvolutionDB.FORMS.size() == 6, "配方表 %d 条（3 旧 + 铜锣/墨斗/打铁花）" % EvolutionDB.FORMS.size())
+	_check(EvolutionDB.FORMS.size() == 9, "配方表 %d 条（6 旧 + 皮影/剪纸/木版年画）" % EvolutionDB.FORMS.size())
+
+	# 迭代 02 的核心验收：9 把武器一把都不许是死路。缺了这条，加配方等于没加。
+	var uncovered: Array[String] = []
+	for wid in WeaponDB.ORDER:
+		if not EvolutionDB.can_evolve(wid):
+			uncovered.append(wid)
+	_check(uncovered.is_empty(), "9 把武器全部有进化路线（未覆盖：%s）" % str(uncovered))
+
+	# 被动覆盖度：配方表去重后必须 >= 6 种，否则"每张被动都通向某把武器"落空
+	var used: Dictionary = {}
+	for key in EvolutionDB.FORMS.keys():
+		used[String(EvolutionDB.form(String(key)).get("req_passive", ""))] = true
+	_check(used.size() >= 6, "配方覆盖 %d 种被动（要求 >=6）" % used.size())
 
 	# 1) 条件门：不满足就不给进化
 	await _reset_stats()
@@ -855,6 +870,13 @@ func _step8_evolution() -> void:
 	_check(lv0 == 0, "前置：力量被动 Lv0")
 	_check(not _weapons.is_evolved("whip"), "鞭弧 Lv8 但缺被动时不进化")
 	_check(not _game.can_evolve_any(), "配方不满足时 candidates 为空")
+
+	# 迭代02 S-03：空箱不能"点了没反应"——必须给出"箱中无脸"的因果提示。
+	# 空分支会补一次升级（gain_xp），所以这里顺手把弹出的三选一收掉，避免带着暂停跑后面的用例。
+	var empty_ok: bool = _game._open_chest()
+	_check(not empty_ok, "缺被动时开箱不进化（返回 false）")
+	_check(_game.hud._banner.text.contains("无脸"), "空箱横幅提示「箱中无脸」（实测：%s）" % _game.hud._banner.text)
+	_game.level_up_ui.close_all()
 
 	# 配方对齐 params.json：1.7 / 1.5 / 1.4，且 req_passive 各不相同
 	var fw: Dictionary = EvolutionDB.form("evolve_whip")
@@ -921,11 +943,13 @@ func _step8_evolution() -> void:
 	for id in WeaponDB.ORDER:
 		var fid: String = EvolutionDB.form_id_for(id)
 		var mul: float = 1.0
+		var bonus: int = 0
 		if fid != "":
 			mul = float(EvolutionDB.form(fid)["dps_mult"])
-		x11_sum += _dps_per_radius(id, 8, mul)
+			bonus = int(EvolutionDB.form(fid).get("orbit_count_bonus", 0))
+		x11_sum += _dps_per_radius(id, 8, mul, bonus)
 	_check(x11_sum < x1_sum * 3.0,
-		"X11 < X1 量级校验：6 把全进化 %.1f < 6 把未进化 %.1f × 3" % [x11_sum, x1_sum])
+		"X11 < X1 量级校验：9 把全进化 %.1f < 9 把未进化 %.1f × 3" % [x11_sum, x1_sum])
 	# 逐把比较：任何一把进化武器的 dps/R 都不得超过整包未进化总量
 	var worst: float = 0.0
 	for id in WeaponDB.ORDER:
@@ -935,7 +959,30 @@ func _step8_evolution() -> void:
 		worst = maxf(worst, _dps_per_radius(id, 8, float(EvolutionDB.form(fid)["dps_mult"])))
 	_check(worst < x1_sum, "最强进化武器 dps/R %.1f < 六把未进化之和 %.1f（防止'少拿武器去进化'成最优解）" % [worst, x1_sum])
 
-	# 7) 进化后不再出现在升级池
+	# 6b) N-01：满堂彩的 dps_mult 与 orbit_count_bonus 不许重复计算
+	# 纸面 dps 应该只涨一次 1.45 × (3/2)，不能两个乘区都乘
+	var p_plain: float = _dps_per_radius("phone", 8, 1.0)
+	var p_evo: float = _dps_per_radius("phone", 8, float(EvolutionDB.form("evolve_phone")["dps_mult"]), 1)
+	_check(absf(p_evo / p_plain - 1.45 * 1.5) < 0.03,
+		"满堂彩纸面 dps 只涨 1.45×1.5 一次（实测 %.2f×）" % (p_evo / p_plain))
+
+	# 7) 迭代 02 三条新配方：各跑一次真实开箱，证明"数据加了、链路真的通"
+	# 写法照抄上面 4) 的开箱链：复位被动 → 只留一把 Lv8 → 补 1 级被动 → 直接开箱。
+	# 不构造假 entry，走 UpgradeDB.apply 的真实写回路径，避免"测试自己骗自己"。
+	for trio in [["phone", "speed"], ["blade", "might"], ["print", "max_hp"]]:
+		var wid: String = String(trio[0])
+		var sid: String = String(trio[1])
+		await _reset_stats()
+		_weapons.evolved.clear()
+		var only_one: Dictionary = {}
+		only_one[wid] = 8
+		_weapons.owned = only_one
+		UpgradeDB.apply({"def": {"id": sid, "kind": "stat"}, "new_level": 1})
+		var ok: bool = _game._open_chest()
+		_check(ok and _weapons.is_evolved(wid),
+			"%s + %s → 开脸成 %s" % [wid, sid, _weapons.display_name(wid)])
+
+	# 8) 进化后不再出现在升级池
 	_weapons.owned = {"whip": 8}
 	_weapons.evolved = {"whip": "evolve_whip"}
 	var pool_has_whip := false
@@ -953,7 +1000,8 @@ func _step8_evolution() -> void:
 	_enemies.clear_all()
 
 ## 粗算 dps/radius：冷却 + 单体伤害 + 覆盖半径，用来做量级比较（不是精确模拟）
-func _dps_per_radius(id: String, lv: int, dmg_mul: float) -> float:
+## orbit_bonus：N-01 的环绕物数量加成（只从进化表 orbit_count_bonus 传进来）
+func _dps_per_radius(id: String, lv: int, dmg_mul: float, orbit_bonus: int = 0) -> float:
 	var d: Dictionary = WeaponDB.def(id)
 	var cd: float = maxf(WeaponDB.cooldown_at(id, lv, 1.0), 0.12)
 	var dmg: float = WeaponDB.damage_at(id, lv, 1.0) * dmg_mul
@@ -972,7 +1020,7 @@ func _dps_per_radius(id: String, lv: int, dmg_mul: float) -> float:
 			radius = float(d.get("range", 500.0)) * 0.5
 		"phone":
 			radius = float(d.get("orbit_radius", 58.0)) + float(d.get("orbit_radius_per_level", 5.0)) * float(lv - 1)
-			hits = float(d.get("orbit_count", 2))
+			hits = float(d.get("orbit_count", 2)) + float(orbit_bonus)
 		"blade":
 			hits = 1.0 + float(d.get("bounce", 0))
 			radius = float(d.get("bounce_range", 260.0))
@@ -1421,7 +1469,7 @@ func _step11_result() -> void:
 	_check(title_lbl.text == "五更鸡鸣", "胜利标题「五更鸡鸣」（实测「%s」）" % title_lbl.text)
 	_check(info_lbl.text.contains("30:00"), "胜利明细显示 30:00 满时长")
 	_check(info_lbl.text.contains("Boss"), "胜利明细含 Boss 击杀数")
-	_check(info_lbl.text.contains("传承"), "胜利明细含传承数")
+	_check(info_lbl.text.contains("开脸"), "胜利明细含开脸数")
 	_check(title_lbl.get_theme_color("font_color").g > title_lbl.get_theme_color("font_color").r * 0.8,
 		"胜利标题为金色（与非失败红区分）")
 	get_tree().paused = false
@@ -1760,6 +1808,188 @@ func _step12_meta_shop() -> void:
 	_enemies.clear_all()
 	GameManager.started = false
 	await _wait_frames(2)
+
+## 迭代03 M-01：进化机制声明表的结构完整性。
+## 只验"声明表本身"，机制行为留给各批次（B1/B2）与专项工具。
+## 放 Step13 而不是 _step9_*：_step9 已被 wave_table / boss 占用，别撞名。
+func _step13_evolve_mechanic() -> void:
+	print("\n[迭代03] 进化机制声明（M-01）")
+	var mech: Dictionary = WeaponManager.EVOLVE_MECHANIC
+	_check(mech.size() == EvolutionDB.FORMS.size(),
+		"机制声明 %d 条 == 进化配方 %d 条（少一条就是漏写）"
+		% [mech.size(), EvolutionDB.FORMS.size()])
+	var bad_keys: Array[String] = []
+	for id in mech.keys():
+		if not WeaponDB.ORDER.has(String(id)):
+			bad_keys.append(String(id))
+	_check(bad_keys.is_empty(),
+		"机制声明的键全在 WeaponDB.ORDER 里（异常：%s）" % ", ".join(bad_keys))
+	# 值必须是「机制名:落点函数」两段式，函数名晚些批次才会全部落地，
+	# 这一批只验格式（has_method 在函数齐了之后再补）。
+	var bad_fmt: Array[String] = []
+	for id in mech.keys():
+		var parts: PackedStringArray = String(mech[id]).split(":")
+		if parts.size() != 2 or parts[0].strip_edges().is_empty() or parts[1].strip_edges().is_empty():
+			bad_fmt.append("%s→%s" % [String(id), String(mech[id])])
+	_check(bad_fmt.is_empty(),
+		"机制声明每条都是「机制名:落点函数」两段式（异常：%s）" % ", ".join(bad_fmt))
+
+	# ---- M-02 火神开脸：第二刀竖劈（与第一刀垂直）
+	await _prep()
+	GameManager.started = true           # 让 garlic_ring 的场初始化；用超长 cd 关自动开火
+	_weapons.owned = {"whip": 8}
+	_weapons.evolved = {"whip": "evolve_whip"}
+	_weapons._cd = {"whip": 999.0}
+	_weapons.set("_side", 1)
+	_weapons._second_arc_v(_player.global_position, 120.0, 60.0, 8)
+	var last_fx: WeaponManager.Fx = _weapons._fx[_weapons._fx.size() - 1]
+	var dot_hv: float = absf(Vector2.RIGHT.dot(Vector2.RIGHT.rotated(last_fx.node.rotation)))
+	_check(dot_hv < 0.1, "M-02 第二刀方向与第一刀垂直（|dot| = %.3f < 0.1）" % dot_hv)
+	# 几何验证：正上方那只第一刀打不到、第二刀打得到
+	_enemies.clear_all()
+	await _wait_frames(2)
+	var above: Enemy = _enemies.spawn(_player.global_position + Vector2(0, -80), 99999.0, 0.0, 1, "cup", false)
+	await _wait_frames(1)
+	_weapons.fire_whip(_player)
+	_check(is_equal_approx(above.hp, 99999.0), "M-02 第一刀（横）打不到正上方 80px（%.1f）" % above.hp)
+	await _wait(0.22)
+	_check(above.hp < 99999.0 - 0.01, "M-02 第二刀（竖）打到正上方 80px（%.1f）" % above.hp)
+
+	# ---- M-03 灯心公转：判定跟着灯心走
+	_enemies.clear_all()
+	_weapons.owned = {"halo": 8}
+	_weapons.evolved = {"halo": "evolve_halo"}
+	_weapons._cd = {"halo": 999.0}
+	_weapons._lamp_step = 0
+	await _wait_frames(2)
+	var hr: float = _weapons.halo_radius()
+	var hp_pos: Vector2 = _player.global_position + Vector2(hr * 0.40, 0.0)
+	# 反侧必须放到灯心半径之外：灯心在 +0.40R，敌人在 -d 时距灯心 d+0.40R，
+	# 要 > R 才能证明"判定确实偏了"；这里取 d = 1.10R ⇒ 距灯心 1.50R（留足余量，避开分离位移）。
+	# （主件原写"两只都放 0.40R"，几何上 -0.40R 距灯心只有 0.80R < R，恒命中，不能用来证明偏心。）
+	var hm_pos: Vector2 = _player.global_position + Vector2(-hr * 1.10, 0.0)
+	var e_plus: Enemy = _enemies.spawn(hp_pos, 99999.0, 0.0, 1, "cup", false)
+	var e_minus: Enemy = _enemies.spawn(hm_pos, 99999.0, 0.0, 1, "cup", false)
+	await _wait_frames(1)
+	var hbase: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
+	_weapons._lamp_step = 0
+	_weapons.fire_halo(_player)
+	var hoff: Vector2 = _player.garlic_ring.position - hbase
+	_check(absf(hoff.length() - hr * 0.40) < 0.01,
+		"M-03 灯心偏移 == 0.40R（实测 %.2f / 期望 %.2f）" % [hoff.length(), hr * 0.40])
+	_check(e_plus.hp < 99999.0 - 0.01, "M-03 灯心在 +X 时命中 +X 侧")
+	_check(is_equal_approx(e_minus.hp, 99999.0), "M-03 灯心在 +X 时 -X 侧不吃伤害（实测 %.1f）" % e_minus.hp)
+
+	# ---- M-04 门神镇宅：落点减速 4s
+	_enemies.clear_all()
+	_weapons.owned = {"print": 8}
+	_weapons.evolved = {"print": "evolve_print"}
+	_weapons._cd = {"print": 999.0}
+	await _wait_frames(2)
+	var pz: Enemy = _enemies.spawn(_player.global_position + Vector2(40, 0), 99999.0, 0.0, 1, "cup", false)
+	await _wait_frames(1)
+	var z: WeaponManager.Zone = WeaponManager.Zone.new()
+	z.pos = pz.global_position
+	z.radius = 60.0
+	z.dmg = 100.0
+	z.node = _weapons._take_fx(Art.WOODBLOCK_PRINT)   # _land_zone 末尾要淡出这张落点贴图
+	_weapons._land_zone(z)
+	_check(pz.is_slowed(), "M-04 落点命中后敌人被镇住（is_slowed）")
+	_check(pz._slow_left >= 3.9, "M-04 减速时长 ≥ 3.9s（实测 _slow_left = %.2f）" % pz._slow_left)
+
+	# ---- M-05 糖水粘连（定身 + 免疫窗口）
+	_enemies.clear_all()
+	_weapons.owned = {"glowstick": 8}
+	_weapons.evolved = {"glowstick": "evolve_glowstick"}
+	_weapons._cd = {"glowstick": 999.0}
+	await _wait_frames(2)
+	var glue: Enemy = _enemies.spawn(_player.global_position + Vector2(80, 0), 99999.0, 140.0, 1, "cup", false)
+	await _wait_frames(1)
+	var rooted: bool = glue.apply_root(1.5)     # 比观察窗 1.0s 长，避免最后一帧恰好解冻多走一步
+	var gp0: Vector2 = glue.global_position
+	await _wait(1.0)
+	var gmove: float = gp0.distance_to(glue.global_position)
+	var again: bool = glue.apply_root(1.0)
+	_check(rooted, "M-05 apply_root 返回 true")
+	_check(gmove < 0.5, "M-05 定身 1.0s 位移 < 0.5px（实测 %.2f）" % gmove)
+	_check(not again, "M-05 2.5s 免疫窗口内第二次返回 false")
+
+	# ---- M-06 铜锣回响（1.45 实测）
+	_enemies.clear_all()
+	_weapons.owned = {"gong": 8}
+	_weapons.evolved = {"gong": "evolve_gong"}
+	_weapons._cd = {"gong": 999.0}
+	await _wait_frames(2)
+	var ge: Enemy = _enemies.spawn(_player.global_position + Vector2(40, 0), 99999.0, 0.0, 1, "cup", false)
+	await _wait_frames(1)
+	var gh0: float = ge.hp
+	_weapons.fire_gong(_player)
+	var gh1: float = ge.hp
+	await _wait(0.45)
+	var gh2: float = ge.hp
+	var g_single: float = gh0 - gh1
+	var g_total: float = gh0 - gh2
+	_check(g_single > 0.01, "M-06 主敲命中（单次 %.1f）" % g_single)
+	_check(absf(g_total / g_single - 1.45) <= 0.0101,
+		"M-06 0.5s 内吃 2 次、总伤/单次 = 1.45 ± 0.01（实测 %.3f）" % (g_total / g_single))
+
+	# ---- M-07 墨线穿透累进 + 全程笔直
+	_enemies.clear_all()
+	_weapons.owned = {"inkline": 8}
+	_weapons.evolved = {"inkline": "evolve_inkline"}
+	_weapons._cd = {"inkline": 999.0}
+	await _wait_frames(2)
+	var ix: float = _player.global_position.x
+	var iy: float = _player.global_position.y
+	var ie1: Enemy = _enemies.spawn(Vector2(ix + 70, iy), 99999.0, 0.0, 1, "cup", false)
+	var ie2: Enemy = _enemies.spawn(Vector2(ix + 140, iy), 99999.0, 0.0, 1, "cup", false)
+	var ie3: Enemy = _enemies.spawn(Vector2(ix + 210, iy), 99999.0, 0.0, 1, "cup", false)
+	await _wait_frames(1)
+	_weapons._bullets.clear()
+	var ib: WeaponManager.Bullet = WeaponManager.Bullet.new()
+	ib.id = "inkline"
+	ib.pos = Vector2(ix + 10, iy)
+	ib.vel = Vector2(900.0, 0.0)
+	ib.life = 3.0
+	ib.dmg = 100.0
+	ib.pierce = 3
+	ib.radius = 8.0
+	ib.spin = 0.0
+	var ibs: Sprite2D = Sprite2D.new()
+	ibs.texture = Art.tex(Art.FX_SPARK)
+	ibs.scale = Vector2(1.84, 1.84)
+	_weapons.add_child(ibs)
+	ib.node = ibs
+	var ia0: float = ib.vel.angle()
+	_weapons._bullets.append(ib)
+	for _i in 40:
+		_weapons.update_bullets(1.0 / 60.0)
+	var ia1: float = ib.vel.angle()
+	var id1: float = 99999.0 - ie1.hp
+	var id2: float = 99999.0 - ie2.hp
+	var id3: float = 99999.0 - ie3.hp
+	_check(absf(ia1 - ia0) < 1e-4, "M-07 全程笔直（首末角差 %.8f < 1e-4）" % absf(ia1 - ia0))
+	_check(absf(id1 - 100.0) < 0.6 and absf(id2 - 125.0) < 0.6 and absf(id3 - 150.0) < 0.6,
+		"M-07 扣血比 1 : 1.25 : 1.50（实测 %.1f : %.1f : %.1f）" % [id1, id2, id3])
+
+	# ---- #9 未开脸守卫：铜锣不回响（evolved.has 写反会在这里红）
+	_enemies.clear_all()
+	_weapons.evolved = {}
+	_weapons.owned = {"gong": 8}
+	_weapons._cd = {"gong": 999.0}
+	await _wait_frames(2)
+	var ne: Enemy = _enemies.spawn(_player.global_position + Vector2(40, 0), 99999.0, 0.0, 1, "cup", false)
+	await _wait_frames(1)
+	_weapons.fire_gong(_player)
+	var nh1: float = ne.hp
+	await _wait(0.45)
+	var nh2: float = ne.hp
+	_check(is_equal_approx(nh1, nh2), "未开脸守卫：铜锣无回响（0.5s 后血量 %.1f → %.1f）" % [nh1, nh2])
+
+	_enemies.clear_all()
+	GameManager.started = false
+	await _wait_frames(2)
+
 
 ## 局外乘数改完之后，把新的 stats 字典重新挂到各系统上。
 ## Game._ready 里做过同一件事：GameManager.reset() 换的是**新字典**，

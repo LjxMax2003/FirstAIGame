@@ -46,6 +46,36 @@ const MOB_DISSOLVE := 0.30
 ## 第一下立即冒（手感不能等），之后按窗口合并。
 const DMG_POP_INTERVAL := 0.22
 
+# ---------------------------------------------------------------- v9 受击位移（A2）
+## 被打中时贴图沿来向偏移的像素。4px → <0.2px 约 16 帧（267ms）。
+## 为什么是"位移"不是"非等比缩放"：位移不写 art.scale，不和 setup() 的出场缩放、
+## _die() 的胀大抢同一个字段；且零破批成本（合批看的是 texture/material，不看 position）。
+## 为什么只有小怪这段：精英/Boss 同屏 <10，它们用 ShaderFX.flash 已经足够，
+## 再叠位移会让"大家伙"看起来轻浮。
+const HIT_PUNCH_PX := 4.0
+## 衰减系数必须乘性：天然"先快后慢"、末段一步归位。
+## 线性减速会有一段匀速滑动，读起来像"被拖着走"而不是"被弹开又回来"。
+const HIT_PUNCH_DECAY := 0.82
+## 同一只敌人的命中音去重窗口。取 0.055 = 与 PresentationFX.QUIET_WINDOW 同量级：
+## 两个窗口对齐时，"能听见的这一声"和"能顿的这一帧"落在同一个瞬间，
+## 玩家的多通道反馈才是叠在一起的，而不是错开成两声两晃。
+## 低于 0.04 就能听见"同一刀的多段伤害"在连响；高于 0.08 会吞掉二次命中的确认。
+const HIT_SFX_GAP := 0.055
+
+# ---------------------------------------------------------------- v9 击杀标点（A3）
+## 溶解过程中"完全不透明"的那一段占比。前 1/3 不透明 → 玩家先看到形状炸开（胀），
+## 再看到散掉（溶），因果顺序才对：是"被打碎"而不是"被擦掉"。
+## 只改 alpha 曲线的形状，不改 MOB_DISSOLVE 的总时长（HudFxGap 用 [0.21,0.40] 锁死了它）。
+const DEATH_HOLD_FRAC := 0.3333
+## 先胀后塌。原 1.12 在 0.30s 的溶解里读不出"胀"，1.20 才有那一帧冲击。
+## 上限取 1.28：再大就像"充气"而不是"被打爆"。
+const DEATH_SCALE_UP := 1.20
+const DEATH_SCALE_UP_TIME := 0.08
+const DEATH_SCALE_DOWN := 0.82
+## 击杀瞬间的结束白。刻意偏冷（B=1.0），与受击暖白 HIT_COLOR(1.0,0.78,0.70) 拉开色相 ——
+## 否则玩家会把"打死了"和"打中了"读成同一件事。
+const DEATH_COLOR := Color(0.0, 0.95, 1.0, 1.0)
+
 var hp := 1.0
 var max_hp := 1.0
 var speed := 70.0
@@ -92,6 +122,19 @@ var _pool_index := 0
 var _player: Player = null
 var _spawn_scale := 1.0
 var _spawn_left := 0.0
+
+# ---------------------------------------------------------------- v9 表现层状态
+## 受击位移的当前值（像素向量）与方向。逐帧乘性衰减到 0。
+## 之所以放在实体里而不是 PresentationFX：单例不能持有池化节点的引用（会悬空）。
+var _punch := Vector2.ZERO
+## 击杀"先胀后塌"的进度计时。_die() 起算，随 _process 推进。
+var _die_t := 0.0
+## 击杀后是否正在走"胀—塌"曲线。走完就交给溶解，不再改 scale。
+var _dying := false
+## 溶解期间是否已经调用过一次 dissolve_out（避免重复挂材质）。
+var _dissolving := false
+## 命中音去重窗口的剩余时间。每秒递减，见 _take_hit_sfx_token()。
+var _hit_sfx_cd := 0.0
 
 @onready var art: Sprite2D = $Art
 @onready var hp_bar: HpBar = $HpBar
@@ -154,7 +197,7 @@ func setup(pool_index: int, spawn_pos: Vector2, p_hp: float, p_speed: float, p_x
 	_dmg_pop_left = 0.0
 	_corpse_left = 0.0
 	_slow_left = 0.0
-	_slow_pct = 0.0
+	_slow_pct = 0.0; _root_left = 0.0; _root_immune = 0.0; _root_tinted = false
 	_slow_tinted = false
 	_walk = randf() * TAU
 	modulate = Color.WHITE
@@ -162,6 +205,15 @@ func setup(pool_index: int, spawn_pos: Vector2, p_hp: float, p_speed: float, p_x
 	art.rotation = 0.0
 	art.position = Vector2.ZERO
 	art.flip_h = false
+	# v9：补上 art.scale 的复位。此前这里漏了这一项 —— 上一具尸体的溶解胀大（1.12）
+	# 会带进下一次复用，表现为"复活的怪比别的怪大一圈"。池化敌人必须把所有
+	# 被表现层改过的 art 属性全部还原，这一条是 A2/A3 能安全落地的前提。
+	art.scale = Vector2.ONE
+	_punch = Vector2.ZERO
+	_die_t = 0.0
+	_dying = false
+	_dissolving = false
+	_hit_sfx_cd = 0.0
 	_spawn_scale = 0.01
 	_spawn_left = 0.18
 	scale = Vector2.ONE * _spawn_scale
@@ -284,7 +336,7 @@ func _process(delta: float) -> void:
 	if _pool != null:
 		move += _pool.separation(self, size * 0.5) * move_speed * 0.65
 
-	global_position += move * delta
+	_advance(move, delta)
 	if _pool != null:
 		_pool.report(self)
 
@@ -296,6 +348,9 @@ func _process(delta: float) -> void:
 		art.position.y = -absf(sin(_walk * 1.0)) * 1.6
 	else:
 		_tick_frames(delta)
+	# v9 受击位移：必须写在走路起伏之后**叠加**。上面那行是直接赋值，
+	# 写在它之前会被每帧覆盖，位移根本看不到。
+	_apply_punch(delta)
 
 	if _hit_left > 0.0:
 		_hit_left -= delta
@@ -304,6 +359,10 @@ func _process(delta: float) -> void:
 			# 否则一只正在减速的怪被打一下就永久丢失染色（它不会再有状态翻转）。
 			art.modulate = SLOW_TINT if _slow_left > 0.0 else Color.WHITE
 	_sync_slow_tint()
+	# 命中音去重窗口。和 _hit_left 分开走：闪白是 0.12s 的视觉，去重是 0.055s 的听觉，
+	# 复用同一个字段会让"闪白还在但可以再响一声"变成不可能。
+	if _hit_sfx_cd > 0.0:
+		_hit_sfx_cd -= delta
 
 	# 飘字聚合窗口收口：窗口内没再挨打，就把这期间累计的伤害一次冒出去
 	if _dmg_pop_left > 0.0:
@@ -347,6 +406,37 @@ func damage_multiplier(weapon_type: StringName) -> float:
 func hit_radius() -> float:
 	return size * 0.36
 
+## 受击位移（A2）。dir 由攻击方给出（归一化方向），幅度是本类自己的常量 ——
+## 让武器侧决定"打歪多少"会把表现耦合进攻武器数据。
+## 位移不写 art.scale / 不挂材质，所以对合批零成本。
+func hit_punch(dir: Vector2) -> void:
+	if not alive or dir == Vector2.ZERO:
+		return
+	_punch = dir.normalized() * HIT_PUNCH_PX
+
+## 逐帧合成受击位移。乘性衰减 → 天然"先快后慢"，末段一步归位。
+func _apply_punch(delta: float) -> void:
+	if _punch.length_squared() < 0.0001:
+		if _punch != Vector2.ZERO:
+			_punch = Vector2.ZERO
+		return
+	art.position += _punch
+	# 0.82^k 收敛到 0.2px 以下约 16 帧。用 pow 而不是减常量，保证不会越过 0 之后抖动。
+	_punch *= pow(HIT_PUNCH_DECAY, delta * 60.0)
+	if _punch.length() < 0.2:
+		_punch = Vector2.ZERO
+
+## 命中音的去重：同一个敌人在极短时间内被打多次只发一次声。
+## 不靠 Audio 的 gap 单独挡（那是全局节流，会让"不同敌人"也被吞），
+## 敌人自己的窗口才能保证"每只挨第一下都有一声"。
+## 用独立标记而不是比较 _hit_left：后者在 take_damage 里刚被赋成 FLASH_TIME，
+## 拿它做判断会恒为真，等于每次命中都发声（实测直接把声部打满）。
+func _take_hit_sfx_token() -> bool:
+	if _hit_sfx_cd > 0.0:
+		return false
+	_hit_sfx_cd = HIT_SFX_GAP
+	return true
+
 ## 击退：amount 是"身体尺寸的比例"（0.15 = 后退 15% 身位），不是像素 ——
 ## 这样 48px 杂兵和 96px 精英被撞开的手感是一致的。
 func knock_back(dir: Vector2, amount: float) -> void:
@@ -386,6 +476,14 @@ func take_damage(dmg: float, weapon_type: StringName = &"") -> void:
 		return
 	hp -= amount
 	_hit_left = FLASH_TIME
+	# v9 A1：命中的"时间标点"。只有这里知道"打中了什么"，武器侧不知道，
+	# 所以顿帧请求必须由 Enemy 发 —— 放 WeaponManager 会变成"每一发子弹都顿"。
+	# 三重门（静默窗/占空比/取最大档）在 PresentationFX 内部处理，这里无脑请求即可。
+	PresentationFX.request_hitstop(PresentationFX.TIER_HIT)
+	# v9 A4：命中音按伤害类型分锐/钝。此前 9 把武器共用"击杀音"，
+	# 打中时一声不响 —— 这是四条反馈通道里唯一完全空掉的一条。
+	if not _take_hit_sfx_token():
+		Audio.play_sfx("hit_aoe" if WeaponDB.dmg_kind(weapon_type) == "aoe" else "hit_single")
 	# 只闪贴图本体：modulate 是整个节点的，会连血条一起染红
 	if is_elite or is_boss:
 		# 精英 / Boss 同屏 < 10，值这一次材质切换：整块压成暖白，比 modulate 的乘法提亮
@@ -432,8 +530,14 @@ func _die() -> void:
 	# 放在 died 之前，是为了让"数字"和"掉落"在同一帧起步 —— 数字先出、宝石后出，
 	# 玩家的因果读法才是"我打死了它，所以掉了东西"。
 	_flush_damage(true)
+	# v9 A3：击杀标点。三档里最重的一档，但也必须过 K=8 的预算门 ——
+	# 泼墨/铜铃一次扫掉 20 只时，如果 20 只都顿一次，画面会冻住（见 13-feel-tuning §3）。
+	# 门在里面按"每帧最多 8 个致命事件"发牌，超出的一律不发，玩家只感到一次重顿。
+	PresentationFX.request_hitstop(PresentationFX.TIER_KILL)
 	# 死亡表现：急速放大 + 淡出，池回收时统一复位（不做 tween，省开销）
 	hp_bar.visible = false
+	_dying = true
+	_die_t = 0.0
 	if is_elite or is_boss:
 		# 化墨散去。restore=false 是刻意的：池化敌人每次 setup() 都会重设 art.material，
 		# 不必在回收前还一次。
@@ -443,24 +547,95 @@ func _die() -> void:
 		_corpse_left = ELITE_DISSOLVE
 	else:
 		# 小怪也化墨散去，复用同一套 in-house 溶解（不新增 shader）。
-		# 代价：这 0.30s 里死掉的每一只都挂着一份独立材质、掉出合批。
+		# 代价：这 DEATH_BUDGET 只里死掉的每一只都挂着一份独立材质、掉出合批。
 		# 实测峰值约 10 具尸体同时在溶（击杀率 30/s × 0.3s），换来的
 		# "被扫掉"的观感值这个钱；再往上（比如把时长拉到 0.6）就该改成
 		# "只给最近 N 只走溶解、其余走硬淡出"了。
 		ShaderFX.dissolve_out(art, MOB_DISSOLVE, false)
 		_corpse_left = MOB_DISSOLVE
-		# 保留一点点放大：溶解负责"散掉"，放大负责"被击中"的瞬间冲击。
-		# 原来的 1.25 是为硬淡出配的，配上溶解会显得"胀大后才开始溶"，收到 1.12。
-		scale = Vector2.ONE * 1.12
+		# 先胀后塌（A3）。原 1.12 是"一步到位"的死相，读不出"被击中"这一下。
+		# 曲线在 corpse_expired() 里按 DEATH_SCALE_UP_TIME 推到 DEATH_SCALE_UP，
+		# 再线性收回到 DEATH_SCALE_DOWN —— 先在 0.08s 内胀（冲击），剩下的时间塌（散掉）。
 		# ⚠️ 这里**不能**再把 modulate.a 置 0：那会让溶解直接看不见，
 		#    表现和改动前一模一样（甚至更差，因为还多挂了份材质）。
 	died.emit(global_position, xp_value, kind)
 
-## EnemyPool 每帧问一次：这具尸体可以回收了吗
+## EnemyPool 每帧问一次：这具尸体可以回收了吗。
+## ⚠️ 死亡表现只能在这里推进，不能放 Enemy._process：_die() 里已经 set_process(false)，
+##    Enemy 自己的帧循环到此为止。这也是为什么"先胀后塌"写在池子侧而不是实体侧。
+## delta 已经被池子换成**真实时间**（见 EnemyPool._process 的 / time_scale）：
+## 顿帧期间 Engine.time_scale < 1，若直接吃缩放后的 delta，尸体会在原地"卡住"，
+## 表现是"打死的瞬间全场凝固"而不是"顿了一下然后继续"。
 func corpse_expired(delta: float) -> bool:
 	if alive:
 		return false
+	if _dying:
+		_tick_death_curve(delta)
 	if _corpse_left <= 0.0:
 		return true
 	_corpse_left -= delta
 	return _corpse_left <= 0.0
+
+## "先胀后塌"的缩放曲线。只改 scale（节点缩放，不是 art.scale），
+## 所以不影响 setup() 里的出场缩放复位，也不会破合批（合批看 texture/material）。
+## 用意：0~0.08s 胀到 1.20（这是"被打爆"的那一下），之后线性塌到 0.82（"散掉"）。
+## 塌到 0.82 而不是 1.0：尸体应该"缩小着消失"，回到 1.0 会读成"变回原样"。
+func _tick_death_curve(delta: float) -> void:
+	_die_t += delta
+	if _die_t <= DEATH_SCALE_UP_TIME:
+		var up_t: float = _die_t / DEATH_SCALE_UP_TIME
+		# ease-out（1-(1-t)^2）：前段快、后段稳，胀的那一下才有"顶住"的手感
+		var e: float = 1.0 - pow(1.0 - up_t, 2.0)
+		scale = Vector2.ONE * lerpf(1.0, DEATH_SCALE_UP, e)
+		return
+	if _corpse_left <= 0.0:
+		_dying = false
+		return
+	# 剩余时间占比 → 从 DEATH_SCALE_UP 线性收到 DEATH_SCALE_DOWN
+	var total_tail: float = maxf(_corpse_left + (_die_t - DEATH_SCALE_UP_TIME), 0.0001)
+	var tail_t: float = clampf((_die_t - DEATH_SCALE_UP_TIME) / total_tail, 0.0, 1.0)
+	scale = Vector2.ONE * lerpf(DEATH_SCALE_UP, DEATH_SCALE_DOWN, tail_t)
+
+# ---------------------------------------------------------------- 迭代03：糖水粘连（定身）
+## 粘连染色。取 0.86 的轻压而不是满饱和：这个通道连血条一起染（见 _sync_root_tint 注释），
+## 压太深会把血条读数吃掉。
+const GLUE_TINT := Color(1.0, 0.96, 0.86)
+## 同一只怪被粘过后的免疫窗口。没有它，单目标场景下糖画冷却 0.65s < 定身 1.0s，
+## 会把同一只怪锁到死 —— 那正是 EvolutionDB 注释里明确要避免的形态。
+const ROOT_IMMUNE := 2.5
+
+var _root_left := 0.0
+var _root_immune := 0.0
+var _root_tinted := false
+
+## 糖水粘连。返回 true 表示这次真的粘上了 ——
+## 测试直接断返回值，不用去读私有字段，也让「免疫窗口生效」这件事可断言。
+func apply_root(duration: float) -> bool:
+	if not alive or _root_immune > 0.0:
+		return false
+	_root_left = maxf(_root_left, duration)
+	_root_immune = ROOT_IMMUNE
+	_sync_root_tint()
+	return true
+
+## 位移闸门。定身时连 _pool.separation 的分离推力一起吃掉 ——
+## 只压推进速度的话，被粘住的怪仍会被身后同伴挤着走，读起来像「糖浆没粘住」。
+## 倒计时放在这里而不是 _process 开头，是为了不新增行（见 M-05 §5.3 的「零行漂移」）。
+func _advance(move: Vector2, delta: float) -> void:
+	_root_immune = maxf(_root_immune - delta, 0.0)
+	_root_left = maxf(_root_left - delta, 0.0)
+	_sync_root_tint()
+	if _root_left > 0.0:
+		return
+	global_position += move * delta
+
+## 粘连的可见化。只在翻转沿写一次 —— 与 _sync_slow_tint 同一个理由：
+## 200 只小怪每帧各赋一次 modulate 是纯开销，而状态一秒只翻两次。
+## 用节点 modulate 而不是 art.modulate：后者是闪白与减速染色的通道，
+## 抢同一个通道会互相抹掉。节点 modulate 全文件只在 setup 里写过，是空着的。
+func _sync_root_tint() -> void:
+	var want: bool = _root_left > 0.0
+	if want == _root_tinted:
+		return
+	_root_tinted = want
+	modulate = GLUE_TINT if want else Color.WHITE

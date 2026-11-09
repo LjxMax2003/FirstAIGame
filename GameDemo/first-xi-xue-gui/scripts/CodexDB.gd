@@ -4,7 +4,7 @@ class_name CodexDB
 # =====================================================================
 # 图鉴（v7.1 / T12 · 策划案 §4.3 优先级 4）
 #
-# 33 条 = 9 手艺 + 6 开脸 + 9 心法 + 9 对手。
+# 36 条 = 9 手艺 + 9 开脸 + 9 心法 + 9 对手。
 #
 # 【为什么手艺/开脸/心法三条轴直接读现有表，只有"对手"手写】
 #   前三条的 id、名字、图标、说明本来就活在 WeaponDB / EvolutionDB / UpgradeDB 里，
@@ -84,7 +84,7 @@ const FOES: Array[Dictionary] = [
 ]
 
 # ---------------------------------------------------------------- 取条目
-## 全部 33 条，按 KIND_ORDER 排列。调用方不需要知道每种几条。
+## 全部 36 条，按 KIND_ORDER 排列。调用方不需要知道每种几条。
 static func entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for k in KIND_ORDER:
@@ -182,11 +182,11 @@ static func seen_in(kind: String) -> int:
 			n += 1
 	return n
 
-## "12 / 33"。给 UI 的顶栏和主菜单按钮用同一个口径。
+## "12 / 36"。给 UI 的顶栏和主菜单按钮用同一个口径。
 static func progress_line() -> String:
 	return "%d / %d" % [seen_count(), total()]
 
-## 主菜单按钮文案："图鉴 · 12/33（有 3 条新）"——"新"是本次会话里刚收录、
+## 主菜单按钮文案："图鉴 · 12/36（有 3 条新）"——"新"是本次会话里刚收录、
 ## 还没在图鉴里看过的数量。用会话内计数而不是存档字段：
 ## 玩家点进图鉴就算看过了，不需要为一件"看过没看过"再写一个持久字段。
 static var _fresh: Dictionary = {}

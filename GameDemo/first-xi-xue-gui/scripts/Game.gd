@@ -115,6 +115,11 @@ var magnets_dropped := 0
 var chests_opened := 0
 ## 一次性情境提示层（L-07 的 5 条）。Game._ready 里创建并 bind。
 var tips: TipUI = null
+## v9 C1：环境层（暗角 / 远景视差 / 灯晕）。在代码里建，理由同 TipUI：
+## 它自己是一整层 z_index 约定，场景里加节点会把"层级"拆成两处定。
+var ambience: Ambience = null
+## Ambience 当前是否处于低配档。按值比对用，避免每帧调 apply_quality。
+var _amb_low := false
 ## 资源点拆解攒下的金币。结算时与击杀/时长奖励相加（见 coin_reward）
 var coins_earned := 0
 
@@ -174,6 +179,18 @@ func _ready() -> void:
 	tips.name = "Tips"
 	add_child(tips)
 	tips.bind(self, player)
+	# v9 C1：环境层。挂在 $World 下 —— 它内部拆成两半：
+	#   · Near(Node2D) 在 World 坐标系里，按 z_index=-6 排序
+	#   · Screen(CanvasLayer) 自动脱离世界坐标，钉在屏幕上
+	# 所以外部只需挂一次，两种坐标系由 Ambience 自己分派。
+	ambience = Ambience.new()
+	ambience.name = "Ambience"
+	$World.add_child(ambience)
+	ambience.bind(camera, get_viewport_rect().size)
+	# v9 A1/A3：顿帧与震屏需要相机句柄。PresentationFX 不持有节点引用（会悬空），
+	# 由这里注入，切场景时 reset_all 会清掉。
+	PresentationFX.bind_camera(camera)
+	PresentationFX.reset_all()
 	# 开局先给一小波，避免前三秒空场
 	_spawn_burst(4)
 	# BGM 在场景真正开始跑之后才切换：主菜单曲的淡出与战斗曲的淡入
@@ -181,6 +198,15 @@ func _ready() -> void:
 	Audio.play_bgm("combat")
 
 func _process(delta: float) -> void:
+	# v9 C1：低配档切换的跟随。Settings.set_fx_level 只落盘、不发信号
+	# （全工程没有"设置变更"广播，为一个弱引用不值得新造一套）。
+	# 这里按值比对而不是每帧都调 apply_quality：后者会写 modulate.a，
+	# 每帧写一次等于让脏矩持续存在。一个 bool 比较的开销可以忽略。
+	if ambience != null:
+		var low_now: bool = Settings.is_low()
+		if low_now != _amb_low:
+			_amb_low = low_now
+			ambience.apply_quality(low_now)
 	# 三现的光效要一直贴着残面走（它会追人），所以每帧同步一次。
 	# 放在最前面：Boss 被打死时哪怕本帧已经进入判胜演出，也要先把光效清干净。
 	_update_boss_fx(delta)
@@ -384,6 +410,10 @@ func _check_boss() -> void:
 	# 登场重音与红色横幅同一个时点：听到和看到必须是同一件事，
 	# 晚 0.1s 就会读成"横幅先响、声音后补"。
 	Audio.play_sfx("boss_spawn")
+	# v9 A6：Boss 现身是"世界的重量换了"的时刻，给一次重震 + 一次长顿帧。
+	# TIER_HEAVY 而非 TIER_KILL：这是"顿住看它出现"，不是"打中了"。
+	PresentationFX.add_trauma(PresentationFX.ADD_BOSS)
+	PresentationFX.request_hitstop(PresentationFX.TIER_HEAVY)
 
 # ---------------------------------------------------------------- 残面三现（T13）
 ## 挂上第 phase 现所对应的全部层。一现只有 1 层，三现是 1+2+3 = 三层一起。
@@ -473,6 +503,9 @@ func _check_mini_boss() -> void:
 	# 小 Boss 用同一个素材但压低 8 dB：玩家要能听出"又来了一个硬的"，
 	# 但不能和终局残面的登场声一样重 —— 那会削弱真 Boss 的分量。
 	Audio.play_sfx("boss_spawn", -8.0)
+	# v9 A6：小 Boss 的神也要跟手。0.20 是终局 Boss（0.32）的 62% ——
+	# 两者的差别必须能用身体读出来，否则"小 Boss"就只是"血少一点的 Boss"。
+	PresentationFX.add_trauma(PresentationFX.ADD_MINI_BOSS)
 
 ## 潮涌：只做"预警 + 尖峰"，不改敌人单体数值。
 ## 预警是功能性的 —— 尖峰 R 会砸到 0.17~0.33，玩家必须提前决定"绕圈还是放震吼"。
@@ -482,6 +515,9 @@ func _check_surge() -> void:
 		return
 	hud.flash_boss("%s  ·  潮涌" % String(s.get("note", "潮涌")))
 	_show_surge_ring()
+	# v9 A6：潮涌是"世界在推你"，震一下提醒回神。0.08 很轻 ——
+	# 潮涌会连续触发，太重会让屏幕一直在抖，反而看不出哪里是重点。
+	PresentationFX.add_trauma(PresentationFX.ADD_SURGE)
 
 func _show_surge_ring() -> void:
 	var s := Sprite2D.new()
@@ -534,6 +570,8 @@ func _on_elite_died(pos: Vector2, kind: String) -> void:
 			MetaSave.note_mini_boss_kill()
 			break
 	_drop_chest(pos)
+	# v9 A6：精英被杀是一次"值得记住"的击杀，给中等冲击。
+	PresentationFX.add_trauma(PresentationFX.ADD_ELITE)
 
 ## Boss 死亡单独走：掉宝箱 + 一串大宝石 + 一个饭盒
 func _on_boss_killed(pos: Vector2) -> void:
@@ -543,6 +581,11 @@ func _on_boss_killed(pos: Vector2) -> void:
 		var off := Vector2.from_angle(TAU * float(i) / 6.0) * randf_range(30.0, 70.0)
 		gems.spawn(pos + off, 20)
 	pickups.spawn(pos + Vector2(0, 40), "bento")
+	# v9 A6：击杀终局 Boss 是全场最重的一次。0.32 接近 traumas 的上沿（1.0 满值），
+	# 但配合 0.85/s 的线性衰减，实际震感是"猛地一顿、0.4 秒内收敛"——
+	# 不会像某些游戏那样震到看不清掉落。
+	PresentationFX.add_trauma(PresentationFX.ADD_BOSS)
+	PresentationFX.request_hitstop(PresentationFX.TIER_HEAVY)
 
 func _on_player_died() -> void:
 	# 死亡时如果升级卡还开着，先让卡回去，否则结算界面会被暂停锁挡住
@@ -571,8 +614,17 @@ func death_cause() -> String:
 	if src == "boss":
 		return "Boss 贴身按住"
 	if not WaveTable.surge_at(elapsed).is_empty():
-		return "潮涌里被挤灭"
+		# v9 文案：原「潮涌里被挤灭」的「灭」字太狠且偏书面，玩家读不出画面。
+		# 「挤倒」是玩家真能想象的动作（一群人在夜市里被推倒），也更符合本作"民俗街市"的调子。
+		return "人潮里被挤倒"
 	if src == "elite" or src == "mob":
+		# v9 文案：把"没盾"这一档单独说出来。这是玩家唯一能立刻改的变量
+		# （等结界回满再往里冲），比笼统的「被围住」有用得多。
+		# 判据用 shield_hp <= 0.0 —— 这是结算那一刻的**真实状态**，
+		# 不引入任何新字段。⚠️ 不能用 Player._shield_break：那是 0.32s 的闪光倒计时，
+		# 不是"盾破了"的持久标记（见 Player.gd:56 注释），拿它判会永远为假。
+		if player.shield_hp <= 0.0:
+			return "没盾的时候被围住"
 		return "被围住"
 	return "力竭而倒"
 
@@ -689,6 +741,8 @@ func _open_chest() -> bool:
 		# 没满足配方：补偿一次升级三选一，否则精英宝箱对新手等于空气。
 		# 注意 player.level_up 是 signal 不是方法，这里必须用 gain_xp 触发升级流程。
 		player.gain_xp(player.xp_next)
+		# S-03：补偿也要有因果提示，否则玩家只看到"突然弹升级面板"
+		hud.flash_evolve("箱中无脸 · 化为一枚灯花")
 		return false
 	var pick: String = cands[randi() % cands.size()]
 	var form_id: String = EvolutionDB.form_id_for(pick)
@@ -698,8 +752,10 @@ func _open_chest() -> bool:
 	# 不挂在 can_evolve_any() 上 —— "能开"和"开了"是两件事。
 	CodexDB.unlock(form_id)
 	weapons.spawn_evolve(player.global_position)
-	hud.flash_evolve("传承！ %s" % String(EvolutionDB.form(form_id).get("name", pick)))
-	# 传承是单局里最重的一次正反馈（横幅、特效都上了），声音也要同级；
+	# C-01：开脸瞬间轻轻推近再弹回（只动 camera.zoom，不抢震屏的 camera.offset）
+	PresentationFX.pull_zoom(1.06, 0.35)
+	hud.flash_evolve("开脸！ %s" % String(EvolutionDB.form(form_id).get("name", pick)))
+	# 开脸是单局里最重的一次正反馈（横幅、特效都上了），声音也要同级；
 	# 复用升级音但抬 2 dB，和"多了一张卡"区分开。
 	Audio.play_sfx("levelup", 2.0)
 	return true

@@ -200,7 +200,7 @@ func _process(_delta: float) -> void:
 	info.text = "归色 %d    同屏 %d    灯花 %d    铜钱 %d" % [
 		_game.kills, _game.alive_enemies(), _game.gem_count(), _game.coin_reward()]
 	if _game.evolutions > 0:
-		info.text += "    传承 %d" % _game.evolutions
+		info.text += "    开脸 %d" % _game.evolutions
 	if _game.enemies.has_boss():
 		info.text = "BOSS 在场    " + info.text
 	fps.text = "%d fps" % Engine.get_frames_per_second()
@@ -331,7 +331,8 @@ func _sync_weapon_row(force: bool) -> void:
 		# 精炼同理（Lv8 之后再 pick 只改精炼层数，等级签名不会变）
 		sig_parts.append("%s:%d:%s:%d" % [String(id), int(weps[id]),
 			_game.weapons.evolution_of(String(id)), _game.weapons.refine_tier(String(id))])
-	var sig: String = ",".join(sig_parts)
+	# 开脸数必须进签名：它不在武器/等级里，漏了会让"开脸徽章"在进化后不刷新
+	var sig: String = ",".join(sig_parts) + "|evo:%d" % _game.evolutions
 	if not force and sig == _signature:
 		return
 	_signature = sig
@@ -431,3 +432,19 @@ func _sync_weapon_row(force: bool) -> void:
 			box.add_child(aw)
 		weapon_row.add_child(box)
 		_slots[id] = lv
+
+	# U-01 常驻开脸徽章：分母读 EvolutionDB.FORMS.size()，配方增减时自动跟上，
+	# 不在 UI 里硬编码 9。与 46px 槽位同高，金色 + 黑描边，不拦截鼠标
+	# （否则它会吃掉右侧 52px 的触摸区，把摇杆/技能键的落点变窄）。
+	var evo_badge := Label.new()
+	evo_badge.name = "EvolutionBadge"
+	evo_badge.text = "开脸 %d/%d" % [_game.evolutions, EvolutionDB.FORMS.size()]
+	evo_badge.custom_minimum_size = Vector2(52, 46)
+	evo_badge.add_theme_font_size_override("font_size", 13)
+	evo_badge.add_theme_color_override("font_color", Color(1.0, 0.86, 0.42))
+	evo_badge.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	evo_badge.add_theme_constant_override("outline_size", 3)
+	evo_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	evo_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	evo_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	weapon_row.add_child(evo_badge)

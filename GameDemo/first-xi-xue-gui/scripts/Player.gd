@@ -73,6 +73,16 @@ var _tilt := 0.0
 var _front_frames: Array[Texture2D] = []
 var _back_frames: Array[Texture2D] = []
 
+# ---------------------------------------------------------------- v9 受伤位移（A2）
+## 受伤时贴图沿"伤害来向的反向"偏移的像素。比小怪的 4px 大 ——
+## 玩家挨打必须有存在感，4px 在他身上（64×80）读不出来。
+const HIT_PUNCH_PX := 5.0
+## 乘性衰减，与小怪同一套（先快后慢，末段一步归位）。共用 0.82 保证"被打飞"的
+## 动势在全场是同一种质地，玩家和敌人在用同一套物理直觉读画面。
+const HIT_PUNCH_DECAY := 0.82
+## 当前位移（像素向量）。逐帧乘性衰减到 0。
+var _punch := Vector2.ZERO
+
 # ---------------------------------------------------------------- v5：主动技·震吼
 ## 子组件（不是全局态）：它只管"能不能放 / 放完冷却多少"，玩家管"往哪冲、无敌多久"。
 var active_skill: ActiveSkill
@@ -98,6 +108,11 @@ func _ready() -> void:
 	add_child(active_skill)
 	_load_frames()
 	art.offset = Vector2(0.0, -ART_FOOT_OFFSET)
+	# 花灯环对齐**身体中部**而不是 origin（脚底）：玩家是站着的人，
+	# 环画在脚踝上会读成"圈套歪了"（实测截图反馈）。
+	# 判定不受影响 —— fire_halo 仍用 global_position，敌我双方 origin 都在脚底、同基准。
+	# 防御：这里每帧重设（见 _physics_process 顶部），防止任何运行时意外把它改回脚底。
+	garlic_ring.position = Vector2(0.0, -ART_FOOT_OFFSET)
 	# 影子在运行时生成：椭圆 + 半透明，避免为每张图另做一张阴影素材
 	shadow = Shadow2D.make(self, Vector2(0.0, -1.0), 22.0, 7.0, 0.34)
 
@@ -125,6 +140,11 @@ func _load_frame_list(paths: Array[String]) -> Array[Texture2D]:
 
 func _physics_process(delta: float) -> void:
 	elapsed += delta
+	# 【迭代03 M-03 偏离登记】这里原本有一行"每帧把 garlic_ring.position 写回 (0,-18)"
+	# 的防御兜底。M-03 要求开脸后由 WeaponManager._lamp_center() 把整个环平移到偏心位置，
+	# 每帧写回会把它立刻抹掉（表现为"环永远在圆心，判定圆在动"）。
+	# 该兜底是为修"移动后中心点变了"，但实测漂移恒为 0，且 _lamp_center 每次脉冲都会重锚，
+	# 因此按 M-03 让出写入权，仅在 _ready（含复活重载场景）写一次。
 	if not GameManager.started:
 		velocity = Vector2.ZERO
 		moving = false
@@ -383,6 +403,51 @@ func take_damage(amount: float, source: StringName = &"") -> void:
 		moving = false
 		_release_drag()
 		died.emit()
+		return
+	# v9 A2/E1：受伤的重反馈。只在**真的掉血**时给（盾全吃掉的那一下不该震屏，
+	# 否则"有盾挨打"和"没盾挨打"的手感就没区别了，盾的价值读不出来）。
+	if left > 0.0:
+		PresentationFX.add_trauma(PresentationFX.ADD_HURT)
+		# 受击位移：沿"伤害来向"的反方向弹一下。
+		# ⚠️ 这里拿不到真实来向 —— take_damage 的 source 只是语义标签（boss/mob/elite），
+		#    所以用"朝最近敌人的反向"近似。被围住时这个方向大概率就是他挨打的方向，
+		#    读感是对的；取不到敌人就干脆不弹（空场景走路不该有位移）。
+		var from: Vector2 = _nearest_threat_dir()
+		if from != Vector2.ZERO:
+			hit_punch(-from)
+
+## 最近威胁的方向（单位向量）。取不到返回 ZERO。
+## 直接查 EnemyPool 而不是走 GameManager：池子是 Player 的兄弟节点（都在 World 下），
+## 而 GameManager 只存 player / weapons 两个引用，没有池子。
+func _nearest_threat_dir() -> Vector2:
+	var pool: EnemyPool = get_parent().get_node_or_null("EnemyPool") as EnemyPool
+	if pool == null:
+		return Vector2.ZERO
+	var e: Enemy = pool.nearest(global_position, 260.0)
+	if e == null:
+		return Vector2.ZERO
+	var d: Vector2 = e.global_position - global_position
+	if d.length_squared() < 0.01:
+		return Vector2.ZERO
+	return d.normalized()
+
+## 受击位移（A2）。方向是本节点自己的常量幅度 —— 和 Enemy.hit_punch 同构，
+## 位移不写 art.scale、不挂材质，所以对合批零成本（玩家只有一个，但语义要一致）。
+func hit_punch(dir: Vector2) -> void:
+	if dir == Vector2.ZERO:
+		return
+	_punch = dir.normalized() * HIT_PUNCH_PX
+
+## 逐帧合成受击位移。与小怪同一套乘性衰减（0.82^帧）。
+func _apply_punch(delta: float) -> void:
+	if _punch.length_squared() < 0.0001:
+		if _punch != Vector2.ZERO:
+			_punch = Vector2.ZERO
+		return
+	art.position += _punch
+	_punch *= pow(HIT_PUNCH_DECAY, delta * 60.0)
+	if _punch.length() < 0.2:
+		_punch = Vector2.ZERO
 
 func is_alive() -> bool:
 	return GameManager.started and float(stats.get("hp", 0.0)) > 0.0
@@ -421,6 +486,11 @@ func _update_feedback(delta: float, dir_len: float) -> void:
 		target_tilt = clampf(velocity.x / top, -1.0, 1.0) * TILT_MAX
 	_tilt = lerpf(_tilt, target_tilt, clampf(delta * TILT_LERP, 0.0, 1.0))
 	art.rotation = _tilt
+
+	# v9 受伤位移：必须写在上面那行**直接赋值**之后叠加。
+	# 写在它之前会被 art.position.y 的每帧赋值覆盖，位移根本看不到
+	# （和小怪那边同一个坑，见 Enemy._process 的同名注释）。
+	_apply_punch(delta)
 
 	# 光环范围：**只跟花灯（halo）**。
 	#

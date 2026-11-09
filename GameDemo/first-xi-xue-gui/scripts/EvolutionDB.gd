@@ -89,6 +89,42 @@ const FORMS: Dictionary = {
 		# （WeaponManager._shatter 里 `if evolved.has("extinguisher")` 那段）。
 		# 所以这里没有行为字段：机制差异在武器侧，进化侧只给倍率，反而更难漂移。
 	},
+	# ---------------------------------------------------------------- 迭代 02：补全 9/9
+	# 皮影：环绕物跟着人走，身法快才撞得上；进化放大环绕半径（WeaponManager._update_orbits 用 area_mult）。
+	# orbit_count_bonus 是 N-01 的行为字段（影人 2 → 3），数值只放在这里，
+	# 武器侧只读表、不自己写死，避免"表说 3、代码还是 2"的静默漂移。
+	"evolve_phone": {
+		"name": "满堂彩",
+		"base": "phone",
+		"req_passive": "speed",
+		"dps_mult": 1.45,
+		"area_mult": 1.30,
+		"desc": "皮影满级 + 夜行",
+		"svg": Art.PHONE_ORBIT,
+		"orbit_count_bonus": 1,
+	},
+	# 剪纸：必须贴身到弹射范围内才打得动，减伤是它敢站进去的前提；
+	# area_mult 会同时放大 bounce_range（WeaponManager 已经这么乘了）。
+	"evolve_blade": {
+		"name": "百鸟朝凤",
+		"base": "blade",
+		"req_passive": "might",
+		"dps_mult": 1.40,
+		"area_mult": 1.50,
+		"desc": "剪纸满级 + 护身",
+		"svg": Art.KNIFE_BOXCUTTER,
+	},
+	# 木版年画：落点延迟 0.45s（WeaponDB 的 delay），玩家得站在圈里等，
+	# 血上限直接决定敢不敢站，所以这条配方绑 max_hp。
+	"evolve_print": {
+		"name": "门神镇宅",
+		"base": "print",
+		"req_passive": "max_hp",
+		"dps_mult": 1.55,
+		"area_mult": 1.35,
+		"desc": "木版年画满级 + 底气",
+		"svg": Art.WOODBLOCK_PRINT,
+	},
 }
 
 ## 武器满级才可进化

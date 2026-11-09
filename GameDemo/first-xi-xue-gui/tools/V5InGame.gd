@@ -153,7 +153,7 @@ func _case_data() -> void:
 	_check(bool(WeaponDB.def("whip")["double_sweep"]), "师刀带双扫标记")
 
 func _case_evolutions() -> void:
-	_check(EvolutionDB.FORMS.size() == 6, "进化配方 6 条（3 旧 + 3 新）")
+	_check(EvolutionDB.FORMS.size() == 9, "进化配方 9 条（6 旧 + 3 迭代02 新增）")
 	_near(float(EvolutionDB.form("evolve_gong")["dps_mult"]), 1.50, 0.001, "开市锣 dps×1.50")
 	_near(float(EvolutionDB.form("evolve_gong")["area_mult"]), 1.50, 0.001, "开市锣 area×1.50")
 	_near(float(EvolutionDB.form("evolve_inkline")["dps_mult"]), 1.55, 0.001, "龙筋墨线 dps×1.55")

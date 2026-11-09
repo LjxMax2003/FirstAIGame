@@ -120,17 +120,17 @@ func show_result(kills: int, elapsed: float, level: int, victory: bool,
 	# 单独做一行大字会抢掉铜钱的视觉重量（结算里铜钱是唯一的正向反馈，不能让位）。
 	if not victory and cause != "":
 		lines.append("死因  %s" % cause)
-	lines.append("守夜  %02d:%02d / %02d:00" % [t / 60, t % 60, int(WaveTable.RUN_LENGTH) / 60])
+	lines.append("撑住  %02d:%02d / %02d:00" % [t / 60, t % 60, int(WaveTable.RUN_LENGTH) / 60])
 	lines.append("归色  %d 只" % kills)
 	lines.append("等级  Lv %d" % level)
-	# 精英/Boss/传承只在非零时显示：一局全 0 的"精英 0  Boss 0"只会让面板变吵
+	# 精英/Boss/开脸只在非零时显示：一局全 0 的"精英 0  Boss 0"只会让面板变吵
 	var extra: Array[String] = []
 	if elite_kills > 0:
 		extra.append("精英 %d" % elite_kills)
 	if boss_kills > 0:
 		extra.append("Boss %d" % boss_kills)
 	if evolutions > 0:
-		extra.append("传承 %d" % evolutions)
+		extra.append("开脸 %d" % evolutions)
 	if not extra.is_empty():
 		lines.append("  ".join(extra))
 	var ws: String = _weapon_summary()
@@ -151,6 +151,8 @@ func _weapon_summary() -> String:
 	return "手艺：" + " · ".join(parts)
 
 func _on_restart() -> void:
+	# 迭代03 U-02：结算面板原本全静音，重开这一下没有任何反馈。
+	Audio.play_sfx("ui_click")
 	get_tree().paused = false
 	if _game != null:
 		_game.restart()

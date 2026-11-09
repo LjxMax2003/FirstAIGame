@@ -264,6 +264,12 @@ static func svg(id: String) -> String:
 static func dmg_kind(id: String) -> String:
 	return String((DEFS.get(id, {}) as Dictionary).get("dmg_kind", "aoe"))
 
+## 这件武器的结构类型（melee / aura / projectile / orbit / arc_projectile / line / zone）。
+## WeaponManager 按它决定冷却通道：环绕类（orbit）不走开火冷却 _cd（迭代01 D-1-F1）。
+## 单独一个取值器，而不是各调用点就地 def(id).get("kind") —— 字符串键散写是事故源。
+static func kind_of(id: String) -> String:
+	return String((DEFS.get(id, {}) as Dictionary).get("kind", ""))
+
 ## 模型口径的命中折损（只对锁定/弹射/直线三种有；其余 1.0）
 static func aim_at(id: String) -> float:
 	return float((DEFS.get(id, {}) as Dictionary).get("aim", 1.0))
