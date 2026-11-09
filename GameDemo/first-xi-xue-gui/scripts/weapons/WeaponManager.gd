@@ -64,8 +64,6 @@ var _orbit_ghosts: Array[Sprite2D] = []
 ## 屏幕光晕的冷却（秒）。打铁花一次泼两发，两团光叠加会过曝；
 ## 用一个短冷却把"同时碎的两发"合并成一次屏幕闪光。只在 _shatter 里读写。
 var _glow_left := 0.0
-## 走马灯的轮转相位（0~7）。只在 evolved.has("halo") 时会推进；未开脸恒 0，不推进。
-var _lamp_step := 0
 
 @onready var _pool: EnemyPool = get_parent().get_node("EnemyPool") as EnemyPool
 
@@ -403,7 +401,7 @@ func fire_halo(player: Node2D) -> void:
 	# 读的是**命中前**的减速状态 —— 先判再上减速，否则第一下就吃到加成，
 	# 等于变成"花灯无条件 +20%"，那就不需要把怪留在圈里了。
 	var slow_bonus: float = float(d.get("slow_dmg", 0.20))
-	# 迭代03 M-03：灯心可能偏心（开脸后绕玩家公转），判定与视觉、资源点必须同圆心。
+	# 迭代04 收尾（D-14）：灯心恒在角色脚下，判定 / 视觉 / 资源点同一圆心。
 	var center: Vector2 = _lamp_center(player, radius)
 	_pool.query_circle(center, radius, _scratch)
 	if not _scratch.is_empty():
@@ -1242,40 +1240,25 @@ func _second_arc_v(p: Vector2, length: float, width: float, _lv: int) -> void:
 	_push_fx(arc, 0.16, 1.55, 1.15)
 	ShaderFX.slash(arc, 0.12, false, false)
 
-# ---------------------------------------------------------------- 迭代03 M-03：灯心公转
-## 花灯的"灯心"：未开脸 = 玩家脚下；开脸后 = 绕玩家 8 方位轮转的点。
+# ---------------------------------------------------------------- 花灯：灯心恒在角色身上
+## 灯心 = 判定圈 / 可见圈 / 资源点三者共同的圆心，它永远不出角色脚下。
 ##
-## 【为什么连视觉一起搬，而不是新建一个环】
-## GarlicRing 的四层视觉全部以自身节点原点为圆心（Ring 无 offset；
-## ShaderFX.field / ripple / lantern_stream 都写 rect.position = -size*0.5），
-## 而 Player.gd 只在初始化(:114) 写过它的 position，每帧只改 visible / set_radius / set_awakened。
-## 所以改它的 position = 整套光环视觉平移，GarlicRing.gd 一行不用改，
-## 判定圈与可见边界圈永远同心同半径。
+## 【为什么只保留"复位"一个动作】
+## 迭代03 M-03 曾让开脸的花灯把整个环绕玩家 8 方位轮转（偏移 0.40R）。
+## 实测手感是"环跑了、人还在原地挨打"：视觉中心、判定中心与角色三者不重合，
+## 玩家看到自己站在圈外，却照样吃接触伤害 —— 表现与判定读起来是两套规则。
+## 迭代04 收尾按用户裁定撤回该机制（interface.md §6.7 D-14）。
 ##
-## 【为什么硬跳 45°，不做平滑插值】
-## 判定圆心只在每次脉冲更新（cd 0.5s）。视觉若用 tween 滑过去，中间那 0.16s 里
-## 看见的圈和正在结算的圈是两个位置 —— 那正是"表现与判定脱节"。
-## 走马灯本来就是一格一格换画，跳格是它的本义。
+## 【为什么要写 position 而不只 return 坐标】
+## GarlicRing 四层视觉全部以节点原点为圆心；把 position 钉回 base 才能保证
+## "卸下花灯 / 复活 / 重开一局"之后不残留上一轮的脏偏移。
+## radius 参数保留：调用方按半径取圆心，签名与判定半径同源，便于未来换算法。
 func _lamp_center(player: Node2D, radius: float) -> Vector2:
 	var base: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
 	var p: Player = player as Player
-	if p == null:
-		return player.global_position
-	if not evolved.has("halo"):
-		# 未开脸：复位。复活(:146)已写回 base，这里再兜一次是因为 _lamp_step
-		# 不会自己归零 —— 卸下花灯又装回来时会带着上一轮的脏偏移。
-		if p.garlic_ring.position != base:
-			p.garlic_ring.position = base
-		return player.global_position
-	# 8 方位轮转：每次脉冲 +45°，偏移 0.40R。
-	# 0.40 < 1.0 ⇒ 玩家到灯心 0.40R < 判定半径 R ⇒ 玩家恒在圈内（数学必然），
-	# 所以"灯心明显偏心"和"贴身怪不漏"可以同时成立。
-	# 顺序是"先用相位、再自增"：第一次脉冲落在 0°（正右），第二次 45°，第三次 90°（正下），
-	# 这样验收表 V-2/V-3 才说得通。写成先自增会让 V-2 变成 45°（斜下），对不上。
-	var off: Vector2 = Vector2.RIGHT.rotated(TAU * float(_lamp_step) / 8.0) * (radius * 0.40)
-	_lamp_step = (_lamp_step + 1) % 8
-	p.garlic_ring.position = base + off
-	return player.global_position + off
+	if p != null and p.garlic_ring.position != base:
+		p.garlic_ring.position = base
+	return player.global_position
 
 # ---------------------------------------------------------------- 迭代03 M-06：铜锣回响
 ## 开市锣的回响。判定口径与主敲一致（最近 cap 只），但**不碰资源点**：
@@ -1311,7 +1294,7 @@ const GLUE_TIME := 1.0
 ## 值必须是**真实存在的方法名**：断言会拿它跑 has_method()，重命名函数时这里会红。
 const EVOLVE_MECHANIC: Dictionary = {
 	"whip": "十字扫:_second_arc_v",
-	"halo": "灯心公转:_lamp_center",
+	"halo": "灯心同心:_lamp_center",            # 迭代04 D-14：撤回公转，灯心恒在角色脚下
 	"glowstick": "糖水粘连:update_bullets",      # 敌人侧落在 Enemy.apply_root
 	"gong": "回响:_gong_echo",
 	"inkline": "穿透累进:update_bullets",

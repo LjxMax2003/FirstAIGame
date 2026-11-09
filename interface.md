@@ -67,6 +67,7 @@
 | **T-18** | **迭代 02 代码落地（主线 + 3 配套）** | **迭代** | **✅ 已完成：S-01 三配方 / S-02 卡面三态 / S-03 空箱横幅 / S-04 术语收口 / S-05 九把全覆盖 / C-01 推镜 / N-01 环绕 2→3 / U-01 开脸徽章；双轨见 §3.3** | **team-lead** |
 | **T-19** | **迭代 03 代码落地（进化机制化 B0~B5）** | **迭代** | **✅ 已完成：M-01 声明位 / M-02 十字扫 / M-03 灯心公转 / M-04 门神镇守 / M-05 糖水粘连 / M-06 铜锣回响 / M-07 墨线穿透累进 / M-08 视觉分层 / M-09 文档同步 + `05` 21 处重锚 / U-02 三处音效 / C-02 旧墓砖；双轨见 §3.4** | **code-orchestrator** |
 | **T-20** | **迭代 04 代码落地（升级选卡界面重构 B0~B5）** | **迭代** | **✅ 已完成：UI-01 层级 20 / UI-02 双层墨幕 / UI-03 伪 3D 五线索 / UI-04 入场 0.42s / UI-05 出场 0.27s+输入锁 / UI-06 悬停 / UI-07 连升不重播标题 / UI-02b 战场降调 / B5 探针 `LevelUpShot` + 六处文档；双轨见 §3.5** | **code-orchestrator** |
+| **T-21** | **迭代 04 收尾（花灯灯心同心 + 过期测试/截图/旧题材清理）** | **迭代** | **✅ 已完成：D-14 撤回 M-03 公转（`_lamp_center` 恒等 + `Player` 每帧钉回 base + 声明表改「灯心同心」）/ D-15 清理 `assets/art/`、`shots/` 旧图、`tests/`、30 个旧探针；双轨见 §3.6** | **code-orchestrator** |
 | **T-14** | **整编收口 + 治理状态总线** | **7** | **✅ `project-design-db-v1.0.md`；三遍审计 / 8 条裁定 / 11 条缺陷总账** | **team-lead** |
 
 ### 2.2 上一轮：表现层 v9
@@ -122,7 +123,7 @@
 |---|---|---|
 | M-01 声明位 | `EVOLVE_MECHANIC` 9 条、键全在 `WeaponDB.ORDER`、值为「机制名:落点函数」两段式 | ✅ SmokeTest `_step13` 3 条断言绿 |
 | M-02 十字扫 | 师刀第二刀方向与第一刀垂直（dot < 0.1） | ✅ dot ≈ 0；正上方第 1 刀不中、第 2 刀命中 |
-| M-03 灯心公转 | 连采 8 次方位集合 = 8、偏移 = `0.40R`、判定真的跟随 | ✅ HaloLogic ⑪ C-1~C-4 全绿；R=190.4 / 偏移 76.2；+X 命中、-X 不中 |
+| M-03 灯心公转 | 连采 8 次方位集合 = 8、偏移 = `0.40R`、判定真的跟随 | ✅ HaloLogic ⑪ C-1~C-4 全绿；R=190.4 / 偏移 76.2；+X 命中、-X 不中。**⚠️ 已于 2026-11-09 按 §6.7 D-14 撤回：现行口径为「灯心同心」，`HaloLogic` ⑪ 已改写为 C-1~C-3 同心用例；本行仅作历史留档** |
 | M-04 门神镇守 | 落点命中后 4s 内 `is_slowed()` 恒真 | ✅ `_slow_left = 4.00` |
 | M-05 糖水粘连 | 首跳定身 1.0s 位移 < 0.5px；2.5s 免疫窗口内第二次 `false` | ✅ 位移 0.00；第二次 false |
 | M-06 铜锣回响 | 单只 0.5s 吃 2 次、总伤/单次 = 1.45 ± 0.01 | ✅ 单次 42.0、比值 1.450 |
@@ -132,7 +133,7 @@
 | U-02 音效 | 升级 / 主菜单 / 死亡重开三处确认音 | ✅ `ActiveSkill` / `MainMenu` / `DeathUI` 各 1 行；V5InGame 165/0 |
 | C-02 旧墓砖 | 街区外（>760px）换 `TOMB_TILE`，街区内仍 `GROUND_TILE` | ✅ `Ground._draw` 按格选贴图；未单独截图（本轮只做代码路径核对） |
 | 双轨验证 | 窗口实跑 + headless 冒烟 + 数值脚本 | ✅ `SmokeTest` 340 ok / FAIL 0 / exit 0；`HaloLogic` 37/0；`FxInGame` 18/0（窗口，`frame_post_draw` 需渲染）；`V5InGame` 165/0；`V71Content` 66/0；`check_numeric_tables.py` PASS 314 / FAIL 0 / exit 0；全程无 SCRIPT ERROR / PARSE ERROR |
-| M-03 视觉 V-1~V-4 | 像素阈值 0.18、饱和 ≥0.45、容差 7%；截图 `shots/m03_*.png` | ✅ `HaloShot` 8/8（V-1 188/189、V-2 113/264、V-3 113/264、V-4 117/118；偏差 ≤1.7%） |
+| M-03 视觉 V-1~V-4 | 像素阈值 0.18、饱和 ≥0.45、容差 7%；截图 `shots/m03_*.png` | ✅ `HaloShot` 8/8（V-1 188/189、V-2 113/264、V-3 113/264、V-4 117/118；偏差 ≤1.7%）。**⚠️ 已于 2026-11-09 按 D-14 撤回：改为「受击前/后四向边距判读」，见 §3.6；旧截图已按 D-15 清理** |
 | 缺口（如实登记） | 实机「主菜单→开始→升级→暂停→死亡→商店→重开」每步有声的人工听觉走查 | ⚠️ **未做人工听觉走查**（U-02 代码路径已证 + V5InGame/动手音效调用点均在，见 §6.5 Q18） |
 
 **占位与资产**：本轮零新增资产（M-05 糖浆复用 `burst_ellipse`；M-08 复用既有 shader）；无【待资产块交付】。**待数据层登记 1 项**：`04` 图鉴机制句尚未进 `EvolutionDB`（需结构增字段，见 §6.5 Q17）。
@@ -156,6 +157,24 @@
 | 缺口（如实登记） | 真人手指连点 3 个升级的观感确认 | ⚠️ 自动化已覆盖输入锁与连升；**真人观感走查未做** → 【需人工介入（仅观感走查）】，见 §6.6 Q21 |
 
 **占位与资产**：本轮零新增资产（墨幕 `Gradient`/`GradientTexture2D`、扫光 `Gradient` 均 runtime 生成；投影/厚度复用 `UI_CARD_FRAME`）；无【待资产块交付】、无【待数据层登记】。
+
+### 3.6 迭代 04 收尾验收结论（代码落地后实测，2026-11-09）
+
+**用户反馈**：花灯开脸后一旦受击，环形圈与角色错位 —— 视觉中心与判定中心都不在角色身上，但贴身的怪仍能打到人（截图已归档）。**根因** = 迭代 03 M-03「灯心公转」（每脉冲把 `GarlicRing.position` 平移 `0.40R`，8 方位轮转，实测偏移 76.2px ≈ 0.40×190.4）。**裁定** = 撤回该机制（§6.7 D-14）。
+
+| 项 | 判据 | 实测 |
+|---|---|---|
+| D-14a 判定圆心 | `WeaponManager._lamp_center()` 恒返回 `player.global_position`，且顺手把 `garlic_ring.position` 钉回 base | ✅ 代码为首末两行；无 `_lamp_step` 残留（`grep` 0 命中） |
+| D-14b 视觉圆心 | `Player._physics_process` 每帧 `garlic_ring.position = (0, -ART_FOOT_OFFSET)` | ✅ `HaloShot` 受击后 / 脉冲后两条结构断言绿 |
+| D-14c 声明表 | `EVOLVE_MECHANIC["halo"] = "灯心同心:_lamp_center"`，全表仍 9 条两段式 | ✅ `SmokeTest._step13` 条数与格式断言绿 |
+| D-14d 受击前后像素 | 四向（左/右/上/下）边距 = `halo_radius()` ±7%，受击后无偏移 | ✅ `HaloShot` 10/10；截图 `shots/halo_before.png` / `shots/halo_after_hit.png` |
+| D-14e 判定对称性 | 以角色为圆心：±0.90R 都命中、+1.10R 不命中 | ✅ `HaloLogic` ⑪ C-3 + `SmokeTest` 4 条断言 |
+| D-15 清理 | 删 `assets/art/`（旧题材 68 文件）、`shots/` 旧图 132 文件（仅留本轮两张证据）、`tests/` 4 文件、30 个旧探针（保留 10 个现行探针） | ✅ 删除后 `SmokeTest` 仍 `340 ok / 0 FAIL / exit 0`，资源齐备性守卫绿 |
+| 双轨验证 | headless 冒烟 + 数值脚本 + 窗口视觉 | ✅ `SmokeTest` 340 ok / 0 FAIL / exit 0；`HaloLogic` 37/0 / exit 0；`HaloShot` 10/10 / exit 0（窗口）；`python` PASS 314 / FAIL 0 / exit 0；全程无 SCRIPT ERROR / PARSE ERROR |
+| 文档回写 | `04` 机制句 / `05` 表 C 行 + 符号引用 / `06` 注记 / 迭代 03 历史件撤回注记 | ✅ 5 处已改 |
+| 缺口（如实登记） | 实机连续受击 5 次的手指观感 | ⚠️ 自动化已覆盖受击前后像素；**真人对连击观感未做** → 【需人工介入（仅观感走查）】，见 §6.7 Q22 |
+
+**占位与资产**：撤回动作零新增 / 零删除资产（`GarlicRing` 四层视觉与贴图全复用）；清理项不计入资产账。无【待资产块交付】、无【待数据层登记】。
 
 ---
 
@@ -217,6 +236,16 @@
 - **文档同步** `05`（表 C 行为机制列 + §4 R-29~R-31 + 21 处行号重锚）、`02`（唯一写入者 +2 行）、`04`（6 条机制句）、`06`（零新增资产确认）、`docs/design/tools/check_numeric_tables.py`（`xp_for_level` 锚 530→531）
 - **锁区遵守**：`MetaSave` / `Game.coin_reward()` / `ShopUI` / `TRACKS.mult` / 复活 / 局外经济**零改动**；`GarlicRing.gd` **零改动**（0 行）；`WeaponDB` 数值零改动；`scenes/*.tscn` 零改动；未提交 git（未收到提交指令）
 - **§8 停手信号核对**：未新增 DOT / 拉拽 / 距离场类能力字段（M-05 的 `_root_left` / `_root_immune` / `_root_tinted` 是主件 §5.3 自身规定的定身字段）；未给 `EnemyPool` 加 `farthest`；未改 `EvolutionDB` 结构；未扩 `Audio.play_sfx` 签名（已有 `extra_db`）→ **四项均未触发能力集扩展**
+
+**迭代 04 收尾 · 改动范围预声明（已执行完毕，L1 自动 / L2 删除经用户指令「/goal 解决问题…②清理以前的测试、截屏、前一个题材的内容」确认）**：
+- **修改** `scripts/weapons/WeaponManager.gd`（撤销 `_lamp_step` 成员；`_lamp_center()` 重写为恒等 + 钉回 base；`EVOLVE_MECHANIC["halo"]` 改「灯心同心」）
+- **修改** `scripts/Player.gd`（`_physics_process` 顶部恢复每帧钉回 `garlic_ring.position = (0, -ART_FOOT_OFFSET)`；§6.5 Q16 的「让出写入权」按 D-14 回滚）
+- **修改** `scripts/Art.gd`（1 行注释：旧目录 `assets/art/` 已清理）
+- **修改** `tools/SmokeTest.gd`（`_step13` M-03 段改同心 4 条断言）、`tools/HaloLogic.gd`（用例⑪ 改写为 C-1~C-3）、`tools/HaloShot.gd`（整份重写：受击前/后四向边距判读 + 2 条结构断言）
+- **删除（L2，已授权）** `assets/art/` 全目录 68 文件、`shots/` 旧图 132 文件（仅保留本轮 `halo_before.png` / `halo_after_hit.png` 两张证据）、`tests/` 全目录 4 文件、`tools/` 30 个旧探针（各 `.gd` / `.gd.uid` / `.tscn`，另含 `SpriteBounds`/`V6Art` 无 tscn）
+- **保留探针 10 个**：`SmokeTest` / `HaloLogic` / `HaloShot` / `CardShot` / `LevelUpShot` / `FxInGame` / `V5InGame` / `V71Content` / `BladeLogic` / `HudFxGap`
+- **文档同步** `04`（`evolve_halo` 机制句）、`05`（表 C `SK_E_HALO` 行 + 符号引用替换行号）、`06`（迭代 03 确认段撤回注记）、`iteration-03-evolve-mechanic.md` / `iteration-03-handoff.md` / `versions/iteration-03-handoff-v2.md`（M-03 撤回注记）、`docs/design/tools/check_numeric_tables.py`（`xp_for_level` 锚 531→530）
+- **锁区遵守**：`MetaSave` / `Game.coin_reward()` / `ShopUI` / `TRACKS.mult` / 复活 / 局外经济**零改动**；`WeaponDB` 数值零改动；`EvolutionDB` 结构与 9 配方零改动；`GarlicRing.gd` 零改动（0 行）
 
 **迭代 04 · 代码批次改动范围预声明（L2 经用户指令「继续根据文件，完成godot4.7.2的游戏代码」+ `iteration-04-handoff.md` 确认）**：
 - **整份替换** `scenes/ui/LevelUpUI.tscn`（`layer=20` + `Vignette` + 2 个 `GradientTexture2D`；46→约 70 行）
@@ -323,6 +352,17 @@
 | Q20 | §13 五条（层级归位 / 符号引用 / tilt 3.2 / exit 0.27 / 战场降调）无用户逐条点头 | **按执行单推荐值落地**（D-6/D-8/D-9 即回滚锚点）。如需改回任一项，按 D-6~D-9 单点回滚即可，不牵连其他批 |
 | Q21 | 真人观感走查（连升三批不闪标题、悬停扫光、出场翻面） | 自动化已覆盖（`LevelUpShot` 33/0）；**真人手指连点 3 个升级的观感未做** →【需人工介入（仅观感走查）】 |
 
+### 6.7 迭代 04 收尾决策与偏离登记（2026-11-09）
+
+| # | 议题 | 结论 / 状态 |
+|---|---|---|
+| **D-14** | **撤回 M-03「灯心公转」，改「灯心同心」（用户截图裁定）** | 用户报「开脸花灯受击后环与角色错位，但贴身怪照样打到人」。根因 = M-03 每脉冲把 `GarlicRing.position` 平移 `0.40R`（实测 76.2px），系列化设计使视觉圈与判定圈一起离身；玩家读作「技能中心不在我身上」。裁定：① `WeaponManager._lamp_center()` 改写为恒等（顺手把 `garlic_ring.position` 钉回 base，删 `_lamp_step`）；② `Player._physics_process` 顶部恢复每帧钉回 base（回滚 §6.5 Q16 的「让出写入权」）；③ `EVOLVE_MECHANIC["halo"]` 改「灯心同心:_lamp_center」（保持 9 条两段式，`_step13` 结构断言不动）。**判定半径 / 伤害 / 平衡零改动**，只把圆心拉回角色 |
+| **D-15** | **清理范围与保留清单（用户指令「清理以前的测试、截屏、前一个题材的内容」）** | **删**：`assets/art/`（奶茶题材 68 文件，唯一引用者 `tools/SpriteBounds.gd` 同为删除项）、`shots/` 旧图 132 文件、`tests/` 全目录（`FuncMagnetVacuumMoveFloat` 4 文件）、`tools/` 30 个旧探针（`.gd`/`.gd.uid`/`.tscn`）。**留**：10 个现行探针（`SmokeTest`/`HaloLogic`/`HaloShot`/`CardShot`/`LevelUpShot`/`FxInGame`/`V5InGame`/`V71Content`/`BladeLogic`/`HudFxGap`）+ 本轮两张证据截图。**不动**：`assets/art_shouyiren/`、`assets/audio/`、`assets/shaders/`、`tools/godot.zip`、`tools/godot46/`、`release/`、`.screenshots/`（不属用户点名的三类） |
+| D-14a | 测试同步（三套） | `SmokeTest._step13` M-03 段 → 4 条同心断言；`HaloLogic` ⑪ → C-1~C-3（未开脸 8 次恒 base / 开脸后 8 次仍恒 base / 判定左右对称）；`HaloShot` 整份重写 → 受击前/后两图 + 四向边距（TOL 7%）+ 2 条结构断言。**判据未放宽** |
+| D-14b | **`check_numeric_tables.py` 锚点 531→530（工具侧）** | `Player.gd` 顶部净减 1 行（新增 5 行 + 删旧 6 行注释），`xp_for_level` 常量从 531 落到 530 → 锚点同步；`05` §1 行号引用一并改 `529-530` / `523-527` |
+| **Q22** | 实机连续受击 5 次的观感走查 | 自动化已覆盖受击前后像素与同心结构；**真人手指连击观感未做** →【需人工介入（仅观感走查）】 |
+| **Q23** | `shots/` 只留本轮两张证据，旧截图全删 | 用户指令明确要求清理截屏；历史验证截图已无留档。如需追溯迭代 03 像素读数，只有 `interface.md` §3.4 的文字读数可用 |
+
 ---
 
 ## 七、INTERFACE_MANIFEST
@@ -417,3 +457,5 @@
 | 2026-11-09 | iter-03-code-git | **本地留痕完成**：提交 `9e4fc1d`（迭代 02+03 累计 50 文件 / +2722 / −100）+ 附注标签 `iter-03-code`；`interface.md` 首次入库。**推送未完成**：`git push origin main` 与 tag 两次失败（`github.com:443` 连接重置 / 21s 超时，沙箱内外一致），见 §6.5 Q19。**复验**：`check_numeric_tables` PASS 314 / FAIL 0；`SmokeTest` 全部通过（含 M-06 实测 1.450 ±0.01）；`HaloLogic` 37/0；`FxInGame` PASS；`V5InGame` 165/0；`V71Content` 66/0；`HaloShot` 8/8；全程无 SCRIPT ERROR / PARSE ERROR。 | code-orchestrator |
 | **2026-11-09** | **iter-04-levelup-ui** | **迭代 04 升级选卡界面重构代码落地**（code-orchestrator 按 `iteration-04-handoff.md` B0→B5 拆解，`ui-scene-building` 主执行、`gameplay-logic`/`architecture-data-layer` 本轮无接口改动）：UI-01 `LevelUpUI.tscn` `layer=20`（盖住 HUD 10）；UI-02 `Mask`（纯色 0→0.80）+ `Vignette`（径向 0→1.0，`GradientTexture2D` 256²）；UI-03 伪 3D 五线索（三层投影 `y=24/17/11` `a=0.26/0.14/0.07` 复用 `UI_CARD_FRAME` + 右侧厚度 + `TILT_DEG 3.2`/`SIDE_SCALE 0.965` 插值位姿 + 移入扫光一次）；UI-04 `_enter()` 0.42s 错峰（`K_ENTER_STAGGER 0.055`，`TRANS_BACK`）；UI-05 `_exit()` 0.27s（被选卡 `scale:x→0.02` + 上移 50 / 落选 ±14° + 下移 36）+ `_picking` 输入锁；UI-06 `_hover()` 转正/上移 12px/`1.055`/投影 `a×0.55`·`y×1.35`；UI-07 `_first_show` 连升不重播标题；UI-02b `World.modulate → (0.58,0.56,0.66)`；配套 `PauseUI` layer 9→21、`DeathUI` 补 `layer=22`；`SmokeTest` 时序适配 + `_prep` 清零 `xp`（D-11/D-13）；`CardShot` 文件头 +3 行；**新增 `tools/LevelUpShot.gd/.tscn`**（33 断言 + 4 张截图，几何实测三卡底边 y=[280,280,280]、投影最大间距 31px）。**验收：`SmokeTest` 340 ok / 0 FAIL / exit 0（headless）、`LevelUpShot` 33/0 / exit 0（窗口）、`CardShot` PASS / FAIL 0、`python` PASS 314 / FAIL 0 / exit 0，无 SCRIPT ERROR / PARSE ERROR**。偏离 handoff 3 处（D-7 `_enter` 调用位置、D-8 `deg_to_rad(14)`、D-9 出场补撤墨幕）+ 测试侧 3 处（D-11/D-12/D-13）已登记 §6.6；锁区零改动（`MetaSave`/`coin_reward`/`ShopUI`/`TRACKS.mult`/复活/局外经济）。 | code-orchestrator |
 | 2026-11-09 | iter-04-git | **本地留痕完成**：提交 `64ce6c3`（9 文件 / +676 / −30，含新增 `LevelUpShot.gd/.tscn`）+ 附注标签 `iter-04-code`。**推送**：本轮再次尝试 `git push origin main`（结果按实际登记于 §6.5 Q19，不假装成功）。**复验**：`SmokeTest` 340/0/exit 0、`LevelUpShot` 33/0/exit 0、`CardShot` PASS、`python` 314/0/exit 0。**versions 归档**：本轮无被取代的旧版本（`iteration-04-levelup-ui.md` 与 `iteration-04-handoff.md` 仍为现行件），`docs/design/versions/` 无新增。 | code-orchestrator |
+| **2026-11-09** | **iter-04-fix-halo** | **花灯灯心同心（撤回 M-03 公转，用户截图裁定）**：`WeaponManager._lamp_center()` 改写为恒等 + 钉回 base（删 `_lamp_step`）；`Player._physics_process` 顶部恢复每帧钉回 `Vector2(0, -ART_FOOT_OFFSET)`；`EVOLVE_MECHANIC["halo"]` 改「灯心同心:_lamp_center」（仍 9 条两段式）。测试同步三套：`SmokeTest._step13` 4 条同心断言、`HaloLogic` ⑪ 改 C-1~C-3、`HaloShot` 整份重写（受击前/后两图 + 四向边距 TOL 7% + 2 条结构断言，期望半径从 `halo_radius()` 动态取）。**验收**：`SmokeTest` 340 ok / 0 FAIL / exit 0（headless）、`HaloLogic` 37/0 / exit 0、`HaloShot` 10/10 / exit 0（窗口，截图 `shots/halo_before.png` / `halo_after_hit.png`）、`python` PASS 314 / FAIL 0 / exit 0；无 SCRIPT ERROR / PARSE ERROR。**判定半径 / 伤害 / 平衡零改动**。 | code-orchestrator |
+| **2026-11-09** | **iter-04-cleanup** | **过期内容清理（用户指令「清理以前的测试、截屏、前一个题材的内容」）**：删 `assets/art/`（奶茶题材 68 文件）、`shots/` 旧图 132 文件（仅留本轮两张证据）、`tests/` 全目录 4 文件、`tools/` 30 个旧探针；保留 10 个现行探针。`Art.gd` 1 行注释同步。删除后 `SmokeTest` 复跑仍 `340 ok / 0 FAIL / exit 0`（资源齐备性守卫绿）。详见 §6.7 D-15 / Q23。 | code-orchestrator |

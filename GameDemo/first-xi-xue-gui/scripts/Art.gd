@@ -3,7 +3,7 @@ class_name Art
 
 # 资源路径集中管理：美术换图只改这里，脚本里不出现裸路径。
 # 全部来自 assets/art_shouyiren/**.svg（守艺人·百工夜行），Godot 导入为纹理，按原尺寸 1:1 使用。
-# 旧目录 assets/art/（奶茶题材）按换皮方案红线 3 原样保留，随时可切回。
+# 旧目录 assets/art/（奶茶题材）已按迭代04 D-15 清理，本工程只剩守艺人一套资产。
 
 # ---- 角色
 const PLAYER := "res://assets/art_shouyiren/characters/shouyiren_front.svg"

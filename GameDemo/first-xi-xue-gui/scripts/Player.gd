@@ -140,11 +140,10 @@ func _load_frame_list(paths: Array[String]) -> Array[Texture2D]:
 
 func _physics_process(delta: float) -> void:
 	elapsed += delta
-	# 【迭代03 M-03 偏离登记】这里原本有一行"每帧把 garlic_ring.position 写回 (0,-18)"
-	# 的防御兜底。M-03 要求开脸后由 WeaponManager._lamp_center() 把整个环平移到偏心位置，
-	# 每帧写回会把它立刻抹掉（表现为"环永远在圆心，判定圆在动"）。
-	# 该兜底是为修"移动后中心点变了"，但实测漂移恒为 0，且 _lamp_center 每次脉冲都会重锚，
-	# 因此按 M-03 让出写入权，仅在 _ready（含复活重载场景）写一次。
+	# 【迭代04 收尾 D-14】灯心恒在角色身上：GarlicRing 的 position 只有本处与
+	# WeaponManager._lamp_center() 会写，这里每帧钉回 base，
+	# 保证受击 / 冲刺 / 复活 / 换装后"视觉圈—判定圈—角色"三者永远同圆心。
+	garlic_ring.position = Vector2(0.0, -ART_FOOT_OFFSET)
 	if not GameManager.started:
 		velocity = Vector2.ZERO
 		moving = false

@@ -1881,30 +1881,26 @@ func _step13_evolve_mechanic() -> void:
 	await _wait(0.22)
 	_check(above.hp < 99999.0 - 0.01, "M-02 第二刀（竖）打到正上方 80px（%.1f）" % above.hp)
 
-	# ---- M-03 灯心公转：判定跟着灯心走
+	# ---- 花灯灯心同心（迭代04 D-14：M-03 的 8 方位公转已撤回）
 	_enemies.clear_all()
 	_weapons.owned = {"halo": 8}
 	_weapons.evolved = {"halo": "evolve_halo"}
 	_weapons._cd = {"halo": 999.0}
-	_weapons._lamp_step = 0
 	await _wait_frames(2)
 	var hr: float = _weapons.halo_radius()
-	var hp_pos: Vector2 = _player.global_position + Vector2(hr * 0.40, 0.0)
-	# 反侧必须放到灯心半径之外：灯心在 +0.40R，敌人在 -d 时距灯心 d+0.40R，
-	# 要 > R 才能证明"判定确实偏了"；这里取 d = 1.10R ⇒ 距灯心 1.50R（留足余量，避开分离位移）。
-	# （主件原写"两只都放 0.40R"，几何上 -0.40R 距灯心只有 0.80R < R，恒命中，不能用来证明偏心。）
-	var hm_pos: Vector2 = _player.global_position + Vector2(-hr * 1.10, 0.0)
-	var e_plus: Enemy = _enemies.spawn(hp_pos, 99999.0, 0.0, 1, "cup", false)
-	var e_minus: Enemy = _enemies.spawn(hm_pos, 99999.0, 0.0, 1, "cup", false)
-	await _wait_frames(1)
 	var hbase: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
-	_weapons._lamp_step = 0
+	# 左右各放 0.90R（圈内）+ 右侧 1.10R（圈外）。只要灯心还偏心 0.40R，
+	# 左侧 -0.90R 距灯心 1.30R 就会漏 —— 这条同时守住"同心"和"半径边界"。
+	var e_left_in: Enemy = _enemies.spawn(_player.global_position + Vector2(-hr * 0.90, 0.0), 99999.0, 0.0, 1, "cup", false)
+	var e_right_in: Enemy = _enemies.spawn(_player.global_position + Vector2(hr * 0.90, 0.0), 99999.0, 0.0, 1, "cup", false)
+	var e_out: Enemy = _enemies.spawn(_player.global_position + Vector2(hr * 1.10, 0.0), 99999.0, 0.0, 1, "cup", false)
+	await _wait_frames(1)
 	_weapons.fire_halo(_player)
-	var hoff: Vector2 = _player.garlic_ring.position - hbase
-	_check(absf(hoff.length() - hr * 0.40) < 0.01,
-		"M-03 灯心偏移 == 0.40R（实测 %.2f / 期望 %.2f）" % [hoff.length(), hr * 0.40])
-	_check(e_plus.hp < 99999.0 - 0.01, "M-03 灯心在 +X 时命中 +X 侧")
-	_check(is_equal_approx(e_minus.hp, 99999.0), "M-03 灯心在 +X 时 -X 侧不吃伤害（实测 %.1f）" % e_minus.hp)
+	_check(_player.garlic_ring.position.is_equal_approx(hbase),
+		"花灯灯心恒在角色脚下（ring.position = %s）" % str(_player.garlic_ring.position))
+	_check(e_left_in.hp < 99999.0 - 0.01, "花灯判定左侧 -0.90R 命中（实测 %.1f）" % e_left_in.hp)
+	_check(e_right_in.hp < 99999.0 - 0.01, "花灯判定右侧 +0.90R 命中（实测 %.1f）" % e_right_in.hp)
+	_check(is_equal_approx(e_out.hp, 99999.0), "花灯判定 +1.10R 不命中（实测 %.1f）" % e_out.hp)
 
 	# ---- M-04 门神镇宅：落点减速 4s
 	_enemies.clear_all()

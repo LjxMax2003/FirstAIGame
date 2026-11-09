@@ -1,9 +1,0 @@
-[gd_scene load_steps=3 format=3]
-
-[ext_resource type="Script" path="res://tools/V6Look.gd" id="1_v6look"]
-[ext_resource type="PackedScene" path="res://scenes/Game.tscn" id="2_game"]
-
-[node name="V6Look" type="Node"]
-script = ExtResource("1_v6look")
-
-[node name="Game" parent="." instance=ExtResource("2_game")]

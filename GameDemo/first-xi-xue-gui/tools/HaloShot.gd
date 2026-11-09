@@ -1,26 +1,23 @@
 extends Node2D
 
 # ============================================================================
-# M-03 视觉判读探针（V-1~V-4）
+# 迭代04 收尾（D-14）：花灯视觉圈与角色同心 —— 受击前 / 受击后两张截图 + 四向边距读数
 # ----------------------------------------------------------------------------
-# 判读规矩：数点亮像素并给阈值，不用眼睛估；期望值来自主件（190.4 / 76.2 /
-# 114.2 / 266.6），不是从运行结果反推。
+# 【这条探针守的是用户报的那个现象】开脸花灯曾经把整个环绕角色 8 方位轮转
+# （偏移 0.40R，迭代03 M-03）。玩家看到的是"环跑到右边去了，人还站在圈外，
+# 但贴身的怪照样能打到人"。M-03 已撤回：判定圆心 / 视觉圆心 / 角色恒为同一点。
 #
-# 量的是"玩家身体中心 → 光环外沿"的距离：
-#   V-1 开脸前 = 190.4 / 190.4
-#   V-2 第 1 脉冲（灯心 +X）= 114.2 / 266.6（左 / 右）
-#   V-3 第 3 脉冲（灯心 +Y）= 114.2 / 266.6（上 / 下）
-#   V-4 复位 = 190.4 / 190.4
+# 量的是"玩家身体中心 → 光环外沿"的距离，四向（左/右/上/下）都必须 ≈ halo_radius()。
+# 期望值从 `halo_radius()` 取，不写死 190.4 —— 被动 / 精炼一变，探针跟着变。
 #
 # ⚠️ 不能加 --headless：要读真实渲染出来的像素。
 #     godot --path . res://tools/HaloShot.tscn
 #
 # 为压掉干扰，只留玩家 + 光环：背景 / 地面 / 道具 / HUD / 掉落全部隐藏。
-# 阈值：亮度 v >= 0.18 记为点亮（本作光环灯笼在纯黑底上的实测值远高于它）。
+# 阈值：饱和度 s >= 0.45 且亮度 v >= 0.35 记为灯笼本体（暖雾底光会被排除）。
 # ============================================================================
 
 const GAME := "res://scenes/Game.tscn"
-const DARK := 0.18
 const TOL := 0.07   # 7%：灯笼外沿是 97.3% 半径（见 HaloLogic ①），留软边余量
 
 var _game: GameScene
@@ -50,34 +47,35 @@ func _ready() -> void:
 	# 只留玩家与光环：把所有会污染像素的东西关掉
 	_game.get_node("UI").visible = false
 	_game.get_node("BG").visible = false
-	# 只留 Player（光环是它的子节点）；World 下的地面 / 道具 / 池子全关，
-	# 否则屏幕边角的灯笼柱与木箱会被当成"圈外的亮像素"读到。
 	for child in _game.get_node("World").get_children():
 		if child != _player and child is CanvasItem:
 			(child as CanvasItem).visible = false
 	GameManager.started = true
-	# 关掉武器自动开火：本轮只手动推进 _lamp_step，避免等待期多转一格
-	_weapons.set_process(false)
+	_weapons.set_process(false)   # 关自动开火：只手动脉冲
 
-	print("\n===== M-03 视觉判读（像素阈值 %.2f，容差 %.0f%%）=====" % [DARK, TOL * 100.0])
+	var base: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
 
 	await _equip(8, true)
+	await _frames(4)
+	var r: float = _weapons.halo_radius()
+	print("\n===== 花灯同心视觉判读（期望半径 %.1f，容差 %.0f%%）=====" % [r, TOL * 100.0])
+
+	# ① 受击前：四向边距都 ≈ R
+	await _shot("halo_before", "受击前", r)
+
+	# ② 受击瞬间：闪白 / 抖屏 / 击退全都发生，环必须仍以角色为圆心
+	_player.take_damage(5.0, &"probe")
+	await _frames(8)
+	await _shot("halo_after_hit", "受击后（反馈进行中）", r)
+
+	# ③ 结构断言：GarlicRing 节点局部位置恒为 base（视觉四层都以它原点为圆心）
+	_check(_player.garlic_ring.position.is_equal_approx(base),
+		"受击后 GarlicRing.position 仍是 %s（实测 %s）" % [str(base), str(_player.garlic_ring.position)])
+	# ④ 结构断言：判定圆心与角色同点（fire_halo 每次都会先复位）
+	_weapons.fire_halo(_player)
 	await _frames(2)
-	await _shot("v1_step0", "V-1 开脸瞬间（第 0 脉冲，未转）", Vector2(190.4, 190.4), true)
-
-	await _pulse()
-	await _shot("v2_pulse1_right", "V-2 第 1 脉冲（灯心 +X）", Vector2(114.2, 266.6), true)
-
-	await _pulse()
-	await _pulse()
-	await _shot("v3_pulse3_down", "V-3 第 3 脉冲（灯心 +Y）", Vector2(114.2, 266.6), false)
-
-	# V-4：复位分支（未开脸 → 写回 base）。复活在局外经济锁区里没有实机路径，
-	# 所以用"卸下花灯"等价触发同一分支；此时常驻圈半径回到未进化的 119。
-	_weapons.evolved = {}
-	await _pulse()
-	await _frames(2)
-	await _shot("v4_reset", "V-4 复位（未开脸分支）", Vector2(119.0, 119.0), true)
+	_check(_player.garlic_ring.position.is_equal_approx(base),
+		"脉冲后 GarlicRing.position 仍是 %s（实测 %s）" % [str(base), str(_player.garlic_ring.position)])
 
 	print("\n---------- 汇总 ----------")
 	if _bad.is_empty():
@@ -102,61 +100,62 @@ func _frames(n: int) -> void:
 	for i in n:
 		await get_tree().process_frame
 
-## 手动推一次灯心脉冲，然后把 cd 钉死（防自动开火插进来多转一格）
-func _pulse() -> void:
-	_weapons.fire_halo(_player)
-	_weapons._cd["halo"] = 999.0
-	await _frames(2)
+func _check(cond: bool, msg: String) -> void:
+	if cond:
+		_ok += 1
+	else:
+		_bad.append(msg)
+	print("  %s %s" % ["ok  " if cond else "FAIL", msg])
 
 # ---------------------------------------------------------------- 截图 + 量尺
-func _shot(tag: String, title: String, expect: Vector2, horizontal: bool) -> void:
+func _shot(tag: String, title: String, expect_r: float) -> void:
 	await RenderingServer.frame_post_draw
 	var img: Image = get_viewport().get_texture().get_image()
-	img.save_png("res://shots/m03_%s.png" % tag)
+	img.save_png("res://shots/%s.png" % tag)
 	var c: Vector2 = _player.get_global_transform_with_canvas() * Vector2(0.0, -Player.ART_FOOT_OFFSET)
 	var sx: float = float(img.get_width()) / get_viewport().get_visible_rect().size.x
 	var cx: int = int(round(c.x * sx))
 	var cy: int = int(round(c.y * sx))
-	var a: int = _scan(img, cx, cy, -1, horizontal)
-	var b: int = _scan(img, cx, cy, 1, horizontal)
-	var m1: float = float(absi(a - (cx if horizontal else cy))) / sx
-	var m2: float = float(absi(b - (cx if horizontal else cy))) / sx
-	var lo: float = minf(m1, m2)
-	var hi: float = maxf(m1, m2)
-	var e_lo: float = minf(expect.x, expect.y)
-	var e_hi: float = maxf(expect.x, expect.y)
-	print("\n[%s] 截图 res://shots/m03_%s.png  body=(%d,%d)  scale=%.3f" % [title, tag, cx, cy, sx])
-	_judge(lo, e_lo, "%s 近侧" % title)
-	_judge(hi, e_hi, "%s 远侧" % title)
+	print("\n[%s] 截图 res://shots/%s.png  body=(%d,%d)  scale=%.3f" % [title, tag, cx, cy, sx])
+	# 四向各读一条边距：左 / 右沿水平轴，上 / 下沿垂直轴
+	_edge(img, cx, cy, Vector2(-1, 0), sx, "左", expect_r)
+	_edge(img, cx, cy, Vector2(1, 0), sx, "右", expect_r)
+	_edge(img, cx, cy, Vector2(0, -1), sx, "上", expect_r)
+	_edge(img, cx, cy, Vector2(0, 1), sx, "下", expect_r)
 
-func _judge(v: float, e: float, msg: String) -> void:
-	var ok: bool = absf(v - e) / e <= TOL
+func _edge(img: Image, cx: int, cy: int, dir: Vector2, sx: float, label: String, expect_r: float) -> void:
+	var hit: int = _scan(img, cx, cy, dir)
+	var d: float = float(hit) / sx
+	var ok: bool = absf(d - expect_r) / expect_r <= TOL
 	if ok:
 		_ok += 1
 	else:
-		_bad.append(msg)
-	print("  %s 实测 %.1f / 期望 %.1f（偏差 %.1f%%）" % ["ok  " if ok else "FAIL", v, e, absf(v - e) / e * 100.0])
+		_bad.append("%s %s 边距 %.1f / 期望 %.1f" % [label, label, d, expect_r])
+	print("  %s %s 边距 %.1f / 期望 %.1f（偏差 %.1f%%）"
+		% ["ok  " if ok else "FAIL", label, d, expect_r, absf(d - expect_r) / expect_r * 100.0])
 
-## 从中心沿 dir(-1/1) 走；灯笼是一个个离散贴图，正轴线上可能正好落在两只之间，
-## 所以在垂直方向 ±18px 的带内取最外那颗，避免"轴线穿过灯笼缝隙"读到内沿。
-func _scan(img: Image, cx: int, cy: int, dir: int, horizontal: bool) -> int:
+## 从中心沿 dir 走到最后一颗"灯笼本体"像素，返回距离（像素，未换算）。
+## 灯笼是离散贴图，轴线可能正好落在两只之间，所以在垂直方向 ±18px 的带内取最外那颗。
+func _scan(img: Image, cx: int, cy: int, dir: Vector2) -> int:
 	var limit: int = 330
 	var start: int = 70   # 跳过玩家自己的像素
 	var best: int = 0
+	var horizontal: bool = absf(dir.x) > 0.5
 	for band in range(-18, 19):
-		var oy: int = cy + (band if horizontal else 0)
 		var ox: int = cx + (band if not horizontal else 0)
+		var oy: int = cy + (band if horizontal else 0)
 		if oy < 0 or oy >= img.get_height() or ox < 0 or ox >= img.get_width():
 			continue
 		var lit_to: int = -1
 		for i in range(start, limit):
-			var p: int = (cx + dir * i) if horizontal else (cy + dir * i)
-			if p < 0 or (horizontal and p >= img.get_width()) or ((not horizontal) and p >= img.get_height()):
+			var px_x: int = cx + int(dir.x) * i + (band if not horizontal else 0)
+			var px_y: int = cy + int(dir.y) * i + (band if horizontal else 0)
+			if px_x < 0 or px_x >= img.get_width() or px_y < 0 or px_y >= img.get_height():
 				break
-			var px: Color = img.get_pixel(p, oy) if horizontal else img.get_pixel(ox, p)
+			var px: Color = img.get_pixel(px_x, px_y)
 			# 只认灯笼本体（高饱和 + 够亮）；低饱和的暖雾底光会铺到 ~1.6R，不能当圈边。
 			if px.s >= 0.45 and px.v >= 0.35:
 				lit_to = i
 		if lit_to > best:
 			best = lit_to
-	return (cx + dir * best) if horizontal else (cy + dir * best)
+	return best

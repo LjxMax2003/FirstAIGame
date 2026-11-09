@@ -61,7 +61,7 @@ func _ready() -> void:
 	print("\n===== 花灯语义探针 =====")
 	await _case_visual_matches_hitbox()
 	await _case_not_orbiting()
-	await _case_orbits_when_evolved()
+	await _case_centered_when_evolved()
 	await _case_full_circle_one_frame()
 	await _case_outside_untouched()
 	await _case_pulse_cadence()
@@ -133,10 +133,9 @@ func _case_visual_matches_hitbox() -> void:
 		"最外可见像素（灯笼外沿）与判定半径偏差 %.1f%% < 5%%" % (absf(lantern_o - r) / r * 100.0))
 
 # ---------------------------------------------------------------- ② 不是环绕（未开脸的花灯）
-## 【迭代03 M-03 语义改口】这条现在测的是"**未开脸**的花灯不会偏心"。
-## 开脸后会整体绕玩家公转（见 ⑪），所以"不会绕圈"这个说法已不成立。
-## 断言本体不动（本用例跑在 evolved 为空的状态），保留它是白送的回归守卫：
-## 一旦 _lamp_center 的未开脸复位分支失效，这里会红。
+## 【迭代04 D-14 语义改口】M-03 的"开脸后公转"已撤回，开脸前后都不偏心（见 ⑪）。
+## 这条现在测的是"光环节点被钉在玩家身上、不自转"，是最基础的回归守卫：
+## 一旦 Player 每帧复位或 _lamp_center 的复位分支失效，这里会红。
 func _case_not_orbiting() -> void:
 	print("\n[②] 圈是钉在玩家脚下的，还是在绕圈飞")
 	var ring: GarlicRing = _player.garlic_ring
@@ -158,9 +157,13 @@ func _case_not_orbiting() -> void:
 		"光圈不自转（rotation 恒为 0）")
 	_check(_player.global_position.distance_to(p0) < 0.5, "玩家本身没被推走（对照组前提成立）")
 
-# ---------------------------------------------------------------- ⑪ 开脸后：灯心绕玩家公转（迭代03 M-03）
-func _case_orbits_when_evolved() -> void:
-	print("\n[⑪] 开脸后花灯是否整体偏心轮转（M-03）")
+# ---------------------------------------------------------------- ⑪ 开脸后：灯心仍以角色为圆心（迭代04 D-14）
+## 【语义改口】M-03 的"8 方位公转"已按用户裁定撤回：环一旦离开角色，
+## 玩家会看到自己站在圈外却照样挨打（视觉中心 ≠ 判定中心 ≠ 角色）。
+## 本用例现在是回归守卫：开脸前后 8 次脉冲，ring.position 必须恒为 base，
+## 且判定圈以角色为圆心左右对称。
+func _case_centered_when_evolved() -> void:
+	print("\n[⑪] 开脸后花灯是否仍以角色为圆心（D-14）")
 	_enemies.clear_all()
 	await _equip(["halo"], 8)
 	var ring: GarlicRing = _player.garlic_ring
@@ -178,47 +181,35 @@ func _case_orbits_when_evolved() -> void:
 	print("  未开脸 8 次采样 ring.position 首条 = %s" % str(samp0[0]))
 	_check(c1_ok, "C-1 未开脸 8 次采样恒为 %s" % str(base))
 
-	# C-2 / C-3 开脸后：8 方位互不重复，且每个偏移长度 == 0.40R
+	# C-2 开脸后：8 次脉冲仍然恒为 base（撤回公转的核心断言）
 	_weapons.evolved = {"halo": "evolve_halo"}
-	# r 必须在开脸**之后**取：进化配方带 area ×1.6，halo_radius 会跟着变大，
-	# 拿未开脸的 r 去算 0.40R 会得到偏小的期望值（C-3 会假失败）。
 	var r: float = _weapons.halo_radius()
-	var dirs: Dictionary = {}
-	var lens_ok: bool = true
-	var offs: Array[Vector2] = []
+	var c2_ok: bool = true
+	var drift_max := 0.0
 	for _i in 8:
 		_weapons.fire_halo(_player)
-		var off: Vector2 = ring.position - base
-		offs.append(off)
-		if absf(off.length() - r * 0.40) > 0.01:
-			lens_ok = false
-		var deg: float = rad_to_deg(off.angle())
-		dirs[int(round(deg / 45.0)) % 8] = true
-	print("  开脸后 8 次偏移 = %s" % str(offs))
-	_check(dirs.size() == 8, "C-2 8 个偏移方位互不重复（集合 size = %d）" % dirs.size())
-	_check(lens_ok, "C-3 每个偏移长度 == 0.40R（R = %.1f，期望偏移 %.1f）" % [r, r * 0.40])
+		var drift: float = ring.position.distance_to(base)
+		if drift > 0.01:
+			c2_ok = false
+			drift_max = maxf(drift_max, drift)
+	print("  开脸后 8 次采样 ring.position = %s（最大漂移 %.2f px）" % [str(ring.position), drift_max])
+	_check(c2_ok, "C-2 开脸后 8 次脉冲灯心恒在 base（最大漂移 %.2f px）" % drift_max)
 
-	# C-4 判定真的跟着灯心走：第 1 脉冲灯心在 +X，只应命中 +X 那只。
-	# 【偏离主件】主件本节写"两只都放 0.40R"，但几何上不成立：
-	# 灯心在 +0.40R 时，敌人在 -0.40R 距灯心 0.80R < R，必定同圈。
-	# 要证明判定位移，反侧必须落在灯心半径外：-1.10R ⇒ 距灯心 1.50R > R。
+	# C-3 判定以角色为圆心、左右对称：±0.90R 都命中，+1.10R 不命中。
+	# 若还留着 0.40R 偏心，-0.90R 侧距灯心 1.30R 会漏 —— 这条能抓住回退。
 	_enemies.clear_all()
 	_weapons._cd["halo"] = 999.0          # 只让手动这一发决定结果，挡住自动脉冲
 	await _frames(2)
-	var plus: Enemy = _pick(_player.global_position + Vector2(r * 0.40, 0.0), "plusx")
-	var minus: Enemy = _pick(_player.global_position + Vector2(-r * 1.10, 0.0), "minusx")
+	var right_in: Enemy = _pick(_player.global_position + Vector2(r * 0.90, 0.0), "right_in")
+	var left_in: Enemy = _pick(_player.global_position + Vector2(-r * 0.90, 0.0), "left_in")
+	var right_out: Enemy = _pick(_player.global_position + Vector2(r * 1.10, 0.0), "right_out")
 	await _frames(2)
-	var plus_hp: float = plus.hp
-	var minus_hp: float = minus.hp
-	_weapons._lamp_step = 0
 	_weapons.fire_halo(_player)
-	print("  第 1 脉冲：+X 侧 %.1f → %.1f，-X 侧 %.1f → %.1f"
-		% [plus_hp, plus.hp, minus_hp, minus.hp])
-	_check(plus.hp < plus_hp - 0.01, "C-4 第 1 脉冲命中 +X（灯心侧）")
-	_check(is_equal_approx(minus.hp, minus_hp), "C-4 第 1 脉冲 -X 侧不掉血（判定跟着灯心位移）")
+	_check(right_in.hp < 99999.0 - 0.01, "C-3 +0.90R 命中（右侧，实测 %.1f）" % right_in.hp)
+	_check(left_in.hp < 99999.0 - 0.01, "C-3 -0.90R 命中（左侧，偏心时会漏，实测 %.1f）" % left_in.hp)
+	_check(is_equal_approx(right_out.hp, 99999.0), "C-3 +1.10R 不命中（半径边界 %.1f）" % r)
 
-	# 复位：后续 ③④ 必须跑在未开脸状态（否则它们的"以脚底为圆心"会一起红）
-	_weapons._lamp_step = 0
+	# 复位：后续 ③④ 必须跑在未开脸状态
 	await _equip(["halo"], 1)
 
 # ---------------------------------------------------------------- ③ 同帧命中整圈
