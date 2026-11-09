@@ -11,6 +11,9 @@ extends Node
 # 不是抽几张样本，而是 9 把武器 × 8 级（含首得）+ 9 个被动 × 5 级，共 117 张全扫。
 # 文案是生成出来的，就必须做到"每一级都成立"，不能只在抽查的那几级成立。
 # 迭代02 加了第 4 张截图：满级武器三态（缺被动 / 待宝箱开脸 / 已开脸）。
+# 迭代04 起 LevelUpUI._make_card 会在卡面之前插 _decorate（投影 ×3 / 厚度 / 扫光），
+# 它只加 TextureRect 和一个空 Control、绝不把 Label 包进容器 —— 本文件"Label 是卡根直接子节点"的前提仍成立。
+# 等待不得小于 0.5s：入场/出场 tween 在 0.42s 内还在改 scale，早截图会拍到半途尺寸。
 #
 # 用法：godot --path . res://tools/CardShot.tscn   （需要窗口，headless 无渲染）
 

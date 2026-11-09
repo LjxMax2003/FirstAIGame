@@ -36,6 +36,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [node name="DeathUI" type="CanvasLayer"]
+layer = 22
 script = ExtResource("1_death")
 
 [node name="Mask" type="ColorRect" parent="."]

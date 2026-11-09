@@ -151,10 +151,10 @@
 | `scenes/ui/ShopUI.tscn:49/55/63/74` | 百工谱 / `0 枚` / 一夜一夜攒下的手艺… / 铜钱来自每夜结算… | |
 | `scripts/ui/ShopUI.gd:163/200` | `%d 枚`（余额与单价） | 旧版 `◆ %d` |
 | `scenes/ui/PauseUI.tscn:55/63/70` | 歇口气 / 接着守 / 重守一夜 | |
-| `scenes/ui/LevelUpUI.tscn:33/46` | 手艺精进 / 选一张传承卡 | **编辑器默认值，运行时被覆盖** |
-| `scripts/ui/LevelUpUI.gd:101/102` | `手艺精进  Lv %d` / `选一张传承卡[ · 还有 N 次待处理]` | 真正生效的一行在这里 |
-| `scripts/ui/LevelUpUI.gd:144-146` | `传承` / `传承 · 新` / `口诀 %d/%d` | 13px，卡宽 200 |
-| `scripts/ui/LevelUpUI.gd:169` | `Lv %d · 满级可传承` | |
+| `scenes/ui/LevelUpUI.tscn:58/70` | 手艺精进 / 选一张手艺卡或心法卡 | **编辑器默认值，运行时被覆盖** |
+| `scripts/ui/LevelUpUI.gd:_show_next` | `手艺精进  Lv %d` / `选一张手艺卡或心法卡[ · 还有 N 次待处理]` | 真正生效的一行在这里 |
+| `scripts/ui/LevelUpUI.gd:_make_card` | `手艺` / `手艺 · 新` / `心法 %d/%d` / `精炼 %d/%d` | 13px，卡宽 200 |
+| `scripts/ui/LevelUpUI.gd:_make_card` | `Lv 1` / `Lv %d → %d` / `精炼 %d → %d（Lv%d 满级）` / 满级四条（已开脸 / 待宝箱开脸 / 开脸需「X」/ 已至尽头） | 满级四态是迭代02 加的 |
 | `scripts/ui/HUD.gd:148` | 一更·戌时 … 五更·寅时 | `GENG_NAMES`，下标来自 `WaveTable.wave_index()` |
 | `scripts/ui/HUD.gd:154` | `12:00  ·  剩 18:00` | 15px 小字，与更次同行 |
 | `scripts/ui/HUD.gd:155` | 归色 / 同屏 / 灯花 / 铜钱 (+ 传承) | |

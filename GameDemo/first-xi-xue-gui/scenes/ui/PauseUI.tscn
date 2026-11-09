@@ -36,7 +36,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [node name="PauseUI" type="CanvasLayer"]
-layer = 9
+layer = 21
 script = ExtResource("1_pause")
 
 [node name="Mask" type="ColorRect" parent="."]

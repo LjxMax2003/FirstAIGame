@@ -21,8 +21,26 @@ const ACCENT_WEAPON := Color(0.62, 0.38, 0.06)
 const ACCENT_STAT := Color(0.10, 0.40, 0.38)
 const INK_NAME := Color(0.13, 0.10, 0.08)
 const INK_DESC := Color(0.32, 0.26, 0.20)
+# ---------------------------------------------------------------- 迭代04 表现参数
+## 战场降调：0.58 亮度 + 6% 偏蓝（b > r），读成"被夜色压下去"而不是"屏幕坏了"。
+const WORLD_DIM := Color(0.58, 0.56, 0.66)
+## 两侧卡倾角。>4° 时 12px 描述字开始难读（Label 会跟着 rotation 一起转）。
+const TILT_DEG := 3.2
+## 两侧卡缩放。<0.94 时 12px 落到可读阈值以下，读成"糊了"不是"远了"。
+const SIDE_SCALE := 0.965
+## 悬停放大。>1.08 会盖住邻卡（卡间距只有 12px）。
+const HOVER_SCALE := 1.055
+## 七条动画时长（秒）。入场总 0.43s，出场总 0.27s（含 0.05s 收尾停顿）。
+const K_ENTER_MASK := 0.16
+const K_ENTER_TITLE := 0.22
+const K_ENTER_CARD := 0.26
+const K_ENTER_STAGGER := 0.055
+const K_EXIT_WIN := 0.16
+const K_EXIT_LOSE := 0.18
+const K_EXIT_HOLD := 0.05
 
 @onready var mask: ColorRect = $Mask
+@onready var vignette: TextureRect = $Vignette
 @onready var popup: CenterContainer = $Popup
 @onready var title: Label = $Popup/VB/Title
 @onready var cards: HBoxContainer = $Popup/VB/Cards
@@ -31,6 +49,16 @@ const INK_DESC := Color(0.32, 0.26, 0.20)
 var _pending := 0
 var _frame: Texture2D = null
 var _icons: Dictionary = {}
+## 输入锁（本轮唯一死锁源）：入场 / 出场动画期间为 true，close_all 必须复位。
+var _picking := false
+## 标题只在第一批入场播一次 —— 连升多级时反复入场会读成"页面在刷新"。
+var _first_show := true
+## 当前批的 tween。close_all 要 kill 掉，否则会在停用后的节点上继续改属性。
+var _tw: Tween = null
+## 战场是否已降调（防重复写）。
+var _dimmed := false
+## 扫光渐变纹理缓存：三张卡共用一个 Texture2D。
+var _gloss_cache: Texture2D = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -62,12 +90,21 @@ func is_open() -> bool:
 func pending() -> int:
 	return _pending
 
-## 收起所有卡片并恢复游戏。卡池抽空、重开、异常退出都走这里，保证不会留下"暂停但无人可点"
+## 收起所有卡片并恢复游戏。卡池抽空、重开、死亡、异常退出都走这里。
+##
+## ⚠️ 这里的 `_picking = false` 是整轮唯一的死锁安全阀：
+##    出场动画期间若玩家死亡 / 重开，close_all 被调用而 _picking 没复位，
+##    下一次 _on_pick 会永远在首行早退 —— 界面上三张卡点不动，整局卡死。
 func close_all() -> void:
 	_pending = 0
+	_picking = false
+	_first_show = true
+	_kill_tween()
 	_clear_cards()
 	mask.visible = false
+	vignette.visible = false
 	popup.visible = false
+	_dim_world(false)
 	if get_tree().paused:
 		get_tree().paused = false
 
@@ -84,8 +121,6 @@ func _show_next() -> void:
 
 	_pending -= 1
 	get_tree().paused = true
-	mask.visible = true
-	popup.visible = true
 	# 升级音在卡面出现的同时播。连升多级时由这里逐张播，天然不会叠成一串。
 	Audio.play_sfx("levelup")
 
@@ -99,6 +134,10 @@ func _show_next() -> void:
 	hint.text = "选一张手艺卡或心法卡 · 还有 %d 次待处理" % _pending if _pending > 0 else "选一张手艺卡或心法卡"
 	for option in options:
 		cards.add_child(_make_card(option))
+	# 入场动画（遮罩淡入 / 标题落位 / 三张卡错峰弹起）全部在 _enter() 里。
+	# ⚠️ 必须放在卡片入树之后：_enter 内部要先等一帧让 HBoxContainer 排好版，
+	#    提前调用会读到空容器并直接早退（三张卡就永远没有入场动画）。
+	_enter()
 
 func _make_card(entry: Dictionary) -> Control:
 	var def: Dictionary = entry["def"]
@@ -106,11 +145,15 @@ func _make_card(entry: Dictionary) -> Control:
 	var is_new: bool = bool(entry["is_new"])
 	var is_weapon: bool = UpgradeDB.is_weapon(id)
 	var accent: Color = ACCENT_WEAPON if is_weapon else ACCENT_STAT
+	# 这张卡将要插进 cards 的第几位。add_child 之前算，等于"即将插入的下标"。
+	var order: int = cards.get_child_count()
 
 	var root := Control.new()
 	root.custom_minimum_size = Vector2(CARD_W, CARD_H)
 	root.size = Vector2(CARD_W, CARD_H)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 伪3D 的三层装饰必须在卡面之前入树，否则会把文字盖住。
+	_decorate(root)
 
 	# 卡框贴图
 	var frame := TextureRect.new()
@@ -225,27 +268,23 @@ func _make_card(entry: Dictionary) -> Control:
 	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 	btn.add_theme_stylebox_override("hover", _hover_style())
 	btn.add_theme_stylebox_override("pressed", _hover_style())
-	btn.pressed.connect(_on_pick.bind(entry))
+	btn.pressed.connect(_on_pick.bind(order))
 	btn.pressed.connect(_blip_hover)
+	btn.mouse_entered.connect(_hover.bind(root, true))
+	btn.mouse_exited.connect(_hover.bind(root, false))
 	root.add_child(btn)
 
 	root.pivot_offset = Vector2(CARD_W, CARD_H) * 0.5
-	# v9 E1/L14：三张卡错开 0.045s 依次"从 0.92 弹到 1.0"。
-	# 为什么闪一下而不是从下往上滑：滑入会改变卡片的最终位置，
-	# 而这三张卡的 y 是布局定死的（用户已经习惯那个位置），动位置等于改布局。
-	# 只动 scale + alpha，位置永远不变。
-	# ⚠️ 用 set_meta 存序号而不是闭包：tween 的 delay 必须在这里算好。
-	var order: int = cards.get_child_count()
-	var tw: Tween = root.create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(root, "scale", Vector2.ONE, 0.16).set_delay(order * 0.045) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).from(Vector2.ONE * 0.92)
-	tw.tween_property(root, "modulate:a", 1.0, 0.13).set_delay(order * 0.045).from(0.0)
+	# 入场动画不再在这里播：三张卡的错峰由 _enter() 统一驱动，
+	# 否则「谁先动」这件事分散在两次调用里，改时序要改两处。
+	root.set_meta("entry", entry)
+	root.set_meta("card_index", order)
 	return root
 
 func _hover_style() -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
-	s.bg_color = Color(0.35, 0.55, 0.85, 0.14)
+	# 0.06 而不是 v9 的 0.14：叠上本轮新增的扫光与投影后，0.14 会把卡面文字冲淡。
+	s.bg_color = Color(0.35, 0.55, 0.85, 0.06)
 	s.set_corner_radius_all(12)
 	return s
 
@@ -254,12 +293,18 @@ func _hover_style() -> StyleBoxFlat:
 func _blip_hover() -> void:
 	Audio.play_sfx("ui_click", -4.0)
 
-func _on_pick(entry: Dictionary) -> void:
+## 键盘 1/2/3 与会话按钮都收敛到这里。`index` 是卡片在 HBoxContainer 中的下标，
+## 真正要 apply 的那份 entry 存在卡根节点的 meta 里（见 _make_card 末尾）。
+## ⚠️ `_picking` 必须在这里同步早退：动画期间连点三次，只有第一次能过。
+func _on_pick(index: int) -> void:
+	if _picking:
+		return
+	if index < 0 or index >= cards.get_child_count():
+		return
 	# v9 F1：选卡是全流程里唯一"玩家做了决定"的界面动作，必须有声。
 	# 用 ui_confirm 而不是 ui_click —— 这是确认，不是点一下看看。
 	Audio.play_sfx("ui_confirm")
-	UpgradeDB.apply(entry)
-	_show_next()
+	_pick_async(index)
 
 ## 键盘 1/2/3 也能选卡：桌面与自动化测试都靠这条路径，不依赖鼠标坐标
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -284,3 +329,315 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			(c as Button).pressed.emit()
 			get_viewport().set_input_as_handled()
 			return
+
+# =====================================================================
+# 迭代04 表现层（只动视觉与输入锁，不碰 UpgradeDB / GameManager 的任何数值）
+# =====================================================================
+
+## 伪3D 的三层装饰：投影 ×3 / 侧面厚度 / 扫光。
+## 三者全部复用卡框贴图（Art.UI_CARD_FRAME），用 modulate 染色 ——
+## 轮廓与卡面天然吻合，不用画第二套形状，也不会出现"圆角卡片配直角影子"。
+##
+## ⚠️ 必须在 root.add_child(frame) 之【前】调用，否则会盖住卡面与文字。
+## ⚠️ 只加 TextureRect / Control，绝不把 Label 包进任何容器 ——
+##    tools/CardShot.gd 靠"Label 是卡根直接子节点"定位文字（:115 / :168），
+##    包一层就让它静默跳过，117 张卡的断言会全部变成假绿。
+func _decorate(root: Control) -> void:
+	if _frame == null:
+		return
+	var shadows: Array[TextureRect] = []
+	# 投影三层：offset 递减、alpha 递减，模拟软边（TextureRect 没有模糊）。
+	# 为什么不做成"一层大阴影"：单层边缘是硬切，在深色墨幕上会读成"卡片描了一圈黑边"。
+	for spec in [
+		{"y": 24.0, "s": 1.05, "a": 0.26},
+		{"y": 17.0, "s": 1.03, "a": 0.14},
+		{"y": 11.0, "s": 1.01, "a": 0.07},
+	]:
+		var sh := TextureRect.new()
+		sh.texture = _frame
+		sh.size = Vector2(CARD_W, CARD_H)
+		sh.pivot_offset = Vector2(CARD_W, CARD_H) * 0.5
+		sh.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sh.stretch_mode = TextureRect.STRETCH_SCALE
+		sh.modulate = Color(0.02, 0.015, 0.01, float(spec["a"]))
+		sh.position = Vector2(0.0, float(spec["y"]))
+		sh.scale = Vector2.ONE * float(spec["s"])
+		sh.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sh.set_meta("shadow", true)
+		sh.set_meta("base_a", float(spec["a"]))
+		sh.set_meta("base_y", float(spec["y"]))
+		root.add_child(sh)
+		shadows.append(sh)
+
+	# 侧面厚度：同轮廓、深褐（与卡框描边 #3B2617 同色系）、偏移 (3,9)。
+	# 卡面会盖住它大部分，只露出右/下一条 3~9px 的深边 —— 那就是"这张纸有厚度"。
+	var spine := TextureRect.new()
+	spine.texture = _frame
+	spine.size = Vector2(CARD_W, CARD_H)
+	spine.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	spine.stretch_mode = TextureRect.STRETCH_SCALE
+	spine.modulate = Color(0.22, 0.15, 0.10)
+	spine.position = Vector2(3.0, 9.0)
+	spine.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(spine)
+
+	# 扫光：装在一个裁到「纸面区」的容器里。不裁剪的话，斜白条会扫到相邻卡上。
+	# 容器尺寸 = 卡框内纸面 (8,10) 起 184×262，与 ui_paper_card.svg 的 rect 对齐。
+	var box := Control.new()
+	box.position = Vector2(8.0, 10.0)
+	box.size = Vector2(184.0, 262.0)
+	box.clip_contents = true
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(box)
+
+	var gloss := TextureRect.new()
+	gloss.texture = _gloss_tex()
+	gloss.size = Vector2(96.0, 380.0)
+	gloss.pivot_offset = Vector2(48.0, 190.0)
+	gloss.rotation = deg_to_rad(18.0)
+	gloss.position = Vector2(-150.0, -70.0)
+	gloss.modulate = Color(1.0, 0.98, 0.92, 0.0)
+	gloss.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gloss.set_meta("gloss", true)
+	box.add_child(gloss)
+
+	root.set_meta("shadows", shadows)
+	root.set_meta("gloss_ref", gloss)
+
+## 扫光用的横向渐变（白 → 透明 → 白的两头对称，中间实）。
+## 缓存一份：三张卡共用同一个 Texture2D，不重复生成。
+func _gloss_tex() -> Texture2D:
+	if _gloss_cache != null:
+		return _gloss_cache
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 0.42, 1.0])
+	g.colors = PackedColorArray([
+		Color(1, 1, 1, 0.0), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.0)])
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.width = 96
+	t.height = 8
+	_gloss_cache = t
+	return t
+
+## 三张卡的静置姿态。**只返回渲染变换，不返回 position** ——
+## HBoxContainer 每次 sort 都会用自己的布局值覆写子节点 position，
+## 把"两侧卡下移 10px"写进静态姿态，会在下一次容器重排时被无声抹掉
+## （表现是"有时候歪、有时候不歪"，只在窗口尺寸变化那一下出现，极难复现）。
+func _pose(index: int, total: int) -> Dictionary:
+	if total <= 1:
+		return {"rot": 0.0, "scale": 1.0}
+	var mid: float = float(total - 1) * 0.5
+	var off: float = (float(index) - mid) / maxf(mid, 1.0)     # -1 .. +1
+	return {
+		"rot": deg_to_rad(TILT_DEG) * off,
+		"scale": 1.0 - (1.0 - SIDE_SCALE) * absf(off),
+	}
+
+## 入场：遮罩淡入 → 标题落位 → 三张卡错峰弹起 → 提示淡入，总 0.42s。
+##
+## ⚠️ 第一行的 await 不能省：cards.add_child() 只是 queue_sort()，
+##    容器在【下一帧】才排好版。早于它读 position 得到的是 0，
+##    会做出"三张卡从屏幕左上角飞进来"的错动画。
+## ⚠️ 整个动画跑在 get_tree().paused == true 下。这依赖 LevelUpUI 在 _ready 首行设了
+##    PROCESS_MODE_ALWAYS；把那一行改掉，全场动画会静止在定格画面。
+func _enter() -> void:
+	mask.visible = true
+	vignette.visible = true
+	popup.visible = true
+	if cards.get_child_count() <= 0:
+		return
+	_picking = true
+
+	await get_tree().process_frame
+	if cards.get_child_count() <= 0:
+		# 期间被 close_all() / CardShot 的 _clear_cards() 清掉了，直接退。
+		_picking = false
+		return
+	var n: int = cards.get_child_count()
+
+	_dim_world(true)
+	_kill_tween()
+	_tw = create_tween()
+	_tw.set_parallel(true)
+	_tw.tween_property(mask, "color:a", 0.80, K_ENTER_MASK).from(0.0)
+	_tw.tween_property(vignette, "modulate:a", 1.0, K_ENTER_MASK).from(0.0)
+
+	# 连升多级时标题不重复入场：每次闪一下会读成"页面在刷新"。
+	if _first_show:
+		_first_show = false
+		var ty: float = title.position.y
+		title.position.y = ty - 26.0
+		title.modulate.a = 0.0
+		_tw.tween_property(title, "position:y", ty, K_ENTER_TITLE) \
+			.set_delay(0.04).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_tw.tween_property(title, "modulate:a", 1.0, K_ENTER_TITLE).set_delay(0.04)
+	else:
+		title.modulate.a = 1.0
+
+	hint.modulate.a = 0.0
+	_tw.tween_property(hint, "modulate:a", 1.0, 0.18).set_delay(0.24)
+
+	for i in n:
+		var c: Control = cards.get_child(i) as Control
+		if c == null:
+			continue
+		var p: Dictionary = _pose(i, n)
+		# rest 必须从容器已排好的当前值读，不能硬算 i*(CARD_W+CARD_GAP)：
+		# 硬算会在 separation 或卡宽改动时静默错位。
+		var rest: Vector2 = c.position
+		c.set_meta("rest_y", rest.y)
+		c.set_meta("rest_pose", p)
+		var d: float = 0.06 + K_ENTER_STAGGER * float(i)
+		c.position = rest + Vector2(0.0, 64.0)
+		c.rotation = 0.0
+		c.scale = Vector2(0.90, 0.90)
+		c.modulate.a = 0.0
+		_tw.tween_property(c, "position", rest, K_ENTER_CARD) \
+			.set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_tw.tween_property(c, "rotation", float(p["rot"]), K_ENTER_CARD) \
+			.set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_tw.tween_property(c, "scale", Vector2.ONE * float(p["scale"]), K_ENTER_CARD) \
+			.set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_tw.tween_property(c, "modulate:a", 1.0, 0.14).set_delay(d)
+
+	await _tw.finished
+	_picking = false
+
+## 升级时把战场压低一档。0.58 亮度 + 6% 偏蓝（b > r）读成"被夜色压下去"，
+## 而不是"屏幕坏了"。
+## 只改 modulate，不动 scale —— 动 scale 会带着 Camera2D 一起抖，玩家会以为卡了。
+func _dim_world(on: bool) -> void:
+	if on == _dimmed:
+		return
+	var w: CanvasItem = _world()
+	if w == null:
+		return
+	_dimmed = on
+	var tw: Tween = create_tween()
+	tw.tween_property(w, "modulate", WORLD_DIM if on else Color.WHITE, 0.22)
+
+## LevelUpUI 挂在 $UI（CanvasLayer）下，$UI 的父是 Game。
+## 用函数式取值而不是写死 "../../World"：节点改名时路径字符串会静默返回 null，
+## 这里能提前 return，不会把 null 传给 tween 报一串错。
+func _world() -> CanvasItem:
+	var g: Node = get_parent().get_parent()
+	if g == null:
+		return null
+	return g.get_node_or_null("World") as CanvasItem
+
+## 出场 → 结算 → 下一批。
+## 为什么结算放在动画之后：UpgradeDB.apply 会改武器等级并让 HUD 的手艺槽刷新，
+## 先结算再动画 = 玩家会看到"卡还在飞、HUD 已经变了"。
+func _pick_async(index: int) -> void:
+	_picking = true
+	await _exit(index)
+	_picking = false
+	if not popup.visible:
+		return
+	var e: Dictionary = _entry_of(index)
+	if not e.is_empty():
+		UpgradeDB.apply(e)
+	_show_next()
+
+## 从卡片的 meta 读回 entry。用 meta 而不是让 _on_pick 直接 bind entry：
+## 出场动画需要知道"第几张"，绑 index 才能算出谁该翻面、谁该倒。
+func _entry_of(index: int) -> Dictionary:
+	if index < 0 or index >= cards.get_child_count():
+		return {}
+	var c: Control = cards.get_child(index) as Control
+	if c == null:
+		return {}
+	return c.get_meta("entry", {}) as Dictionary
+
+## 出场：选中的翻面抽走，落选的两张向外倒。总 0.22s + 0.05s 停顿。
+## 为什么落选卡是"倒"而不是淡出：三张牌摊在桌上，抽走一张、另外两张被带得晃一下 ——
+## 这是"桌上有三张实体牌"这个设定唯一自洽的收场。纯淡出会退回"三张贴纸"。
+func _exit(win: int) -> void:
+	if cards.get_child_count() <= 0:
+		return
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	_tw = create_tween()
+	_tw.set_parallel(true)
+	for i in cards.get_child_count():
+		var c: Control = cards.get_child(i) as Control
+		if c == null:
+			continue
+		var p: Dictionary = c.get_meta("rest_pose", {"rot": 0.0, "scale": 1.0})
+		var ry: float = float(c.get_meta("rest_y", c.position.y))
+		if i == win:
+			# 绕 Y 轴翻成一条线。scale.x → 0 在 2D 里就是"转到侧面"，
+			# 是本项目能做的、最接近翻牌的效果，且一帧成本为零。
+			# 不做真 3D 翻转：本项目没有卡背资产，翻过来是空白，比不翻更假。
+			_tw.tween_property(c, "scale:x", 0.02, K_EXIT_WIN) \
+				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+			_tw.tween_property(c, "position:y", ry - 50.0, K_EXIT_WIN) \
+				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+			_tw.tween_property(c, "modulate:a", 0.0, 0.08).set_delay(K_EXIT_WIN - 0.08)
+		else:
+			# 方向取它原本歪的那一侧：看起来像"被抽走那张带倒的"，而不是"两边对称倒下"。
+			# ⚠️ rotation 的单位是弧度：rest 本身是弧度，+14° 必须再 deg_to_rad。
+			var side: float = 1.0 if float(p["rot"]) >= 0.0 else -1.0
+			_tw.tween_property(c, "rotation", float(p["rot"]) + side * deg_to_rad(14.0), K_EXIT_LOSE) \
+				.set_delay(0.04).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+			_tw.tween_property(c, "position:y", ry + 36.0, K_EXIT_LOSE) \
+				.set_delay(0.04).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+			_tw.tween_property(c, "modulate:a", 0.0, 0.12).set_delay(0.10)
+	# 墨幕随卡一起撤（handoff §7.3 未列，主件 §3 的出场表亦未列）。
+	# 不撤会有两处硬切：①单次升级结束时 close_all 把遮罩瞬间隐藏；
+	# ②连升下一批 _enter 的 .from(0.0) 会把 0.80 的遮罩瞬间归零再淡入（战场闪一下）。
+	# 时长压在 0.22s 内，不延长 §5.2 的出场总时长 0.27s。
+	_tw.tween_property(mask, "color:a", 0.0, 0.20).set_delay(0.02)
+	_tw.tween_property(vignette, "modulate:a", 0.0, 0.20).set_delay(0.02)
+	await _tw.finished
+	# 停顿给"抽走"一个收尾。暂停态下 create_timer 默认 process_always = true，照走。
+	await get_tree().create_timer(K_EXIT_HOLD).timeout
+
+func _kill_tween() -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	_tw = null
+
+## 悬停：转正 + 抬高 + 投影变淡拉长 + 扫光。
+##
+## "影子变淡变长"是伪 3D 里最关键的一步，比放大本身更能读出"离地了" ——
+## 真实世界物体抬起来，投影会更远、更虚、更淡。只放大不换影子，读起来是"贴纸被拉大"。
+func _hover(card: Control, on: bool) -> void:
+	if _picking or card == null:
+		return
+	var p: Dictionary = card.get_meta("rest_pose", {"rot": 0.0, "scale": 1.0})
+	var ry: float = float(card.get_meta("rest_y", card.position.y))
+	var dur: float = 0.10 if on else 0.14
+	var tw: Tween = card.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(card, "rotation", 0.0 if on else float(p["rot"]), dur) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(card, "scale", Vector2.ONE * (HOVER_SCALE if on else float(p["scale"])), dur) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(card, "position:y", ry - 12.0 if on else ry, dur) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+	var shadows: Array = card.get_meta("shadows", [])
+	for node in shadows:
+		var sh: TextureRect = node as TextureRect
+		if sh == null:
+			continue
+		var ba: float = float(sh.get_meta("base_a", 0.2))
+		var by: float = float(sh.get_meta("base_y", 0.0))
+		tw.tween_property(sh, "modulate:a", ba * (0.55 if on else 1.0), dur)
+		tw.tween_property(sh, "position:y", by * (1.35 if on else 1.0), dur)
+
+	if not on:
+		return
+	# 扫光：只在进入时播一次。每次移入都重播会像"有人在反复擦屏幕"。
+	var g: TextureRect = card.get_meta("gloss_ref", null) as TextureRect
+	if g == null:
+		return
+	g.position = Vector2(-150.0, -70.0)
+	var gt: Tween = card.create_tween()
+	gt.set_parallel(true)
+	gt.tween_property(g, "modulate:a", 0.18, 0.06)
+	gt.tween_property(g, "position:x", 190.0, 0.28) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	gt.chain().tween_property(g, "modulate:a", 0.0, 0.10)

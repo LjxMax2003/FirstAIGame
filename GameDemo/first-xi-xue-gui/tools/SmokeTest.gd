@@ -118,6 +118,21 @@ func _wait(seconds: float) -> void:
 	var steps: int = maxi(1, int(seconds * 60.0))
 	await _wait_frames(steps)
 
+## 等升级/暂停界面自己退出（解除暂停）。迭代04 起选卡有 0.27s 出场动画，
+## 结算与解除暂停都发生在动画之后；老写法"等 2 帧"会读到 paused=true 而假失败。
+## 有上限：卡池异常时不会把整套冒烟卡死在这里。
+func _wait_unpause(timeout_ms: int = 800) -> void:
+	var t0: int = Time.get_ticks_msec()
+	while get_tree().paused and Time.get_ticks_msec() - t0 < timeout_ms:
+		await get_tree().process_frame
+
+## 等本批卡的入场动画放完。迭代04 起 _enter() 期间 _picking = true，
+## 这 0.42s 内点卡会被输入锁挡掉 —— 真人不会这么快，但测试点得比动画快。
+func _wait_enter_done(timeout_ms: int = 1200) -> void:
+	var t0: int = Time.get_ticks_msec()
+	while _lvui._picking and Time.get_ticks_msec() - t0 < timeout_ms:
+		await get_tree().process_frame
+
 ## 每个用例的公共前置：解暂停、清场、玩家无敌（免疫干扰但不会死）、冻住经验条。
 ##
 ## 【为什么默认冻结经验】
@@ -136,6 +151,10 @@ func _prep(invincible: bool = true, freeze_xp: bool = true) -> void:
 		_player.xp = 0
 		_player.xp_next = 1 << 30
 	else:
+		# 残留经验必须清零：Step4 会留下几枚没吃完的宝石，若带进 Step5，
+		# `gain_xp(xp_next)` 之后会在恢复游戏的那一帧立刻再升一级，
+		# 表现为「选卡后恢复游戏」假失败（paused 被同帧内的新批次又置回 true）。
+		_player.xp = 0
 		_player.xp_next = _player.xp_for_level(_player.level)
 	_enemies.clear_all()
 	await _wait_frames(2)
@@ -386,11 +405,15 @@ func _step5_levelup() -> void:
 			btn = c as Button
 	_check(btn != null, "卡片可点击")
 
+	# 入场动画期间 _picking 锁输入，先等它放完再点（真人点不到这么快，测试会）
+	await _wait_enter_done()
 	var wep_before: Dictionary = _weapons.owned.duplicate()
 	var passive_before: Dictionary = _player.level_upgrades.duplicate()
 	if btn != null:
 		btn.pressed.emit()
-	await _wait_frames(2)
+	# 迭代04 起选卡有 0.27s 出场动画（LevelUpUI._exit），结算发生在动画之后，
+	# 所以"等 2 帧"会读到仍是暂停、仍是旧数值。这里等界面自己收尾。
+	await _wait_unpause()
 	_check(not get_tree().paused, "选卡后恢复游戏")
 	var changed: bool = _weapons.owned != wep_before or _player.level_upgrades != passive_before
 	_check(changed, "选卡后确实生效（武器 %s / 被动 %s）" % [str(_weapons.owned), str(_player.level_upgrades)])
@@ -404,14 +427,17 @@ func _step5_levelup() -> void:
 	# 连续升级排队：全部选完后必须自动解除暂停（否则整局死锁）
 	var guard := 0
 	while get_tree().paused and guard < 40:
+		guard += 1
 		var c2: HBoxContainer = _lvui.get_node("Popup/VB/Cards") as HBoxContainer
 		if c2.get_child_count() > 0:
 			for c in (c2.get_child(0) as Control).get_children():
 				if c is Button:
 					(c as Button).pressed.emit()
 					break
-		await get_tree().process_frame
-		guard += 1
+			# 等这一批的出场动画走完再看下一批：动画期间 _picking 为 true，连点会被挡
+			await _wait_unpause(500)
+		else:
+			await get_tree().process_frame
 	_check(not get_tree().paused, "连续升级排队全部选完后自动恢复（%d 轮）" % guard)
 
 # ---------------------------------------------------------------- 暂停 / 重开
