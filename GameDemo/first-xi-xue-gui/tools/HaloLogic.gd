@@ -61,6 +61,7 @@ func _ready() -> void:
 	print("\n===== 花灯语义探针 =====")
 	await _case_visual_matches_hitbox()
 	await _case_not_orbiting()
+	await _case_punch_resets()
 	await _case_centered_when_evolved()
 	await _case_full_circle_one_frame()
 	await _case_outside_untouched()
@@ -133,9 +134,9 @@ func _case_visual_matches_hitbox() -> void:
 		"最外可见像素（灯笼外沿）与判定半径偏差 %.1f%% < 5%%" % (absf(lantern_o - r) / r * 100.0))
 
 # ---------------------------------------------------------------- ② 不是环绕（未开脸的花灯）
-## 【迭代04 D-14 语义改口】M-03 的"开脸后公转"已撤回，开脸前后都不偏心（见 ⑪）。
+## 【迭代04 D-14/D-15 语义改口】M-03 的"开脸后公转"已撤回，开脸前后都不偏心（见 ⑪）。
 ## 这条现在测的是"光环节点被钉在玩家身上、不自转"，是最基础的回归守卫：
-## 一旦 Player 每帧复位或 _lamp_center 的复位分支失效，这里会红。
+## GarlicRing.position 只在 Player._ready 写一次（唯一写入点），任何运行时路径都不该再改它。
 func _case_not_orbiting() -> void:
 	print("\n[②] 圈是钉在玩家脚下的，还是在绕圈飞")
 	var ring: GarlicRing = _player.garlic_ring
@@ -156,6 +157,33 @@ func _case_not_orbiting() -> void:
 	_check(absf(ring.ring.rotation - rot0) < 0.0001 and absf(rot0) < 0.0001,
 		"光圈不自转（rotation 恒为 0）")
 	_check(_player.global_position.distance_to(p0) < 0.5, "玩家本身没被推走（对照组前提成立）")
+
+# ---------------------------------------------------------------- ⑫ 受击位移必须归零（迭代04 D-16）
+## 用户报的"受击后环与角色错位"的根因是 `art.position += _punch` 逐帧累加且永不归位：
+## 单次受击会永久留下 HIT_PUNCH_PX/(1-DECAY) ≈ 27.8px 的横向偏移，累计多次会单向越漂越远。
+## 花灯环挂在 Player 节点上、不跟 art 贴图走，所以表现成"环还在原位，人已经歪了"。
+## 本用例连打四个方向的位移，等衰减结束后 art.position 必须精确回到 (0, bob)。
+func _case_punch_resets() -> void:
+	print("\n[⑫] 受击位移不得在 art.position 上留残渣（D-16）")
+	_enemies.clear_all()
+	await _equip(["halo"], 1)
+	await _frames(2)
+	var art: Sprite2D = _player.art
+	var dirs: Array[Vector2] = [Vector2.RIGHT, Vector2.LEFT, Vector2.DOWN, Vector2.UP]
+	for d in dirs:
+		_player.hit_punch(d)
+		await _wait(0.10)
+	# 0.40s 已远超衰减到 0.2px 所需的 ~0.27s
+	await _wait(0.40)
+	var residue: float = art.position.length()
+	print("  四次不同方向受击后 art.position = %s（残留 %.3f px）" % [str(art.position), residue])
+	_check(residue < 0.05, "受击位移完全归零（残留 %.3f px）" % residue)
+	# 环心与身体中心必须重合：两者都在 Player 子空间，基准恒为 (0, -ART_FOOT_OFFSET)
+	var ring_c: Vector2 = _player.garlic_ring.global_position
+	var body_c: Vector2 = _player.global_position + Vector2(0.0, -Player.ART_FOOT_OFFSET)
+	print("  环心 %s / 身体中心 %s" % [str(ring_c), str(body_c)])
+	_check(ring_c.distance_to(body_c) < 0.5,
+		"环心与身体中心重合（误差 %.3f px）" % ring_c.distance_to(body_c))
 
 # ---------------------------------------------------------------- ⑪ 开脸后：灯心仍以角色为圆心（迭代04 D-14）
 ## 【语义改口】M-03 的"8 方位公转"已按用户裁定撤回：环一旦离开角色，
@@ -195,14 +223,15 @@ func _case_centered_when_evolved() -> void:
 	print("  开脸后 8 次采样 ring.position = %s（最大漂移 %.2f px）" % [str(ring.position), drift_max])
 	_check(c2_ok, "C-2 开脸后 8 次脉冲灯心恒在 base（最大漂移 %.2f px）" % drift_max)
 
-	# C-3 判定以角色为圆心、左右对称：±0.90R 都命中，+1.10R 不命中。
-	# 若还留着 0.40R 偏心，-0.90R 侧距灯心 1.30R 会漏 —— 这条能抓住回退。
+	# C-3 判定以角色**身体中心**为圆心、左右对称：±0.90R 都命中，+1.10R 不命中。
+	# D-15：判定圆心 = 可见环圆心 = 身体中心（原点在脚底，所以这里要加 -18 的抬升）。
 	_enemies.clear_all()
 	_weapons._cd["halo"] = 999.0          # 只让手动这一发决定结果，挡住自动脉冲
 	await _frames(2)
-	var right_in: Enemy = _pick(_player.global_position + Vector2(r * 0.90, 0.0), "right_in")
-	var left_in: Enemy = _pick(_player.global_position + Vector2(-r * 0.90, 0.0), "left_in")
-	var right_out: Enemy = _pick(_player.global_position + Vector2(r * 1.10, 0.0), "right_out")
+	var body: Vector2 = _player.global_position + Vector2(0.0, -Player.ART_FOOT_OFFSET)
+	var right_in: Enemy = _pick(body + Vector2(r * 0.90, 0.0), "right_in")
+	var left_in: Enemy = _pick(body + Vector2(-r * 0.90, 0.0), "left_in")
+	var right_out: Enemy = _pick(body + Vector2(r * 1.10, 0.0), "right_out")
 	await _frames(2)
 	_weapons.fire_halo(_player)
 	_check(right_in.hp < 99999.0 - 0.01, "C-3 +0.90R 命中（右侧，实测 %.1f）" % right_in.hp)

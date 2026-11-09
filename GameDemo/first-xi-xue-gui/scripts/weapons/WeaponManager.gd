@@ -131,9 +131,16 @@ func weapon_level(id: String) -> int:
 func stat(key: String) -> float:
 	return float(stats.get(key, 1.0))
 
-## 玩家"看起来"的中心：角色 origin 在脚底（art.offset 上抬 ART_FOOT_OFFSET），
-## 环绕类视觉（花灯爆闪 / 铜锣震波 / 皮影轨道）以身体中部为圆心才读作"绕着我"。
-## 判定一律不动：敌我双方 origin 同基准（都在各自脚底），判定公平性与平衡不变。
+## 全工程唯一的"角色中心"口径（迭代04 收尾 D-15）。
+##
+## 坐标约定：
+##   · 玩家 / 敌人的节点 origin 都在**脚底**（贴图靠 art.offset 上抬）；
+##   · 可见身体中心 = origin + (0, -ART_FOOT_OFFSET)；
+##   · 所有"以玩家为圆心"的技能（花灯判定、铜锣震波、皮影轨道）一律用本函数。
+## 视觉与判定必须同源：视觉圈画在身体中心，判定圈也从身体中心量，
+## 否则会在半径边界上出现"看着在圈外却被打到 / 看着在圈里却没吃到"。
+## 敌人一侧仍按各自 origin（脚底）参与距离判定 —— 与皮影轨道沿用的既有口径一致，
+## 相对半径（≥70px）的 18px 偏差在边界容差（hit_radius ≥17px）内。
 func _visual_center(player: Node2D) -> Vector2:
 	return player.global_position + Vector2(0.0, -Player.ART_FOOT_OFFSET)
 
@@ -203,9 +210,6 @@ func halo_radius() -> float:
 	var per: float = float(d.get("radius_per_level", 7.0))
 	var r: float = (base + per * float(lv - 1)) * stat("area") * _area_mult("halo")
 	return r
-
-func garlic_radius() -> float:
-	return halo_radius()
 
 ## 铜锣的实际判定半径（第二光环位）。Player 用它在两者并存时画大的那个圈。
 func gong_radius() -> float:
@@ -401,8 +405,8 @@ func fire_halo(player: Node2D) -> void:
 	# 读的是**命中前**的减速状态 —— 先判再上减速，否则第一下就吃到加成，
 	# 等于变成"花灯无条件 +20%"，那就不需要把怪留在圈里了。
 	var slow_bonus: float = float(d.get("slow_dmg", 0.20))
-	# 迭代04 收尾（D-14）：灯心恒在角色脚下，判定 / 视觉 / 资源点同一圆心。
-	var center: Vector2 = _lamp_center(player, radius)
+	# 迭代04 收尾（D-15）：判定圆心 = 可见环圆心 = 角色身体中心（_visual_center）。
+	var center: Vector2 = _visual_center(player)
 	_pool.query_circle(center, radius, _scratch)
 	if not _scratch.is_empty():
 		for e in _scratch:
@@ -416,9 +420,9 @@ func fire_halo(player: Node2D) -> void:
 		# 灯晕"跳一下"：只在**真的烧到东西**时才放，不是每次冷却都放。
 		# 光环 cd 只有 0.5s，若每次都放，画面会变成常亮的环——反而看不出命中。
 		# rays = 0：纯环不带光条，和"灼烧"的语义一致，光条读起来像"爆炸"。
-		# 圆心对齐身体中部（-18 口径），并与判定圆心同源（center）。
+		# 与判定圆同源（center 就是 _visual_center 的返回值），不再另加偏移。
 		ShaderFX.burst_ellipse(
-			self, center + Vector2(0.0, -Player.ART_FOOT_OFFSET), radius * 2.0, radius * 2.0,
+			self, center, radius * 2.0, radius * 2.0,
 			Color(1.0, 0.78, 0.32), 0, 0.28
 		)
 	if resources != null:
@@ -568,12 +572,15 @@ func fire_gong(player: Node2D) -> void:
 		+ float(d.get("radius_per_level", 10.0)) * float(lv - 1)) * stat("area") * _area_mult("gong")
 	var dmg: float = weapon_damage("gong", lv)
 	var cap: int = int(d.get("hit_cap", 8))
-	_pool.query_circle(player.global_position, radius, _scratch)
+	# 判定圆心与震波 / 锣面同源（_visual_center，D-15）：否则画在身体中部、
+	# 判在脚底，半径边界上会出现 18px 的"看着在圈外却被打到"。
+	var center: Vector2 = _visual_center(player)
+	_pool.query_circle(center, radius, _scratch)
 	if _scratch.is_empty():
 		if resources != null:
-			resources.try_hit(player.global_position, radius, dmg)
+			resources.try_hit(center, radius, dmg)
 		return
-	for e in _nearest_n(player.global_position, cap):
+	for e in _nearest_n(center, cap):
 		# 铜锣自带 amp=0.12（对结壳敌人 +12%），倍率由 Enemy.damage_multiplier 按 id 判
 		e.take_damage(dmg, &"gong")
 		# 命中泛"金属光"：白色火花（不是暖金）。
@@ -581,15 +588,15 @@ func fire_gong(player: Node2D) -> void:
 		# 就是 8 次 draw call，和 T0 合批红线直接冲突（v6 §6 的"金属光"在这里兑现）。
 		spawn_spark(e.global_position, 0.7, GONG_SPARK_COLOR)
 	if resources != null:
-		resources.try_hit(player.global_position, radius, dmg)
+		resources.try_hit(center, radius, dmg)
 	# ---- 视觉：一声"咚"，不是一个圈在"烧" ----
 	# 铜锣和花灯都是"以玩家为中心的一圈暖色"，叠在一起时肉眼分不开（实测过）。
 	# 拉开靠三件事，缺一件就会重新糊回去：
 	#   ① 形状：铜锣带径向声波刺 + 一圈回震向内收；花灯是光滑环且只往外推
 	#   ② 色相：铜锣是金属被敲响的白热反光（近白暖金）；花灯是烛火的橙
 	#   ③ 尺寸：铜锣半径约为花灯的 1.8 倍，一次性炸到边界就没了
-	# 圆心对齐身体中部（_visual_center）：震波画在脚底会读成"圈歪了"。
-	ShaderFX.shockwave(self, _visual_center(player), radius * 2.0, GONG_WAVE_COLOR, 16, 0.30)
+	# 圆心与判定同源（_visual_center）：震波画在脚底会读成"圈歪了"。
+	ShaderFX.shockwave(self, center, radius * 2.0, GONG_WAVE_COLOR, 16, 0.30)
 	# Lv8 觉醒：每脉冲再外扩**一圈**声波环（v6 §6「锣面震波实化为扩散金环」）。
 	# 只加环、不加伤害 —— 这是"满级"的视觉读法，不是第二个结算口。
 	# 半径 1.26×：比主波远一档，两圈同屏时一眼能数出"荡了两下"；
@@ -598,7 +605,7 @@ func fire_gong(player: Node2D) -> void:
 	# 否则开脸那一下同屏三圈（满级外扩 + 主波 + 回响），读不出"回响"是新东西。
 	if lv >= WeaponDB.MAX_LEVEL and not evolved.has("gong"):
 		ShaderFX.burst_ellipse(
-			self, _visual_center(player), radius * 2.0 * 1.26, radius * 2.0 * 1.26,
+			self, center, radius * 2.0 * 1.26, radius * 2.0 * 1.26,
 			Color(1.0, 0.86, 0.46), 20, 0.34, 0.16
 		)
 	# 锣面本体：这是"铜锣"这个技能唯一的实体，也是玩家认出它的锚点。
@@ -609,8 +616,8 @@ func fire_gong(player: Node2D) -> void:
 	face.z_index = -2
 	# 用 global_position 而不是 position：face 是 WeaponManager 的子节点，
 	# 若 Weapons 自身有位移（当前在原点但不保证永远），局部坐标会偏。
-	# 圆心对齐身体中部（_visual_center）：锣面画在脚底会读成"圈歪了"。
-	face.global_position = _visual_center(player)
+	# 圆心与判定同源（_visual_center）：锣面画在脚底会读成"圈歪了"。
+	face.global_position = center
 	face.rotation = randf_range(-0.05, 0.05)
 	face.flip_h = false
 	# 范围直径的 0.42。这个数是被"看得见声波"卡住的：
@@ -625,7 +632,7 @@ func fire_gong(player: Node2D) -> void:
 		# 用 tween 而不是 await：fire_* 必须保持同步（与 :303-304 同一个理由）。
 		var tw: Tween = create_tween()
 		tw.tween_interval(0.28)
-		tw.tween_callback(_gong_echo.bind(_visual_center(player), radius, dmg * 0.45, cap))
+		tw.tween_callback(_gong_echo.bind(center, radius, dmg * 0.45, cap))
 
 # ---------------------------------------------------------------- 墨斗（直线穿透）
 ## 单点头牌 + 浆壳兵官方解。射出一道笔直墨线，穿透 pierce_at 个目标。
@@ -1240,26 +1247,6 @@ func _second_arc_v(p: Vector2, length: float, width: float, _lv: int) -> void:
 	_push_fx(arc, 0.16, 1.55, 1.15)
 	ShaderFX.slash(arc, 0.12, false, false)
 
-# ---------------------------------------------------------------- 花灯：灯心恒在角色身上
-## 灯心 = 判定圈 / 可见圈 / 资源点三者共同的圆心，它永远不出角色脚下。
-##
-## 【为什么只保留"复位"一个动作】
-## 迭代03 M-03 曾让开脸的花灯把整个环绕玩家 8 方位轮转（偏移 0.40R）。
-## 实测手感是"环跑了、人还在原地挨打"：视觉中心、判定中心与角色三者不重合，
-## 玩家看到自己站在圈外，却照样吃接触伤害 —— 表现与判定读起来是两套规则。
-## 迭代04 收尾按用户裁定撤回该机制（interface.md §6.7 D-14）。
-##
-## 【为什么要写 position 而不只 return 坐标】
-## GarlicRing 四层视觉全部以节点原点为圆心；把 position 钉回 base 才能保证
-## "卸下花灯 / 复活 / 重开一局"之后不残留上一轮的脏偏移。
-## radius 参数保留：调用方按半径取圆心，签名与判定半径同源，便于未来换算法。
-func _lamp_center(player: Node2D, radius: float) -> Vector2:
-	var base: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
-	var p: Player = player as Player
-	if p != null and p.garlic_ring.position != base:
-		p.garlic_ring.position = base
-	return player.global_position
-
 # ---------------------------------------------------------------- 迭代03 M-06：铜锣回响
 ## 开市锣的回响。判定口径与主敲一致（最近 cap 只），但**不碰资源点**：
 ## 同一次敲击把资源点打两遍，会让"可拆资源点"的血量预期整体错位（ResourceField 按 key 去重，
@@ -1294,7 +1281,7 @@ const GLUE_TIME := 1.0
 ## 值必须是**真实存在的方法名**：断言会拿它跑 has_method()，重命名函数时这里会红。
 const EVOLVE_MECHANIC: Dictionary = {
 	"whip": "十字扫:_second_arc_v",
-	"halo": "灯心同心:_lamp_center",            # 迭代04 D-14：撤回公转，灯心恒在角色脚下
+	"halo": "灯心同心:_visual_center",          # 迭代04 D-15：判定与可见环都以身体中心为圆心
 	"glowstick": "糖水粘连:update_bullets",      # 敌人侧落在 Enemy.apply_root
 	"gong": "回响:_gong_echo",
 	"inkline": "穿透累进:update_bullets",

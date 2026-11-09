@@ -67,7 +67,7 @@
 | **T-18** | **迭代 02 代码落地（主线 + 3 配套）** | **迭代** | **✅ 已完成：S-01 三配方 / S-02 卡面三态 / S-03 空箱横幅 / S-04 术语收口 / S-05 九把全覆盖 / C-01 推镜 / N-01 环绕 2→3 / U-01 开脸徽章；双轨见 §3.3** | **team-lead** |
 | **T-19** | **迭代 03 代码落地（进化机制化 B0~B5）** | **迭代** | **✅ 已完成：M-01 声明位 / M-02 十字扫 / M-03 灯心公转 / M-04 门神镇守 / M-05 糖水粘连 / M-06 铜锣回响 / M-07 墨线穿透累进 / M-08 视觉分层 / M-09 文档同步 + `05` 21 处重锚 / U-02 三处音效 / C-02 旧墓砖；双轨见 §3.4** | **code-orchestrator** |
 | **T-20** | **迭代 04 代码落地（升级选卡界面重构 B0~B5）** | **迭代** | **✅ 已完成：UI-01 层级 20 / UI-02 双层墨幕 / UI-03 伪 3D 五线索 / UI-04 入场 0.42s / UI-05 出场 0.27s+输入锁 / UI-06 悬停 / UI-07 连升不重播标题 / UI-02b 战场降调 / B5 探针 `LevelUpShot` + 六处文档；双轨见 §3.5** | **code-orchestrator** |
-| **T-21** | **迭代 04 收尾（花灯灯心同心 + 过期测试/截图/旧题材清理）** | **迭代** | **✅ 已完成：D-14 撤回 M-03 公转（`_lamp_center` 恒等 + `Player` 每帧钉回 base + 声明表改「灯心同心」）/ D-15 清理 `assets/art/`、`shots/` 旧图、`tests/`、30 个旧探针；双轨见 §3.6** | **code-orchestrator** |
+| **T-21** | **迭代 04 收尾（花灯灯心同心 + 过期测试/截图/旧题材清理）** | **迭代** | **✅ 已完成（含 2026-11-09 复诊补修）：**D-14 撤回 M-03 公转 → **D-16 修受击位移永久残留（`art.position` 合成赋值，删 `_apply_punch`）/ D-17 收口 `aura_field` 方形硬边 / D-18 锚点口径统一（`_visual_center` 为判定+视觉唯一圆心，删 `_lamp_center`/`garlic_radius`/每帧钉回）** / D-15 清理 `assets/art/`、`shots/` 旧图、`tests/`、30 个旧探针；双轨见 §3.6（SmokeTest 340 / HaloLogic 39 / HaloShot 13 / numeric 314 全绿） | **code-orchestrator** |
 | **T-14** | **整编收口 + 治理状态总线** | **7** | **✅ `project-design-db-v1.0.md`；三遍审计 / 8 条裁定 / 11 条缺陷总账** | **team-lead** |
 
 ### 2.2 上一轮：表现层 v9
@@ -160,19 +160,22 @@
 
 ### 3.6 迭代 04 收尾验收结论（代码落地后实测，2026-11-09）
 
-**用户反馈**：花灯开脸后一旦受击，环形圈与角色错位 —— 视觉中心与判定中心都不在角色身上，但贴身的怪仍能打到人（截图已归档）。**根因** = 迭代 03 M-03「灯心公转」（每脉冲把 `GarlicRing.position` 平移 `0.40R`，8 方位轮转，实测偏移 76.2px ≈ 0.40×190.4）。**裁定** = 撤回该机制（§6.7 D-14）。
+**用户反馈**：花灯开脸后一旦受击，环形圈与角色错位 —— 视觉中心与判定中心都不在角色身上，但贴身的怪仍能打到人（截图已归档）。**根因（一）** = 迭代 03 M-03「灯心公转」（每脉冲把 `GarlicRing.position` 平移 `0.40R`，8 方位轮转，实测偏移 76.2px ≈ 0.40×190.4），按 §6.7 D-14 撤回。**根因（二，2026-11-09 复诊新查）** = 受击位移 `art.position += _punch` 逐帧累加、衰减到 0 时也不减回去：单次受击永久残留 `HIT_PUNCH_PX/(1-0.82)` ≈ **27.8px**（小怪 22px），且花灯环挂在 `Player` 上、不跟 `art` 贴图走 → 表现成「环还在原位，人已经歪了」。用户截图里的偏移方向与量级（≈30px）与这条完全吻合，D-14 只修了其中一半。
 
 | 项 | 判据 | 实测 |
 |---|---|---|
-| D-14a 判定圆心 | `WeaponManager._lamp_center()` 恒返回 `player.global_position`，且顺手把 `garlic_ring.position` 钉回 base | ✅ 代码为首末两行；无 `_lamp_step` 残留（`grep` 0 命中） |
-| D-14b 视觉圆心 | `Player._physics_process` 每帧 `garlic_ring.position = (0, -ART_FOOT_OFFSET)` | ✅ `HaloShot` 受击后 / 脉冲后两条结构断言绿 |
-| D-14c 声明表 | `EVOLVE_MECHANIC["halo"] = "灯心同心:_lamp_center"`，全表仍 9 条两段式 | ✅ `SmokeTest._step13` 条数与格式断言绿 |
-| D-14d 受击前后像素 | 四向（左/右/上/下）边距 = `halo_radius()` ±7%，受击后无偏移 | ✅ `HaloShot` 10/10；截图 `shots/halo_before.png` / `shots/halo_after_hit.png` |
-| D-14e 判定对称性 | 以角色为圆心：±0.90R 都命中、+1.10R 不命中 | ✅ `HaloLogic` ⑪ C-3 + `SmokeTest` 4 条断言 |
+| D-14a 判定圆心 | `WeaponManager._visual_center()` 为唯一口径（`player.global_position + (0, -ART_FOOT_OFFSET)`）；`fire_halo` / `fire_gong` 的判定、资源点、视觉全部同源；`_lamp_center` / `_lamp_step` / `garlic_radius` 已删 | ✅ `grep` 零残留；`WeaponManager.gd` 单一锚点函数 |
+| D-14b 视觉圆心 | `Player._ready` 一次性把 `garlic_ring.position` 钉到 `(0, -ART_FOOT_OFFSET)`；运行时无第二写入者（原每帧重设已删） | ✅ `HaloShot` 受击后 / 脉冲后两条结构断言绿 |
+| D-14c 声明表 | `EVOLVE_MECHANIC["halo"] = "灯心同心:_visual_center"`，全表仍 9 条两段式 | ✅ `SmokeTest._step13` 条数与格式断言绿 |
+| **D-16a 受击位移清零** | `Player` / `Enemy` 的 `art.position` 改为「行走起伏 + 衰减偏移」**合成后一次性赋值**，删 `_apply_punch`；受击后 `art.position` 必须精确回 `(0, bob)` | ✅ `HaloLogic` ⑫：四向受击后 `art.position = (0, 0)`，残留 0.000px；`HaloShot` ⑤ 同样归零 |
+| **D-16b 环/人同源** | 环心 `garlic_ring.global_position` == 身体中心（误差 < 0.5px） | ✅ `HaloShot` ⑥ 实测误差 **0.000 px** |
+| D-14d 受击前后像素 | 四向（左/右/上/下）边距 = `halo_radius()` ±7%，受击后无偏移 | ✅ `HaloShot` ①~④ 全绿；截图 `shots/halo_before.png` / `halo_after_hit.png` |
+| D-14e 判定对称性 | 以角色**身体中心**为圆心：±0.90R 都命中、+1.10R 不命中 | ✅ `HaloLogic` ⑪ C-3 + `SmokeTest` 4 条断言 |
+| **D-17 场底板方形硬边** | `aura_field` 外径 fade 收口到 `r=1.0`（原拖到 `outer+softness=1.20`，超出 `ColorRect` UV 范围被硬裁 → `add` 混合下成一圈方形亮框） | ✅ `HaloShot` ⑦ 水平边突变列 **10 < 60**（10 列 = 顶部灯笼贴图，非方边） |
 | D-15 清理 | 删 `assets/art/`（旧题材 68 文件）、`shots/` 旧图 132 文件（仅留本轮两张证据）、`tests/` 4 文件、30 个旧探针（保留 10 个现行探针） | ✅ 删除后 `SmokeTest` 仍 `340 ok / 0 FAIL / exit 0`，资源齐备性守卫绿 |
-| 双轨验证 | headless 冒烟 + 数值脚本 + 窗口视觉 | ✅ `SmokeTest` 340 ok / 0 FAIL / exit 0；`HaloLogic` 37/0 / exit 0；`HaloShot` 10/10 / exit 0（窗口）；`python` PASS 314 / FAIL 0 / exit 0；全程无 SCRIPT ERROR / PARSE ERROR |
-| 文档回写 | `04` 机制句 / `05` 表 C 行 + 符号引用 / `06` 注记 / 迭代 03 历史件撤回注记 | ✅ 5 处已改 |
-| 缺口（如实登记） | 实机连续受击 5 次的手指观感 | ⚠️ 自动化已覆盖受击前后像素；**真人对连击观感未做** → 【需人工介入（仅观感走查）】，见 §6.7 Q22 |
+| 双轨验证 | headless 冒烟 + 数值脚本 + 窗口视觉 | ✅ `SmokeTest` 340 ok / 0 FAIL / exit 0；`HaloLogic` **39/0** / exit 0；`HaloShot` **13/13** / exit 0（窗口）；`python` PASS 314 / FAIL 0 / exit 0；全程无 SCRIPT ERROR / PARSE ERROR。`HudFxGap` 11 项为 **HEAD 既有红点**（§6.4 Q14），不计入本轮 |
+| 文档回写 | `04` 机制句 / `05` 表 C 行 + 符号引用 / `06` 注记 / 迭代 03 历史件撤回注记 / `PROJECT_OVERVIEW.md` 符号表 | ✅ 6 处已改 |
+| 缺口（如实登记） | ①实机连续受击 5 次的手指观感；②`SmokeTest` Step2 构筑钉住断言偶发失败 | ⚠️ ①【需人工介入（仅观感走查）】见 Q22；②复跑即绿（既有时序抖动，非本轮引入）见 Q24 |
 
 **占位与资产**：撤回动作零新增 / 零删除资产（`GarlicRing` 四层视觉与贴图全复用）；清理项不计入资产账。无【待资产块交付】、无【待数据层登记】。
 
@@ -323,7 +326,7 @@
 
 | # | 议题 | 结论 / 状态 |
 |---|---|---|
-| Q16 | `garlic_ring.position` 的写入权归属 | **已决**：唯一写者改为 `WeaponManager._lamp_center`（未开脸写 `(0, -18)`，开脸写 `(0, -18) + off`）；`Player` 只读 `ART_FOOT_OFFSET`。**⚠️ 2026-11-09 按 D-14 修订**：开脸分支不再偏移，`_lamp_center` 恒返回角色位置并钉回 base；`Player._physics_process` 恢复每帧钉回（双写者但写同一值，语义仍是「恒 base」） |
+| Q16 | `garlic_ring.position` 的写入权归属 | **最终口径（2026-11-09 D-18）**：唯一写入点是 `Player._ready`（`(0, -ART_FOOT_OFFSET)`），运行时无任何路径改写；`WeaponManager` 不再写它，只通过 `_visual_center()` 返回同一坐标供判定使用。`_lamp_center` / `_lamp_step` 已删 |
 | Q17 | `04` 图鉴 6 条机制句尚未入库 | 实机 `CodexDB.gd:115` 仍按模板生成；入库需给 `EvolutionDB` 增字段（`§8` 停手信号）。**【待数据层登记】**，留下一轮 |
 | Q18 | M-03 视觉 V-1~V-4 截图与实机「每步有声」走查 | **视觉已闭环**：新增 `tools/HaloShot.tscn` 窗口探针，像素量尺 8/8（截图 `shots/m03_v1_step0.png` / `m03_v2_pulse1_right.png` / `m03_v3_pulse3_down.png` / `m03_v4_reset.png`）。**仍缺**：实机逐屏音效的人工听觉走查。**【需人工介入（仅听觉走查）】**。**⚠️ 2026-11-09 按 D-14 修订**：该 4 张截图随 D-15 清理，探针已改同心判读（见 §3.6）；听觉走查项仍挂起 |
 | Q19 | GitHub 留痕的远端推送 | 本地提交 `9e4fc1d`（50 文件 / +2722 / −100）与标签 `iter-03-code` 已建立；`git push origin main` 两次均失败：`github.com:443` 连接被重置 / 21s 超时（沙箱内外均失败，非凭证问题，`gh auth status` 正常）。**迭代 04 复测（2026-11-09）**：本地提交 `64ce6c3` + 标签 `iter-04-code` 已建立；`git push origin main` 再失败 2 次 —— 沙箱内 `Recv failure: Connection was reset`，沙箱外 `Failed to connect to github.com port 443 after 21095 ms`。**✅ 2026-11-09 收尾已恢复**：首次 push 被拒（远端有 `93276ba Update README.md`，本地落后）；`git merge origin/main`（仅 README 2 行）后推送成功 `93276ba..6c21294`，标签 `iter-04-fix` 同步推送；至此迭代 02/03/04 累计提交与 `iter-03-code` / `iter-04-code` / `iter-04-fix` 三个标签全部在远端。**另注**：GitHub 提示仓库已迁移，旧地址 `LjxMax2003/FirstXiXueGui` 重定向到 `LjxMax2003/FirstAIGame`（仅告警，推送成功） |
@@ -362,6 +365,10 @@
 | D-14b | **`check_numeric_tables.py` 锚点 531→530（工具侧）** | `Player.gd` 顶部净减 1 行（新增 5 行 + 删旧 6 行注释），`xp_for_level` 常量从 531 落到 530 → 锚点同步；`05` §1 行号引用一并改 `529-530` / `523-527` |
 | **Q22** | 实机连续受击 5 次的观感走查 | 自动化已覆盖受击前后像素与同心结构；**真人手指连击观感未做** →【需人工介入（仅观感走查）】 |
 | **Q23** | `shots/` 只留本轮两张证据，旧截图全删 | 用户指令明确要求清理截屏；历史验证截图已无留档。如需追溯迭代 03 像素读数，只有 `interface.md` §3.4 的文字读数可用 |
+| **D-16** | **受击位移残留修复（用户复诊「没有完成」）** | **根因**：`Player._apply_punch` / `Enemy._apply_punch` 都是 `art.position += _punch` 逐帧累加、`_punch` 衰减到 0 后**不反向减回**。Player 的 `y` 每帧被行走起伏覆盖而自愈，但 `x` 永不归位 → 单次受击永久残留 `5/(1-0.82)` ≈ **27.8px**（小怪 4px → 22px），多次受击单向越漂越远。花灯环挂在 `Player` 上、不跟 `art` 走，所以读作「环没动、人歪了」。**修法**：两边都改为「行走起伏 `_bob_y` + 衰减偏移 `_punch` **合成后一次性赋值**」`art.position = Vector2(_punch.x, _bob_y + _punch.y)`，删 `_apply_punch`；`Enemy.setup` / `Player._ready` 复位 `_bob_y` 与 `_punch` |
+| **D-17** | **光环底板方形硬边（用户截图里的方框）** | `aura_field.gdshader` 的外径 fade 到 `outer + softness`（花灯实配 1.20），而 `ColorRect` 的 UV 在 `r>1` 处已被裁掉 → 四条边中点上留下 `add` 混合的方形亮边。**修法**：把外径 fade 收口到 `min(outer+softness, 1.0)`、带宽 `min(softness*1.25, out_end)`，可见外沿正好等于光环半径；`HaloShot` ⑦ 新增「水平边突变列 < 60」像素断言 |
+| **D-18** | **锚点 / 坐标系口径统一（防再犯）** | ①玩家与敌人节点 origin = **脚底**；②可见身体中心 = `origin + (0, -ART_FOOT_OFFSET)`；③所有「以玩家为圆心」技能（花灯 / 铜锣 / 皮影）的**判定圆心与视觉圆心都必须走 `_visual_center()`**，禁止在调用点手写 `+(0,-18)` 补丁；④敌人侧距离判定仍按各自 origin（脚底），与皮影轨道既有口径一致（18px 偏差在 `hit_radius ≥17px` 容差内）；⑤`garlic_ring.position` 只有 `Player._ready` 一个写入点，运行时删除每帧重设 |
+| **Q24** | `SmokeTest` Step2「钉住的测量构筑生效（whip Lv2）」偶发失败 | 复跑即绿（本次连续 3 跑：1 红 2 绿），失败点在 `_step3_weapons` 读 `weapon_level("whip")`；与受击 / 锚点改动无关，属既有异步时序抖动（升级卡异步回调可能改写 `owned`）。**未修**（放开断言不可接受），留下一轮查 `_pin_probe_build` 与异步选卡的竞态 |
 
 ---
 
@@ -409,9 +416,10 @@
 
 | 接口 | 签名 / 字段 | 定义处 | 使用方 |
 |---|---|---|---|
-| `WeaponManager.EVOLVE_MECHANIC` | `const Dictionary`，9 条；键 = `weapon_id`，值 = `"机制名:落点函数"`（两段式） | `scripts/weapons/WeaponManager.gd:1312-1322` | `SmokeTest._step13`（结构断言） |
-| `WeaponManager._lamp_step` | `int`，0~7；仅 `evolved.has("halo")` 时推进 | `WeaponManager.gd` 成员 | `_lamp_center` |
-| `WeaponManager._lamp_center(player, radius)` | `-> Vector2`；**唯一写 `player.garlic_ring.position`**，返回判定圆心 | `WeaponManager.gd` | `fire_halo` / 测试 |
+| `WeaponManager.EVOLVE_MECHANIC` | `const Dictionary`，9 条；键 = `weapon_id`，值 = `"机制名:落点函数"`（两段式；`halo` = `灯心同心:_visual_center`） | `scripts/weapons/WeaponManager.gd:1282` | `SmokeTest._step13`（结构断言） |
+| `WeaponManager._visual_center(player)` | `-> Vector2`；角色身体中心 = `global_position + (0, -Player.ART_FOOT_OFFSET)`。**全工程「以玩家为圆心」技能的判定与视觉唯一口径**（花灯 / 铜锣 / 皮影轨道） | `WeaponManager.gd` | `fire_halo` / `fire_gong` / `_update_orbits` / `HaloLogic` / `HaloShot` |
+| `Player._punch` / `_bob_y` | `Vector2` / `float`；受击偏移只在这里衰减，`art.position` 每帧由「`(0, _bob_y)` + `_punch`」**合成赋值**（不再累加） | `scripts/Player.gd` | 仅 `Player._update_feedback` / `hit_punch` |
+| `Enemy._punch` / `_bob_y` | 同上（小怪受击位移） | `scripts/Enemy.gd` | 仅 `Enemy._process` / `hit_punch` / `setup` |
 | `WeaponManager._gong_echo(pos, radius, dmg, cap)` | `-> void`；0.28s 后补响（伤害 ×0.45 + 减速 0.25/0.8 + 第二圈波） | `WeaponManager.gd` | `fire_gong`（Tween 回调） |
 | `WeaponManager.GLUE_TIME` | `const float = 1.0`（糖画首跳定身时长） | `WeaponManager.gd` | `update_bullets` |
 | `WeaponManager._delay_arc_v` / `_second_arc_v` | `-> void`（M-02 竖劈第二刀，内部） | `WeaponManager.gd` | `fire_whip` |
@@ -460,3 +468,4 @@
 | **2026-11-09** | **iter-04-fix-halo** | **花灯灯心同心（撤回 M-03 公转，用户截图裁定）**：`WeaponManager._lamp_center()` 改写为恒等 + 钉回 base（删 `_lamp_step`）；`Player._physics_process` 顶部恢复每帧钉回 `Vector2(0, -ART_FOOT_OFFSET)`；`EVOLVE_MECHANIC["halo"]` 改「灯心同心:_lamp_center」（仍 9 条两段式）。测试同步三套：`SmokeTest._step13` 4 条同心断言、`HaloLogic` ⑪ 改 C-1~C-3、`HaloShot` 整份重写（受击前/后两图 + 四向边距 TOL 7% + 2 条结构断言，期望半径从 `halo_radius()` 动态取）。**验收**：`SmokeTest` 340 ok / 0 FAIL / exit 0（headless）、`HaloLogic` 37/0 / exit 0、`HaloShot` 10/10 / exit 0（窗口，截图 `shots/halo_before.png` / `halo_after_hit.png`）、`python` PASS 314 / FAIL 0 / exit 0；无 SCRIPT ERROR / PARSE ERROR。**判定半径 / 伤害 / 平衡零改动**。 | code-orchestrator |
 | **2026-11-09** | **iter-04-cleanup** | **过期内容清理（用户指令「清理以前的测试、截屏、前一个题材的内容」）**：删 `assets/art/`（奶茶题材 68 文件）、`shots/` 旧图 132 文件（仅留本轮两张证据）、`tests/` 全目录 4 文件、`tools/` 30 个旧探针；保留 10 个现行探针。`Art.gd` 1 行注释同步。删除后 `SmokeTest` 复跑仍 `340 ok / 0 FAIL / exit 0`（资源齐备性守卫绿）。详见 §6.7 D-15 / Q23。 | code-orchestrator |
 | **2026-11-09** | **iter-04-fix-git** | **远端留痕完成**：提交 `772283b`（230 文件 / +166 / −10707）+ 附注标签 `iter-04-fix`；与远端 README 提交 `93276ba` 合并为 `6c21294`，`git push origin main` 成功、标签同步推送。**Q19 闭环**。复验（提交前）：`SmokeTest` 340/0/exit 0、`HaloLogic` 37/0、`HaloShot` 10/10（窗口）、`python` 314/0/exit 0；无 SCRIPT ERROR / PARSE ERROR。注：`/docs/` 在 `.gitignore` 第 13 行，本轮五处文档回写仅在本地生效，不入库。 | code-orchestrator |
+| **2026-11-09** | **iter-04-fix-halo-v2** | **受击坐标残留复诊修复（用户反馈「没有完成」）**：**根因** = `Player._apply_punch` / `Enemy._apply_punch` 的 `art.position += _punch` 逐帧累加、衰减到 0 时也不减回 → 单次受击永久残留 `HIT_PUNCH_PX/(1-0.82)` ≈ **27.8px**（小怪 22px），而花灯环挂在 `Player` 上不跟 `art` 走 → 截图里的「环没动、人歪了」。**修法**：两边改为「行走起伏 `_bob_y` + 衰减偏移 `_punch` **合成后一次性赋值**」，删 `_apply_punch`；锚点统一为 `WeaponManager._visual_center()`（`fire_halo`/`fire_gong` 的判定、资源点、爆闪/震波/锣面同源），删 `_lamp_center` / `garlic_radius` / `Player` 每帧钉回，`garlic_ring.position` 只由 `Player._ready` 写一次；`aura_field.gdshader` 外径 fade 收口到 `r=1.0`，消除 add 混合下的方形亮边。**测试**：`HaloLogic` 新增⑫（四向受击后 `art.position=(0,0)` + 环心==身体中心）、C-3 改以身体中心放置；`HaloShot` 新增⑤⑥⑦（归零 / 同源 / 无方边像素断言，共 13 条）。**验收**：`SmokeTest` 340 ok / 0 FAIL / exit 0（Step2 偶发 1 红、复跑绿 → Q24）、`HaloLogic` 39/0 / exit 0、`HaloShot` 13/13 / exit 0（窗口）、`python` PASS 314 / FAIL 0 / exit 0；无 SCRIPT ERROR / PARSE ERROR。判定半径 / 伤害数值 / 平衡零改动。详见 §6.7 D-16/D-17/D-18。 | code-orchestrator |

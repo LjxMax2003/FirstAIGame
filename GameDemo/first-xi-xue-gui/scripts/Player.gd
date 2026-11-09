@@ -82,6 +82,9 @@ const HIT_PUNCH_PX := 5.0
 const HIT_PUNCH_DECAY := 0.82
 ## 当前位移（像素向量）。逐帧乘性衰减到 0。
 var _punch := Vector2.ZERO
+## 行走起伏的当前值（只影响贴图 y）。和 _punch 一起**合成**后写入 art.position，
+## 绝不往 art.position 上累加 —— 见 _update_feedback 末尾的说明。
+var _bob_y := 0.0
 
 # ---------------------------------------------------------------- v5：主动技·震吼
 ## 子组件（不是全局态）：它只管"能不能放 / 放完冷却多少"，玩家管"往哪冲、无敌多久"。
@@ -108,10 +111,15 @@ func _ready() -> void:
 	add_child(active_skill)
 	_load_frames()
 	art.offset = Vector2(0.0, -ART_FOOT_OFFSET)
-	# 花灯环对齐**身体中部**而不是 origin（脚底）：玩家是站着的人，
-	# 环画在脚踝上会读成"圈套歪了"（实测截图反馈）。
-	# 判定不受影响 —— fire_halo 仍用 global_position，敌我双方 origin 都在脚底、同基准。
-	# 防御：这里每帧重设（见 _physics_process 顶部），防止任何运行时意外把它改回脚底。
+	art.position = Vector2.ZERO
+	_bob_y = 0.0
+	_punch = Vector2.ZERO
+	# 坐标系唯一口径（迭代04 收尾 D-15）：
+	#   · 本节点 origin = 脚底；
+	#   · 可见身体中心 = origin + (0, -ART_FOOT_OFFSET)；
+	#   · 花灯环四层视觉全部以 GarlicRing 原点为圆心，所以它必须钉在身体中心。
+	# WeaponManager._visual_center() 返回同一个点，判定圈也用它 —— 视觉 / 判定 / 角色同源。
+	# 只有这里会写 garlic_ring.position（不再每帧重设：没有任何运行时路径会改它）。
 	garlic_ring.position = Vector2(0.0, -ART_FOOT_OFFSET)
 	# 影子在运行时生成：椭圆 + 半透明，避免为每张图另做一张阴影素材
 	shadow = Shadow2D.make(self, Vector2(0.0, -1.0), 22.0, 7.0, 0.34)
@@ -140,10 +148,6 @@ func _load_frame_list(paths: Array[String]) -> Array[Texture2D]:
 
 func _physics_process(delta: float) -> void:
 	elapsed += delta
-	# 【迭代04 收尾 D-14】灯心恒在角色身上：GarlicRing 的 position 只有本处与
-	# WeaponManager._lamp_center() 会写，这里每帧钉回 base，
-	# 保证受击 / 冲刺 / 复活 / 换装后"视觉圈—判定圈—角色"三者永远同圆心。
-	garlic_ring.position = Vector2(0.0, -ART_FOOT_OFFSET)
 	if not GameManager.started:
 		velocity = Vector2.ZERO
 		moving = false
@@ -437,17 +441,6 @@ func hit_punch(dir: Vector2) -> void:
 		return
 	_punch = dir.normalized() * HIT_PUNCH_PX
 
-## 逐帧合成受击位移。与小怪同一套乘性衰减（0.82^帧）。
-func _apply_punch(delta: float) -> void:
-	if _punch.length_squared() < 0.0001:
-		if _punch != Vector2.ZERO:
-			_punch = Vector2.ZERO
-		return
-	art.position += _punch
-	_punch *= pow(HIT_PUNCH_DECAY, delta * 60.0)
-	if _punch.length() < 0.2:
-		_punch = Vector2.ZERO
-
 func is_alive() -> bool:
 	return GameManager.started and float(stats.get("hp", 0.0)) > 0.0
 
@@ -472,10 +465,10 @@ func _update_feedback(delta: float, dir_len: float) -> void:
 	# 原来那个幅度看起来像在原地蹦，不像走路。
 	if moving and dir_len > 0.01:
 		_walk_phase += delta * 11.0
-		art.position.y = -absf(sin(_walk_phase)) * 1.6
+		_bob_y = -absf(sin(_walk_phase)) * 1.6
 	else:
 		_walk_phase = 0.0
-		art.position.y = lerpf(art.position.y, 0.0, clampf(delta * 14.0, 0.0, 1.0))
+		_bob_y = lerpf(_bob_y, 0.0, clampf(delta * 14.0, 0.0, 1.0))
 
 	# 横向速度 → 身体倾斜（约 3°），停下回正。
 	# 拖拽/摇杆玩家最容易读到的"我这一下按对了"就是这一下侧倾。
@@ -486,10 +479,17 @@ func _update_feedback(delta: float, dir_len: float) -> void:
 	_tilt = lerpf(_tilt, target_tilt, clampf(delta * TILT_LERP, 0.0, 1.0))
 	art.rotation = _tilt
 
-	# v9 受伤位移：必须写在上面那行**直接赋值**之后叠加。
-	# 写在它之前会被 art.position.y 的每帧赋值覆盖，位移根本看不到
-	# （和小怪那边同一个坑，见 Enemy._process 的同名注释）。
-	_apply_punch(delta)
+	# 受击位移与行走起伏**合成后一次性赋值**，绝不在 art.position 上累加。
+	# 旧写法 `art.position += _punch` 每帧叠加、位移衰减到 0 时也不会减回去：
+	# 单次受击会永久留下 HIT_PUNCH_PX / (1 - HIT_PUNCH_DECAY) ≈ 27.8px 的横向偏移。
+	# 而花灯环是 Player 的子节点、不跟 art 贴图走 —— 表现就是"环还在原位，人已经歪了"
+	# （用户截图里的错位正是这个残留，不是环自己偏移）。合成式写法保证 _punch 归零时
+	# art.position 精确回到 (0, bob_y)，受击后不会留任何视觉残留。
+	art.position = Vector2(_punch.x, _bob_y + _punch.y)
+	if _punch != Vector2.ZERO:
+		_punch *= pow(HIT_PUNCH_DECAY, delta * 60.0)
+		if _punch.length() < 0.2:
+			_punch = Vector2.ZERO
 
 	# 光环范围：**只跟花灯（halo）**。
 	#

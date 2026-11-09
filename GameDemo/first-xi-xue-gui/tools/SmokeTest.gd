@@ -1881,7 +1881,7 @@ func _step13_evolve_mechanic() -> void:
 	await _wait(0.22)
 	_check(above.hp < 99999.0 - 0.01, "M-02 第二刀（竖）打到正上方 80px（%.1f）" % above.hp)
 
-	# ---- 花灯灯心同心（迭代04 D-14：M-03 的 8 方位公转已撤回）
+	# ---- 花灯灯心同心（迭代04 D-14/D-15：M-03 的 8 方位公转已撤回）
 	_enemies.clear_all()
 	_weapons.owned = {"halo": 8}
 	_weapons.evolved = {"halo": "evolve_halo"}
@@ -1889,15 +1889,17 @@ func _step13_evolve_mechanic() -> void:
 	await _wait_frames(2)
 	var hr: float = _weapons.halo_radius()
 	var hbase: Vector2 = Vector2(0.0, -Player.ART_FOOT_OFFSET)
+	# 判定圆心 = 可见环圆心 = 身体中心（原点在脚底，故先抬 hbase）。
+	var hbody: Vector2 = _player.global_position + hbase
 	# 左右各放 0.90R（圈内）+ 右侧 1.10R（圈外）。只要灯心还偏心 0.40R，
 	# 左侧 -0.90R 距灯心 1.30R 就会漏 —— 这条同时守住"同心"和"半径边界"。
-	var e_left_in: Enemy = _enemies.spawn(_player.global_position + Vector2(-hr * 0.90, 0.0), 99999.0, 0.0, 1, "cup", false)
-	var e_right_in: Enemy = _enemies.spawn(_player.global_position + Vector2(hr * 0.90, 0.0), 99999.0, 0.0, 1, "cup", false)
-	var e_out: Enemy = _enemies.spawn(_player.global_position + Vector2(hr * 1.10, 0.0), 99999.0, 0.0, 1, "cup", false)
+	var e_left_in: Enemy = _enemies.spawn(hbody + Vector2(-hr * 0.90, 0.0), 99999.0, 0.0, 1, "cup", false)
+	var e_right_in: Enemy = _enemies.spawn(hbody + Vector2(hr * 0.90, 0.0), 99999.0, 0.0, 1, "cup", false)
+	var e_out: Enemy = _enemies.spawn(hbody + Vector2(hr * 1.10, 0.0), 99999.0, 0.0, 1, "cup", false)
 	await _wait_frames(1)
 	_weapons.fire_halo(_player)
 	_check(_player.garlic_ring.position.is_equal_approx(hbase),
-		"花灯灯心恒在角色脚下（ring.position = %s）" % str(_player.garlic_ring.position))
+		"花灯灯心恒在角色身体中心（ring.position = %s）" % str(_player.garlic_ring.position))
 	_check(e_left_in.hp < 99999.0 - 0.01, "花灯判定左侧 -0.90R 命中（实测 %.1f）" % e_left_in.hp)
 	_check(e_right_in.hp < 99999.0 - 0.01, "花灯判定右侧 +0.90R 命中（实测 %.1f）" % e_right_in.hp)
 	_check(is_equal_approx(e_out.hp, 99999.0), "花灯判定 +1.10R 不命中（实测 %.1f）" % e_out.hp)

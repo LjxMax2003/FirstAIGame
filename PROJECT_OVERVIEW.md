@@ -524,7 +524,7 @@ Audio        → scripts/Audio.gd
 - **公开 API**：
   - 构建：`acquire(id)`（首次拿到时 `CodexDB.unlock(id)`）、`level_of(id)`、`has_weapon(id)`、`weapon_level(id)`、`is_evolved(id)`、`evolution_of(id)`；
   - 数值：`stat(key)`、`weapon_damage(id, lv)`（`WeaponDB.damage_at × stats.damage × 形态倍率 × 精炼倍率 × 更鼓倍率`）、`refine_tier(id)`、`set_refine(id, tier)`、`refine_mult(id)`、`drum_mult()`；
-  - 范围：`halo_radius()` / `garlic_radius()` / `gong_radius()`；
+  - 范围：`halo_radius()` / `gong_radius()`；锚点：`_visual_center(player)`（角色身体中心，判定与视觉同源）；
   - 输出：`single_dps()` / `total_dps()` / `display_name(id)`；
   - 开火：`fire(id, player)` 分派到 `fire_whip / fire_halo / fire_projectile / fire_extinguisher / fire_gong / fire_inkline / fire_print`；
   - 表现：`spawn_spark(pos, size_mul, color)`、`spawn_evolve(pos)`、`update_fx`、`clear_bullets`、`fx_active_count`。

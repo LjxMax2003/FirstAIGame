@@ -127,6 +127,9 @@ var _spawn_left := 0.0
 ## 受击位移的当前值（像素向量）与方向。逐帧乘性衰减到 0。
 ## 之所以放在实体里而不是 PresentationFX：单例不能持有池化节点的引用（会悬空）。
 var _punch := Vector2.ZERO
+## 行走起伏的当前值（只影响贴图 y）。和 _punch 一起**合成**后写入 art.position，
+## 绝不往 art.position 上累加 —— 累加会在贴图上留下永久漂移（见 _process 末尾）。
+var _bob_y := 0.0
 ## 击杀"先胀后塌"的进度计时。_die() 起算，随 _process 推进。
 var _die_t := 0.0
 ## 击杀后是否正在走"胀—塌"曲线。走完就交给溶解，不再改 scale。
@@ -210,6 +213,7 @@ func setup(pool_index: int, spawn_pos: Vector2, p_hp: float, p_speed: float, p_x
 	# 被表现层改过的 art 属性全部还原，这一条是 A2/A3 能安全落地的前提。
 	art.scale = Vector2.ONE
 	_punch = Vector2.ZERO
+	_bob_y = 0.0
 	_die_t = 0.0
 	_dying = false
 	_dissolving = false
@@ -345,12 +349,18 @@ func _process(delta: float) -> void:
 	if _frames.is_empty():
 		_walk += delta * (5.0 + speed * 0.05)
 		art.rotation = sin(_walk) * 0.07
-		art.position.y = -absf(sin(_walk * 1.0)) * 1.6
+		_bob_y = -absf(sin(_walk * 1.0)) * 1.6
 	else:
 		_tick_frames(delta)
-	# v9 受击位移：必须写在走路起伏之后**叠加**。上面那行是直接赋值，
-	# 写在它之前会被每帧覆盖，位移根本看不到。
-	_apply_punch(delta)
+	# 受击位移与行走起伏**合成后一次性赋值**，绝不在 art.position 上累加。
+	# 旧写法 `art.position += _punch` 每帧叠加、衰减到 0 时也不减回去：
+	# 单次受击永久残留 HIT_PUNCH_PX / (1 - HIT_PUNCH_DECAY) ≈ 22px 的偏移，
+	# 池化敌人表现为"贴图与判定/影子错位"，而且多次受击会单向越漂越远。
+	art.position = Vector2(_punch.x, _bob_y + _punch.y)
+	if _punch != Vector2.ZERO:
+		_punch *= pow(HIT_PUNCH_DECAY, delta * 60.0)
+		if _punch.length() < 0.2:
+			_punch = Vector2.ZERO
 
 	if _hit_left > 0.0:
 		_hit_left -= delta
@@ -413,18 +423,6 @@ func hit_punch(dir: Vector2) -> void:
 	if not alive or dir == Vector2.ZERO:
 		return
 	_punch = dir.normalized() * HIT_PUNCH_PX
-
-## 逐帧合成受击位移。乘性衰减 → 天然"先快后慢"，末段一步归位。
-func _apply_punch(delta: float) -> void:
-	if _punch.length_squared() < 0.0001:
-		if _punch != Vector2.ZERO:
-			_punch = Vector2.ZERO
-		return
-	art.position += _punch
-	# 0.82^k 收敛到 0.2px 以下约 16 帧。用 pow 而不是减常量，保证不会越过 0 之后抖动。
-	_punch *= pow(HIT_PUNCH_DECAY, delta * 60.0)
-	if _punch.length() < 0.2:
-		_punch = Vector2.ZERO
 
 ## 命中音的去重：同一个敌人在极短时间内被打多次只发一次声。
 ## 不靠 Audio 的 gap 单独挡（那是全局节流，会让"不同敌人"也被吞），

@@ -71,11 +71,38 @@ func _ready() -> void:
 	# ③ 结构断言：GarlicRing 节点局部位置恒为 base（视觉四层都以它原点为圆心）
 	_check(_player.garlic_ring.position.is_equal_approx(base),
 		"受击后 GarlicRing.position 仍是 %s（实测 %s）" % [str(base), str(_player.garlic_ring.position)])
-	# ④ 结构断言：判定圆心与角色同点（fire_halo 每次都会先复位）
+	# ④ 结构断言：判定圆心与角色同点（fire_halo 与可见环共用 _visual_center）
 	_weapons.fire_halo(_player)
 	await _frames(2)
 	_check(_player.garlic_ring.position.is_equal_approx(base),
 		"脉冲后 GarlicRing.position 仍是 %s（实测 %s）" % [str(base), str(_player.garlic_ring.position)])
+
+	# ⑤ 结构断言：受击位移必须衰减归零，不得在 art.position 上留残渣（D-16）。
+	# 旧实现 `art.position += _punch` 会永久留下 ≈27.8px 的横向偏移，
+	# 而花灯环挂在 Player 上、不跟 art 走 —— 这就是用户截图里"环与角色错位"的根因。
+	_player.hit_punch(Vector2.RIGHT)
+	await get_tree().create_timer(0.60).timeout
+	_check(_player.art.position.length() < 0.05,
+		"受击位移完全归零（art.position = %s）" % str(_player.art.position))
+
+	# ⑥ 结构断言：环心 == 判定圆心 == 身体中心（三者同源）
+	var body: Vector2 = _player.global_position + Vector2(0.0, -Player.ART_FOOT_OFFSET)
+	_check(_player.garlic_ring.global_position.distance_to(body) < 0.5,
+		"环心与身体中心重合（误差 %.3f px）"
+			% _player.garlic_ring.global_position.distance_to(body))
+
+	# ⑦ 像素断言：光环底板的矩形边界不得留"方形亮框"（D-17）。
+	# aura_field 的外径 fade 原本拖到 outer+softness=1.20，超出 ColorRect 的 UV 范围，
+	# 在 rect 边界上被硬裁；add 混合下就是一圈方形亮边（用户截图里那个方框）。
+	await RenderingServer.frame_post_draw
+	var img: Image = get_viewport().get_texture().get_image()
+	var cpx: Vector2 = _player.get_global_transform_with_canvas() * Vector2(0.0, -Player.ART_FOOT_OFFSET)
+	var sx: float = float(img.get_width()) / get_viewport().get_visible_rect().size.x
+	var cx: int = int(round(cpx.x * sx))
+	var cy: int = int(round(cpx.y * sx))
+	var rp: int = int(round(_weapons.halo_radius() * sx))
+	var jumps: int = _edge_jump_columns(img, cy - rp, cx - rp, cx + rp)
+	_check(jumps < 60, "光环底板无方形硬边（水平边突变列 %d < 60）" % jumps)
 
 	print("\n---------- 汇总 ----------")
 	if _bad.is_empty():
@@ -133,6 +160,19 @@ func _edge(img: Image, cx: int, cy: int, dir: Vector2, sx: float, label: String,
 		_bad.append("%s %s 边距 %.1f / 期望 %.1f" % [label, label, d, expect_r])
 	print("  %s %s 边距 %.1f / 期望 %.1f（偏差 %.1f%%）"
 		% ["ok  " if ok else "FAIL", label, d, expect_r, absf(d - expect_r) / expect_r * 100.0])
+
+## 沿矩形上边界扫一行，统计"上下相邻像素亮度突变"的列数。
+## 方形被裁时整条边（≈2R 列）都会突变；正常收口到 r=1.0 后只剩灯笼贴图穿过的十来列。
+func _edge_jump_columns(img: Image, y: int, x0: int, x1: int) -> int:
+	var n: int = 0
+	var ya: int = maxi(y - 1, 0)
+	var yb: int = mini(y + 1, img.get_height() - 1)
+	for x in range(maxi(x0, 1), mini(x1, img.get_width() - 2)):
+		var a: Color = img.get_pixel(x, ya)
+		var b: Color = img.get_pixel(x, yb)
+		if absf(a.r + a.g + a.b - b.r - b.g - b.b) > 0.04:
+			n += 1
+	return n
 
 ## 从中心沿 dir 走到最后一颗"灯笼本体"像素，返回距离（像素，未换算）。
 ## 灯笼是离散贴图，轴线可能正好落在两只之间，所以在垂直方向 ±18px 的带内取最外那颗。

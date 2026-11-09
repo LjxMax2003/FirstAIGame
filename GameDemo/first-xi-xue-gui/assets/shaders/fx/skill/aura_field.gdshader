@@ -62,9 +62,15 @@ void fragment() {
 	float r = length(p);
 	float ang = atan(p.y, p.x);
 
-	// 环带遮罩：内径软进、外径软出
+	// 环带遮罩：内径软进、外径软出。
+	// 外径必须在**节点边界内**收口：ColorRect 的 UV 在 r>1 处已被裁掉，若 fade 拖到
+	// outer+softness（默认 1.10 / 花灯实配 1.20），边界上会留一圈方形硬边 ——
+	// add 混合下就是一个发亮的方框（实测截图确认）。收口到 r=1.0 后，
+	// 场的可见外沿正好等于光环贴图的半径，视觉半径与判定半径同界。
+	float out_end = min(outer + softness, 1.0);
+	float out_w = min(softness * 1.25, out_end);
 	float band = smoothstep(inner - softness, inner + softness * 0.25, r)
-			* (1.0 - smoothstep(outer - softness * 0.25, outer + softness, r));
+			* (1.0 - smoothstep(out_end - out_w, out_end, r));
 
 	// 关键：角度 → 单位圆坐标，天然连续，不会在 ±PI 处裂开
 	float a2 = ang + TIME * swirl_speed;
